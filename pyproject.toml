@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools-rust>=1.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurenix"
+version = "1.0.0"
+description = "Empowering Intelligent Futures, One Edge at a Time."
+readme = "README.md"
+authors = [
+    {name = "Neurenix Team", email = "packages@milesonerd.8shield.net"}
+]
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+]
+keywords = ["machine learning", "deep learning", "neural networks", "AI", "edge computing", "reinforcement learning", "agents"]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0",
+]
+cuda = [
+    "pycuda>=2022.1",
+]
+distributed = [
+    "ray>=2.0.0",
+]
+agents = [
+    "gymnasium>=0.28.0",
+]
+huggingface = [
+    "transformers>=4.0.0",
+    "datasets>=2.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://neurenix.github.io"
+"Bug Tracker" = "https://github.com/MilesONerd/neurenix/issues"
+
+[tool.setuptools]
+packages = ["neurenix"]
+
+[tool.setuptools-rust]
+rust-extensions = [
+    { path = "src/phynexus/rust", binding = "pyo3", features = ["pyo3/extension-module"] }
+]
