@@ -1,0 +1,45 @@
+[package]
+name = "phynexus"
+version = "1.0.0"
+edition = "2025"
+authors = ["Neurenix Team"]
+description = "High-performance tensor operations engine for the Neurenix AI framework"
+license = "Apache-2.0"
+repository = "https://github.com/MilesONerd/Neurenix"
+
+[lib]
+name = "phynexus"
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+ndarray = "0.15"
+rayon = "1.7"
+num-traits = "0.2"
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.10"
+pyo3 = { version = "0.18", features = ["extension-module", "abi3-py38"] }
+numpy = { version = "0.18", features = ["nalgebra"] }
+nalgebra = "0.32"
+
+[dev-dependencies]
+criterion = "0.4"
+proptest = "1.1"
+
+[features]
+default = ["cpu"]
+cpu = []
+cuda = []
+rocm = []
+webgpu = []
+python = ["pyo3/extension-module"]
+wasm = ["wasm-bindgen", "web-sys", "js-sys"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", features = [
+    "Window", "Document", "Element", "HtmlElement",
+    "GpuDevice", "GpuBuffer", "GpuShaderModule",
+    "GpuComputePipeline", "GpuCommandEncoder"
+], optional = true }
