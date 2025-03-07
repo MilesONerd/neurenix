@@ -29,7 +29,7 @@ To set up your development environment:
 2. **Clone Your Fork**: Clone your fork to your local machine.
 
    ```bash
-   git clone https://github.com/your-username/framework.git
+   git clone https://github.com/your-username/neurenix.git
    cd framework
    ```
 
