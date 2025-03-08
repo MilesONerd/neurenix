@@ -1,12 +1,12 @@
 """
-Neurenix - Framework de Inteligência Artificial otimizado para Edge AI
+Neurenix - Artificial Intelligence Framework Optimized for Edge AI
 
-Neurenix é um framework de inteligência artificial otimizado para dispositivos embarcados (Edge AI),
-com suporte para múltiplas GPUs e clusters distribuídos. O framework é especializado em agentes de IA,
-com suporte nativo para multi-agentes, aprendizado por reforço e IA autônoma.
+Neurenix is ​​an artificial intelligence framework optimized for embedded devices (Edge AI),
+with support for multiple GPUs and distributed clusters. The framework is specialized for AI agents,
+with native support for multi-agents, reinforcement learning, and autonomous AI.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from neurenix.core import init, version
 from neurenix.tensor import Tensor
