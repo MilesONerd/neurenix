@@ -6,7 +6,6 @@ Welcome to the Neurenix documentation! This directory contains comprehensive doc
 
 - [Getting Started](../README.md): Introduction to Neurenix and installation instructions
 - [Framework Comparison](FRAMEWORK_COMPARISON.md): Comparison of Neurenix with TensorFlow, PyTorch, and Scikit-Learn
-- [Contributing](../CONTRIBUTING.md): Guidelines for contributing to Neurenix
 
 ## API Documentation
 
