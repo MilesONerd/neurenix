@@ -5,7 +5,7 @@ We take security seriously at **Neurenix**. If you discover any security vulnera
 # Reporting a Vulnerability
 
 If you find a vulnerability, please do not disclose it publicly until we’ve had the opportunity to address it. Instead, send an email to our security team at:
-[security@milesonerd.8shield.net](security@milesonerd.8shield.net)
+security@milesonerd.8shield.net
 
 Alternatively, you can submit a pull request with your proposed fix. We will review it as soon as possible and work to resolve any issues.
 
