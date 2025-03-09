@@ -31,7 +31,7 @@ Project maintainers are responsible for clarifying and enforcing the Code of Con
 # Reporting Violations
 
 If you experience or witness any violation of this Code of Conduct, please report it as soon as possible by contacting us at:
-[security@milesonerd.8shield.net](security@milesonerd.8shield.net)
+security@milesonerd.8shield.net
 
 We will review your report and take appropriate action. All reports will be kept confidential.
 
