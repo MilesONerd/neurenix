@@ -3,7 +3,7 @@ name = "phynexus"
 version = "1.0.0"
 edition = "2025"
 authors = ["Neurenix Team"]
-description = "High-performance tensor operations engine for the Neurenix AI framework"
+description = "Empowering Intelligent Futures, One Edge at a Time."
 license = "Apache-2.0"
 repository = "https://github.com/MilesONerd/Neurenix"
 
