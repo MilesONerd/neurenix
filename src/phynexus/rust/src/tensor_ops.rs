@@ -149,6 +149,9 @@ pub fn subtract(a: &Tensor, b: &Tensor) -> Result<Tensor> {
         crate::device::DeviceType::WebGPU => {
             ops::elementwise::webgpu_subtract(a, b, &mut result)?;
         },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_subtract(a, b, &mut result)?;
+        },
     }
     
     Ok(result)
@@ -188,6 +191,9 @@ pub fn multiply(a: &Tensor, b: &Tensor) -> Result<Tensor> {
         crate::device::DeviceType::WebGPU => {
             ops::elementwise::webgpu_multiply(a, b, &mut result)?;
         },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_multiply(a, b, &mut result)?;
+        },
     }
     
     Ok(result)
@@ -226,6 +232,9 @@ pub fn divide(a: &Tensor, b: &Tensor) -> Result<Tensor> {
         },
         crate::device::DeviceType::WebGPU => {
             ops::elementwise::webgpu_divide(a, b, &mut result)?;
+        },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_divide(a, b, &mut result)?;
         },
     }
     
@@ -273,6 +282,9 @@ pub fn reduce(tensor: &Tensor, op: ops::reduction::ReductionOp, dims: &[usize], 
         crate::device::DeviceType::WebGPU => {
             ops::reduction::webgpu_reduce(tensor, &mut result, op, dims, keep_dims)?;
         },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_reduce(tensor, &mut result, op, dims, keep_dims)?;
+        },
     }
     
     Ok(result)
@@ -316,6 +328,9 @@ pub fn activate(tensor: &Tensor, activation: ops::activation::ActivationType) ->
         },
         crate::device::DeviceType::WebGPU => {
             ops::activation::webgpu_activate(tensor, &mut result, activation)?;
+        },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_activate(tensor, &mut result, activation)?;
         },
     }
     
@@ -394,6 +409,9 @@ pub fn conv(input: &Tensor, weight: &Tensor, bias: Option<&Tensor>, stride: &[us
         crate::device::DeviceType::WebGPU => {
             ops::conv::webgpu_conv(input, weight, bias, &mut result, stride, padding, dilation, groups)?;
         },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_conv(input, weight, bias, &mut result, stride, padding, dilation, groups)?;
+        },
     }
     
     Ok(result)
@@ -431,6 +449,9 @@ pub fn transpose(tensor: &Tensor, dim0: usize, dim1: usize) -> Result<Tensor> {
         },
         crate::device::DeviceType::WebGPU => {
             ops::blas::webgpu_transpose(tensor, &mut result, dim0, dim1)?;
+        },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_transpose(tensor, &mut result, dim0, dim1)?;
         },
     }
     
