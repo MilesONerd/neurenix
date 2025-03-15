@@ -4,12 +4,14 @@ mod cpu;
 mod cuda;
 mod rocm;
 mod webgpu;
+mod tpu;
 mod multi_device;
 
 pub use cpu::CpuBackend;
 pub use cuda::CudaBackend;
 pub use rocm::RocmBackend;
 pub use webgpu::WebGpuBackend;
+pub use tpu::TpuBackend;
 pub use multi_device::{MultiDeviceManager, DeviceInfo};
 
 use crate::error::Result;
@@ -59,6 +61,10 @@ pub fn get_backend(device_type: crate::device::DeviceType) -> Result<Box<dyn Bac
         },
         crate::device::DeviceType::WebGPU => {
             let backend = WebGpuBackend::new()?;
+            Ok(Box::new(backend))
+        },
+        crate::device::DeviceType::TPU => {
+            let backend = TpuBackend::new()?;
             Ok(Box::new(backend))
         },
     }

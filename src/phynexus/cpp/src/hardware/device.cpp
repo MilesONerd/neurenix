@@ -21,6 +21,7 @@ const Device Device::CUDA1 = Device(DeviceType::CUDA, 1);
 const Device Device::ROCM0 = Device(DeviceType::ROCM, 0);
 const Device Device::ROCM1 = Device(DeviceType::ROCM, 1);
 const Device Device::WEBGPU = Device(DeviceType::WEBGPU, 0);
+const Device Device::TPU0 = Device(DeviceType::TPU, 0);
 
 // Constructor
 Device::Device(DeviceType type, int index) : type_(type), index_(index) {}
@@ -51,6 +52,9 @@ std::string Device::to_string() const {
         case DeviceType::WEBGPU:
             oss << "webgpu:" << index_;
             break;
+        case DeviceType::TPU:
+            oss << "tpu:" << index_;
+            break;
         default:
             oss << "unknown";
             break;
@@ -70,6 +74,10 @@ Device Device::rocm(int index) {
 
 Device Device::webgpu(int index) {
     return Device(DeviceType::WEBGPU, index);
+}
+
+Device Device::tpu(int index) {
+    return Device(DeviceType::TPU, index);
 }
 
 // Comparison operators
@@ -98,6 +106,10 @@ bool Device::is_available() const {
             // Check WebGPU availability
             // return webgpu_is_available();
             return false;  // Placeholder
+        case DeviceType::TPU:
+            // Check TPU availability
+            // return tpu_is_available() && tpu_get_device_count() > index_;
+            return false;  // Placeholder
         default:
             return false;
     }
@@ -119,6 +131,10 @@ void Device::set_current() const {
         case DeviceType::WEBGPU:
             // Set WebGPU device
             // webgpu_set_device(index_);
+            break;
+        case DeviceType::TPU:
+            // Set TPU device
+            // tpu_set_device(index_);
             break;
         default:
             throw std::runtime_error("Unsupported device type");
@@ -156,6 +172,10 @@ int Device::get_device_count(DeviceType type) {
             // Get WebGPU device count
             // return webgpu_get_device_count();
             return 0;  // Placeholder
+        case DeviceType::TPU:
+            // Get TPU device count
+            // return tpu_get_device_count();
+            return 0;  // Placeholder
         default:
             return 0;
     }
@@ -183,6 +203,12 @@ std::vector<Device> Device::get_all_devices() {
     int webgpu_count = get_device_count(DeviceType::WEBGPU);
     for (int i = 0; i < webgpu_count; ++i) {
         devices.push_back(Device(DeviceType::WEBGPU, i));
+    }
+    
+    // Add TPU devices
+    int tpu_count = get_device_count(DeviceType::TPU);
+    for (int i = 0; i < tpu_count; ++i) {
+        devices.push_back(Device(DeviceType::TPU, i));
     }
     
     return devices;
@@ -265,6 +291,29 @@ DeviceProperties Device::get_properties() const {
             
             // Placeholder values
             props.name = "WebGPU Device";
+            props.total_memory = 0;
+            props.compute_capability_major = 0;
+            props.compute_capability_minor = 0;
+            props.multi_processor_count = 0;
+            props.max_threads_per_block = 0;
+            props.max_threads_per_multiprocessor = 0;
+            props.warp_size = 0;
+            break;
+        case DeviceType::TPU:
+            // TPU properties
+            // tpu_device_properties_t tpu_props;
+            // tpu_get_device_properties(index_, &tpu_props);
+            // props.name = tpu_props.name;
+            // props.total_memory = tpu_props.total_memory;
+            // props.compute_capability_major = 0;
+            // props.compute_capability_minor = 0;
+            // props.multi_processor_count = 0;
+            // props.max_threads_per_block = tpu_props.max_threads_per_block;
+            // props.max_threads_per_multiprocessor = 0;
+            // props.warp_size = 0;
+            
+            // Placeholder values
+            props.name = "TPU Device";
             props.total_memory = 0;
             props.compute_capability_major = 0;
             props.compute_capability_minor = 0;

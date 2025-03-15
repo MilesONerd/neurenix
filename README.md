@@ -15,6 +15,7 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 - **Phynexus Engine**: High-performance engine for tensor operations
 - **Optimized for Edge AI**: Efficient execution on embedded devices
 - **Multi-GPU and Distributed Support**: Scalability to clusters and multiple GPUs
+- **TPU Support**: Tensor Processing Unit acceleration for machine learning workloads
 - **Agent-Specialized**: Native support for multi-agent and autonomous AI
 - **Declarative API**: Simpler and more intuitive interface than traditional frameworks
 - **LLM Fine-tuning**: Simplified tools for tuning language models
