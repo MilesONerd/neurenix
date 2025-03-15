@@ -18,12 +18,15 @@ pub trait Optimizer {
 /// SGD optimizer
 pub struct SGD {
     /// Learning rate
+    #[allow(dead_code)]
     lr: f32,
     
     /// Momentum
+    #[allow(dead_code)]
     momentum: f32,
     
     /// Weight decay
+    #[allow(dead_code)]
     weight_decay: f32,
     
     /// Parameters
@@ -88,18 +91,23 @@ impl Optimizer for SGD {
 /// Adam optimizer
 pub struct Adam {
     /// Learning rate
+    #[allow(dead_code)]
     lr: f32,
     
     /// Beta1
+    #[allow(dead_code)]
     beta1: f32,
     
     /// Beta2
+    #[allow(dead_code)]
     beta2: f32,
     
     /// Epsilon
+    #[allow(dead_code)]
     eps: f32,
     
     /// Weight decay
+    #[allow(dead_code)]
     weight_decay: f32,
     
     /// Parameters

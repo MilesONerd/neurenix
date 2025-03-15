@@ -13,9 +13,11 @@ pub trait Module {
 /// Linear layer
 pub struct Linear {
     /// Weight tensor
+    #[allow(dead_code)]
     weight: Tensor,
     
     /// Bias tensor
+    #[allow(dead_code)]
     bias: Option<Tensor>,
 }
 
@@ -40,21 +42,27 @@ impl Module for Linear {
 /// Convolutional layer
 pub struct Conv2d {
     /// Weight tensor
+    #[allow(dead_code)]
     weight: Tensor,
     
     /// Bias tensor
+    #[allow(dead_code)]
     bias: Option<Tensor>,
     
     /// Stride
+    #[allow(dead_code)]
     stride: Vec<usize>,
     
     /// Padding
+    #[allow(dead_code)]
     padding: Vec<usize>,
     
     /// Dilation
+    #[allow(dead_code)]
     dilation: Vec<usize>,
     
     /// Groups
+    #[allow(dead_code)]
     groups: usize,
 }
 
@@ -89,24 +97,31 @@ impl Module for Conv2d {
 /// LSTM layer
 pub struct LSTM {
     /// Input size
+    #[allow(dead_code)]
     input_size: usize,
     
     /// Hidden size
+    #[allow(dead_code)]
     hidden_size: usize,
     
     /// Number of layers
+    #[allow(dead_code)]
     num_layers: usize,
     
     /// Whether to use bias
+    #[allow(dead_code)]
     bias: bool,
     
     /// Whether batch dimension is first
+    #[allow(dead_code)]
     batch_first: bool,
     
     /// Dropout probability
+    #[allow(dead_code)]
     dropout: f32,
     
     /// Whether to use bidirectional LSTM
+    #[allow(dead_code)]
     bidirectional: bool,
 }
 
