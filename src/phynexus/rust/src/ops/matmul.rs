@@ -51,7 +51,7 @@ pub fn matmul(a: &Tensor, b: &Tensor) -> Result<Tensor> {
     out_shape.push(b_shape[b_shape.len() - 1]);
     
     // Create the output tensor
-    let mut out = Tensor::new(out_shape, a.dtype(), a.device().clone())?;
+    let out = Tensor::new(out_shape, a.dtype(), a.device().clone())?;
     
     // TODO: Implement the actual matrix multiplication
     // This would depend on the device and would be dispatched accordingly

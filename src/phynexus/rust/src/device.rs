@@ -3,7 +3,7 @@
 use crate::error::{PhynexusError, Result};
 use crate::hardware::MultiDeviceManager;
 use std::fmt;
-use std::sync::{Arc, Mutex, Once};
+use std::sync::{Arc, Once};
 
 /// Device type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -49,9 +49,7 @@ pub struct Device {
     manager: Arc<MultiDeviceManager>,
 }
 
-// Global multi-device manager
-static mut MULTI_DEVICE_MANAGER: Option<Arc<MultiDeviceManager>> = None;
-static INIT: Once = Once::new();
+// Global multi-device manager is now handled inside get_manager()
 
 impl Device {
     /// Create a new device
@@ -158,12 +156,33 @@ impl Device {
     
     /// Get the global multi-device manager
     fn get_manager() -> Result<Arc<MultiDeviceManager>> {
+        // Thread-safe singleton pattern using Once
+        static INIT: Once = Once::new();
+        static mut MANAGER: Option<Arc<MultiDeviceManager>> = None;
+        
         unsafe {
             INIT.call_once(|| {
-                MULTI_DEVICE_MANAGER = Some(Arc::new(MultiDeviceManager::new().unwrap()));
+                // This code runs exactly once across all threads
+                match MultiDeviceManager::new() {
+                    Ok(manager) => {
+                        MANAGER = Some(Arc::new(manager));
+                    },
+                    Err(e) => {
+                        // We can't return an error from call_once, so we'll just log it
+                        eprintln!("Failed to initialize MultiDeviceManager: {:?}", e);
+                    }
+                }
             });
             
-            Ok(MULTI_DEVICE_MANAGER.as_ref().unwrap().clone())
+            // After initialization, MANAGER is either Some or None
+            // Using a direct access to avoid the shared reference to mutable static warning
+            if let Some(ref manager) = MANAGER {
+                Ok(manager.clone())
+            } else {
+                Err(PhynexusError::UninitializedError(
+                    "Failed to initialize MultiDeviceManager".to_string()
+                ))
+            }
         }
     }
     

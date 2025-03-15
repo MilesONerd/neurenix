@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 /// Multi-device manager for coordinating operations across multiple devices
 pub struct MultiDeviceManager {
     /// Available backends
+    #[allow(dead_code)]
     backends: HashMap<DeviceType, Arc<dyn Backend + 'static>>,
     
     /// Device information

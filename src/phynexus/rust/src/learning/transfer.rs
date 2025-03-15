@@ -13,6 +13,7 @@ pub struct TransferModel {
     head_model: Box<dyn Module>,
     
     /// Whether to freeze the base model
+    #[allow(dead_code)]
     freeze_base: bool,
 }
 
