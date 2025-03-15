@@ -24,11 +24,12 @@ Join the community and stay up to date with the latest news, releases, and updat
 - **Phynexus Engine**: High-performance engine for tensor operations
 - **Optimized for Edge AI**: Efficient execution on embedded devices
 - **Multi-GPU and Distributed Support**: Scalability to clusters and multiple GPUs
+- **TPU Support**: Tensor Processing Unit acceleration for machine learning workloads
 - **Agent-Specialized**: Native support for multi-agent and autonomous AI
 - **Declarative API**: Simpler and more intuitive interface than traditional frameworks
 - **LLM Fine-tuning**: Simplified tools for tuning language models
 - **Hugging Face Integration**: Compatibility with pre-existing models
 
-## Licença
+## License
 
-Este projeto é licenciado sob a [Apache License 2.0](LICENSE).
+This project is licensed under the [Apache License 2.0](LICENSE).
