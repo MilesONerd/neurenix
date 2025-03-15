@@ -1,32 +1,50 @@
-//! Error handling for the Phynexus engine
+//! Error types for the Phynexus engine
 
 use thiserror::Error;
-use std::result;
 
-/// Custom error type for Phynexus operations
+/// Result type for the Phynexus engine
+pub type Result<T> = std::result::Result<T, PhynexusError>;
+
+/// Error type for the Phynexus engine
 #[derive(Error, Debug)]
 pub enum PhynexusError {
-    #[error("Device error: {0}")]
-    DeviceError(String),
-    
-    #[error("Memory allocation error: {0}")]
-    MemoryError(String),
-    
-    #[error("Shape mismatch: {0}")]
-    ShapeMismatch(String),
-    
-    #[error("Operation not supported: {0}")]
-    UnsupportedOperation(String),
-    
+    /// Invalid argument
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
     
+    /// Unsupported operation
+    #[error("Unsupported operation: {0}")]
+    UnsupportedOperation(String),
+    
+    /// Unsupported data type
+    #[error("Unsupported data type: {0}")]
+    UnsupportedDataType(String),
+    
+    /// Shape mismatch
+    #[error("Shape mismatch: {0}")]
+    ShapeMismatch(String),
+    
+    /// Device error
+    #[error("Device error: {0}")]
+    DeviceError(String),
+    
+    /// Device mismatch
+    #[error("Device mismatch: {0}")]
+    DeviceMismatch(String),
+    
+    /// Memory error
+    #[error("Memory error: {0}")]
+    MemoryError(String),
+    
+    /// Uninitialized error
+    #[error("Uninitialized error: {0}")]
+    UninitializedError(String),
+    
+    /// IO error
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
     
+    /// Other error
     #[error("Other error: {0}")]
     Other(String),
 }
-
-/// Result type for Phynexus operations
-pub type Result<T> = result::Result<T, PhynexusError>;

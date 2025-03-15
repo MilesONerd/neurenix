@@ -1,9 +1,10 @@
 //! Learning algorithms for the Phynexus engine
 
-mod transfer;
-mod meta;
-mod unsupervised;
+pub mod transfer;
+pub mod meta;
+pub mod unsupervised;
 
-pub use transfer::*;
-pub use meta::*;
-pub use unsupervised::*;
+// Re-export common types
+pub use transfer::TransferModel;
+pub use meta::MetaLearningModel;
+pub use unsupervised::Autoencoder;

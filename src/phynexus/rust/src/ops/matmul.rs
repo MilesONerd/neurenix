@@ -63,3 +63,38 @@ pub fn matmul(a: &Tensor, b: &Tensor) -> Result<Tensor> {
 pub fn batch_matmul(a: &Tensor, b: &Tensor) -> Result<Tensor> {
     matmul(a, b)
 }
+
+/// Perform matrix multiplication on CPU
+#[allow(unused_variables)]
+pub fn cpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    unimplemented!("CPU matrix multiplication not yet implemented")
+}
+
+/// Perform matrix multiplication on CUDA
+#[allow(unused_variables)]
+pub fn cuda_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    unimplemented!("CUDA matrix multiplication not yet implemented")
+}
+
+/// Perform matrix multiplication on ROCm
+#[allow(unused_variables)]
+pub fn rocm_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    unimplemented!("ROCm matrix multiplication not yet implemented")
+}
+
+/// Perform matrix multiplication on WebGPU
+#[allow(unused_variables)]
+pub fn webgpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    unimplemented!("WebGPU matrix multiplication not yet implemented")
+}
+
+/// Perform matrix multiplication on TPU
+#[allow(unused_variables)]
+pub fn tpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    unimplemented!("TPU matrix multiplication not yet implemented")
+}
