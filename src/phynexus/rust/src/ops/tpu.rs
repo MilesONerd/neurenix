@@ -2,6 +2,8 @@
 
 use crate::error::{PhynexusError, Result};
 use crate::tensor::Tensor;
+use crate::ops::activation::ActivationType;
+use crate::ops::reduction::ReductionOp;
 
 /// Perform matrix multiplication on TPU
 pub fn tpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
@@ -49,7 +51,7 @@ pub fn tpu_divide(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform reduction operation on TPU
-pub fn tpu_reduce(tensor: &Tensor, out: &mut Tensor, op: crate::ops::reduction::ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
+pub fn tpu_reduce(tensor: &Tensor, out: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
     Err(PhynexusError::UnsupportedOperation(
@@ -58,7 +60,7 @@ pub fn tpu_reduce(tensor: &Tensor, out: &mut Tensor, op: crate::ops::reduction::
 }
 
 /// Apply activation function on TPU
-pub fn tpu_activate(tensor: &Tensor, out: &mut Tensor, activation: crate::ops::activation::ActivationType) -> Result<()> {
+pub fn tpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
     Err(PhynexusError::UnsupportedOperation(
