@@ -22,6 +22,7 @@ pub enum DeviceType {
     CUDA,
     ROCm,
     WebGPU,
+    TPU,
 }
 
 impl Device {

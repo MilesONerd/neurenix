@@ -32,6 +32,7 @@ cpu = []
 cuda = []
 rocm = []
 webgpu = []
+tpu = []
 python = ["pyo3/extension-module"]
 wasm = ["wasm-bindgen", "web-sys", "js-sys"]
 

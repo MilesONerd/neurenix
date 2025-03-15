@@ -179,6 +179,24 @@ void* webgpu_create_command_encoder();
 void webgpu_destroy_command_encoder(void* encoder);
 void webgpu_submit_command_encoder(void* encoder);
 
+// TPU functions
+bool initialize_tpu();
+int get_tpu_device_count();
+DeviceProperties get_tpu_device_properties(int device_index);
+void set_tpu_device(int device_index);
+int get_current_tpu_device();
+void* tpu_malloc(size_t size);
+void tpu_free(void* ptr);
+void tpu_memcpy_host_to_device(void* dst, const void* src, size_t size);
+void tpu_memcpy_device_to_host(void* dst, const void* src, size_t size);
+void tpu_memcpy_device_to_device(void* dst, const void* src, size_t size);
+void tpu_memset(void* ptr, int value, size_t size);
+void tpu_launch_kernel(void* kernel, dim3 grid_dim, dim3 block_dim, size_t shared_mem_size, void* stream, void** args);
+void tpu_synchronize();
+void* tpu_create_stream();
+void tpu_destroy_stream(void* stream);
+void tpu_stream_synchronize(void* stream);
+
 } // namespace hardware
 } // namespace phynexus
 

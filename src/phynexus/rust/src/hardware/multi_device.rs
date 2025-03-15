@@ -110,6 +110,24 @@ impl MultiDeviceManager {
             }
         }
         
+        // Try to initialize TPU backend
+        if let Ok(tpu_backend) = crate::hardware::TpuBackend::new() {
+            let tpu_backend = Arc::new(tpu_backend);
+            backends.insert(DeviceType::TPU, tpu_backend.clone());
+            
+            // Add TPU devices
+            let device_count = tpu_backend.device_count();
+            for i in 0..device_count {
+                devices.push(DeviceInfo {
+                    device_type: DeviceType::TPU,
+                    device_index: i,
+                    name: format!("TPU Device {}", i),
+                    memory_capacity: 0, // Unknown
+                    backend: tpu_backend.clone(),
+                });
+            }
+        }
+        
         Self {
             backends,
             devices,

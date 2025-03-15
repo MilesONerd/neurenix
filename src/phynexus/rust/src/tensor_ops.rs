@@ -65,6 +65,9 @@ pub fn matmul(a: &Tensor, b: &Tensor) -> Result<Tensor> {
         crate::device::DeviceType::WebGPU => {
             ops::matmul::webgpu_matmul(a, b, &mut result)?;
         },
+        crate::device::DeviceType::TPU => {
+            ops::matmul::tpu_matmul(a, b, &mut result)?;
+        },
     }
     
     Ok(result)
@@ -103,6 +106,9 @@ pub fn add(a: &Tensor, b: &Tensor) -> Result<Tensor> {
         },
         crate::device::DeviceType::WebGPU => {
             ops::elementwise::webgpu_add(a, b, &mut result)?;
+        },
+        crate::device::DeviceType::TPU => {
+            ops::tpu::tpu_add(a, b, &mut result)?;
         },
     }
     
