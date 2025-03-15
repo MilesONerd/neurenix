@@ -6,6 +6,7 @@ use crate::ops::activation::ActivationType;
 use crate::ops::reduction::ReductionOp;
 
 /// Perform matrix multiplication on TPU
+#[allow(unused_variables)]
 pub fn tpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -15,6 +16,7 @@ pub fn tpu_matmul(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform element-wise addition on TPU
+#[allow(unused_variables)]
 pub fn tpu_add(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -24,6 +26,7 @@ pub fn tpu_add(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform element-wise subtraction on TPU
+#[allow(unused_variables)]
 pub fn tpu_subtract(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -33,6 +36,7 @@ pub fn tpu_subtract(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform element-wise multiplication on TPU
+#[allow(unused_variables)]
 pub fn tpu_multiply(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -42,6 +46,7 @@ pub fn tpu_multiply(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform element-wise division on TPU
+#[allow(unused_variables)]
 pub fn tpu_divide(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -51,6 +56,7 @@ pub fn tpu_divide(a: &Tensor, b: &Tensor, out: &mut Tensor) -> Result<()> {
 }
 
 /// Perform reduction operation on TPU
+#[allow(unused_variables)]
 pub fn tpu_reduce(tensor: &Tensor, out: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -60,6 +66,7 @@ pub fn tpu_reduce(tensor: &Tensor, out: &mut Tensor, op: ReductionOp, dims: &[us
 }
 
 /// Apply activation function on TPU
+#[allow(unused_variables)]
 pub fn tpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
@@ -68,20 +75,84 @@ pub fn tpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationTyp
     ))
 }
 
-/// Perform convolution on TPU
-pub fn tpu_conv(input: &Tensor, weight: &Tensor, bias: Option<&Tensor>, out: &mut Tensor, stride: &[usize], padding: &[usize], dilation: &[usize], groups: usize) -> Result<()> {
+/// Perform copy on TPU
+#[allow(unused_variables)]
+pub fn tpu_copy(tensor: &Tensor, out: &mut Tensor) -> Result<()> {
     // This is a placeholder implementation
     // Real implementation would use TPU API
     Err(PhynexusError::UnsupportedOperation(
-        "TPU convolution not yet implemented".to_string()
+        "TPU copy not yet implemented".to_string()
     ))
 }
 
-/// Perform transpose on TPU
-pub fn tpu_transpose(tensor: &Tensor, out: &mut Tensor, dim0: usize, dim1: usize) -> Result<()> {
-    // This is a placeholder implementation
-    // Real implementation would use TPU API
+/// Perform CPU transpose operation
+#[allow(unused_variables)]
+pub fn cpu_transpose(tensor: &Tensor, out: &mut Tensor, dim0: usize, dim1: usize) -> Result<()> {
+    // Placeholder implementation
     Err(PhynexusError::UnsupportedOperation(
-        "TPU transpose not yet implemented".to_string()
+        "CPU transpose not yet implemented".to_string()
+    ))
+}
+
+/// Perform CUDA transpose operation
+#[allow(unused_variables)]
+pub fn cuda_transpose(tensor: &Tensor, out: &mut Tensor, dim0: usize, dim1: usize) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CUDA transpose not yet implemented".to_string()
+    ))
+}
+
+/// Perform ROCm transpose operation
+#[allow(unused_variables)]
+pub fn rocm_transpose(tensor: &Tensor, out: &mut Tensor, dim0: usize, dim1: usize) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "ROCm transpose not yet implemented".to_string()
+    ))
+}
+
+/// Perform WebGPU transpose operation
+#[allow(unused_variables)]
+pub fn webgpu_transpose(tensor: &Tensor, out: &mut Tensor, dim0: usize, dim1: usize) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "WebGPU transpose not yet implemented".to_string()
+    ))
+}
+
+/// Perform CPU copy operation
+#[allow(unused_variables)]
+pub fn cpu_copy(tensor: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CPU copy not yet implemented".to_string()
+    ))
+}
+
+/// Perform CUDA copy operation
+#[allow(unused_variables)]
+pub fn cuda_copy(tensor: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CUDA copy not yet implemented".to_string()
+    ))
+}
+
+/// Perform ROCm copy operation
+#[allow(unused_variables)]
+pub fn rocm_copy(tensor: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "ROCm copy not yet implemented".to_string()
+    ))
+}
+
+/// Perform WebGPU copy operation
+#[allow(unused_variables)]
+pub fn webgpu_copy(tensor: &Tensor, out: &mut Tensor) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "WebGPU copy not yet implemented".to_string()
     ))
 }

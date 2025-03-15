@@ -1,201 +1,101 @@
 //! Reduction operations for the Phynexus engine
 
-use crate::error::Result;
+use crate::error::{PhynexusError, Result};
 use crate::tensor::Tensor;
 
-/// Reduction operation types
+/// Reduction operation type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReductionOp {
-    /// Sum reduction
+    /// Sum
     Sum,
     
-    /// Mean reduction
+    /// Mean
     Mean,
     
-    /// Maximum reduction
+    /// Maximum
     Max,
     
-    /// Minimum reduction
+    /// Minimum
     Min,
-    
-    /// Product reduction
-    Prod,
-    
-    /// Logical AND reduction
-    All,
-    
-    /// Logical OR reduction
-    Any,
 }
 
 /// Perform reduction operation on CPU
-pub fn cpu_reduce(input: &Tensor, output: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
-    // Placeholder implementation for CPU reduction
-    // In a real implementation, we would use SIMD instructions for better performance
-    // and optimize for different reduction operations
-    
-    // For now, just return a success result
-    Ok(())
+#[allow(unused_variables)]
+pub fn cpu_reduce(_input: &Tensor, _output: &mut Tensor, _op: ReductionOp, _dims: &[usize], _keep_dims: bool) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CPU reduction not yet implemented".to_string()
+    ))
 }
 
 /// Perform reduction operation on CUDA
-pub fn cuda_reduce(input: &Tensor, output: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
-    // Placeholder implementation for CUDA reduction
-    // In a real implementation, we would use CUDA kernels optimized for different
-    // reduction operations and tensor shapes
-    
-    // For now, just return a success result
-    Ok(())
+#[allow(unused_variables)]
+pub fn cuda_reduce(_input: &Tensor, _output: &mut Tensor, _op: ReductionOp, _dims: &[usize], _keep_dims: bool) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CUDA reduction not yet implemented".to_string()
+    ))
 }
 
 /// Perform reduction operation on ROCm
-pub fn rocm_reduce(input: &Tensor, output: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
-    // Placeholder implementation for ROCm reduction
-    // In a real implementation, we would use HIP kernels optimized for different
-    // reduction operations and tensor shapes
-    
-    // For now, just return a success result
-    Ok(())
+#[allow(unused_variables)]
+pub fn rocm_reduce(_input: &Tensor, _output: &mut Tensor, _op: ReductionOp, _dims: &[usize], _keep_dims: bool) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "ROCm reduction not yet implemented".to_string()
+    ))
 }
 
 /// Perform reduction operation on WebGPU
-pub fn webgpu_reduce(input: &Tensor, output: &mut Tensor, op: ReductionOp, dims: &[usize], keep_dims: bool) -> Result<()> {
-    // Placeholder implementation for WebGPU reduction
-    // In a real implementation, we would use WebGPU compute shaders optimized for
-    // different reduction operations and tensor shapes
-    
-    // For now, just return a success result
-    Ok(())
+#[allow(unused_variables)]
+pub fn webgpu_reduce(_input: &Tensor, _output: &mut Tensor, _op: ReductionOp, _dims: &[usize], _keep_dims: bool) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "WebGPU reduction not yet implemented".to_string()
+    ))
 }
 
-/// Compute the sum of a tensor along the specified dimensions
-pub fn sum(x: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
-    // Create a generic reduction operation that delegates to the appropriate backend
-    let mut output_shape = Vec::new();
-    for (i, &dim) in x.shape().iter().enumerate() {
-        if !dims.contains(&i) {
-            output_shape.push(dim);
-        } else if keep_dims {
-            output_shape.push(1);
-        }
-    }
-    
-    let mut result = Tensor::new(output_shape, x.dtype(), x.device().clone())?;
-    
-    // Perform the reduction using the appropriate backend
-    match x.device().device_type() {
-        crate::device::DeviceType::CPU => {
-            cpu_reduce(x, &mut result, ReductionOp::Sum, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::CUDA => {
-            cuda_reduce(x, &mut result, ReductionOp::Sum, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::ROCm => {
-            rocm_reduce(x, &mut result, ReductionOp::Sum, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::WebGPU => {
-            webgpu_reduce(x, &mut result, ReductionOp::Sum, dims, keep_dims)?;
-        },
-    }
-    
-    Ok(result)
+/// Perform reduction operation on TPU
+#[allow(unused_variables)]
+pub fn tpu_reduce(_input: &Tensor, _output: &mut Tensor, _op: ReductionOp, _dims: &[usize], _keep_dims: bool) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "TPU reduction not yet implemented".to_string()
+    ))
 }
 
-/// Compute the mean of a tensor along the specified dimensions
-pub fn mean(x: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
-    // Create a generic reduction operation that delegates to the appropriate backend
-    let mut output_shape = Vec::new();
-    for (i, &dim) in x.shape().iter().enumerate() {
-        if !dims.contains(&i) {
-            output_shape.push(dim);
-        } else if keep_dims {
-            output_shape.push(1);
-        }
-    }
-    
-    let mut result = Tensor::new(output_shape, x.dtype(), x.device().clone())?;
-    
-    // Perform the reduction using the appropriate backend
-    match x.device().device_type() {
-        crate::device::DeviceType::CPU => {
-            cpu_reduce(x, &mut result, ReductionOp::Mean, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::CUDA => {
-            cuda_reduce(x, &mut result, ReductionOp::Mean, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::ROCm => {
-            rocm_reduce(x, &mut result, ReductionOp::Mean, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::WebGPU => {
-            webgpu_reduce(x, &mut result, ReductionOp::Mean, dims, keep_dims)?;
-        },
-    }
-    
-    Ok(result)
+/// Perform sum reduction
+#[allow(unused_variables)]
+pub fn sum(tensor: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Sum reduction not yet implemented".to_string()
+    ))
 }
 
-/// Compute the maximum of a tensor along the specified dimensions
-pub fn max(x: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
-    // Create a generic reduction operation that delegates to the appropriate backend
-    let mut output_shape = Vec::new();
-    for (i, &dim) in x.shape().iter().enumerate() {
-        if !dims.contains(&i) {
-            output_shape.push(dim);
-        } else if keep_dims {
-            output_shape.push(1);
-        }
-    }
-    
-    let mut result = Tensor::new(output_shape, x.dtype(), x.device().clone())?;
-    
-    // Perform the reduction using the appropriate backend
-    match x.device().device_type() {
-        crate::device::DeviceType::CPU => {
-            cpu_reduce(x, &mut result, ReductionOp::Max, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::CUDA => {
-            cuda_reduce(x, &mut result, ReductionOp::Max, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::ROCm => {
-            rocm_reduce(x, &mut result, ReductionOp::Max, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::WebGPU => {
-            webgpu_reduce(x, &mut result, ReductionOp::Max, dims, keep_dims)?;
-        },
-    }
-    
-    Ok(result)
+/// Perform mean reduction
+#[allow(unused_variables)]
+pub fn mean(tensor: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Mean reduction not yet implemented".to_string()
+    ))
 }
 
-/// Compute the minimum of a tensor along the specified dimensions
-pub fn min(x: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
-    // Create a generic reduction operation that delegates to the appropriate backend
-    let mut output_shape = Vec::new();
-    for (i, &dim) in x.shape().iter().enumerate() {
-        if !dims.contains(&i) {
-            output_shape.push(dim);
-        } else if keep_dims {
-            output_shape.push(1);
-        }
-    }
-    
-    let mut result = Tensor::new(output_shape, x.dtype(), x.device().clone())?;
-    
-    // Perform the reduction using the appropriate backend
-    match x.device().device_type() {
-        crate::device::DeviceType::CPU => {
-            cpu_reduce(x, &mut result, ReductionOp::Min, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::CUDA => {
-            cuda_reduce(x, &mut result, ReductionOp::Min, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::ROCm => {
-            rocm_reduce(x, &mut result, ReductionOp::Min, dims, keep_dims)?;
-        },
-        crate::device::DeviceType::WebGPU => {
-            webgpu_reduce(x, &mut result, ReductionOp::Min, dims, keep_dims)?;
-        },
-    }
-    
-    Ok(result)
+/// Perform max reduction
+#[allow(unused_variables)]
+pub fn max(tensor: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Max reduction not yet implemented".to_string()
+    ))
+}
+
+/// Perform min reduction
+#[allow(unused_variables)]
+pub fn min(tensor: &Tensor, dims: &[usize], keep_dims: bool) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Min reduction not yet implemented".to_string()
+    ))
 }

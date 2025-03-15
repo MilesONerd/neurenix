@@ -8,10 +8,9 @@ pub mod matmul;
 pub mod reduction;
 pub mod tpu;
 
-pub use activation::*;
-pub use blas::*;
-pub use conv::*;
-pub use elementwise::*;
-pub use matmul::*;
-pub use reduction::*;
+// Export specific functions to avoid name conflicts
+pub use activation::{ActivationType, relu, sigmoid, tanh, softmax};
+pub use elementwise::{add, subtract, multiply, divide, pow, exp, log};
+pub use matmul::{matmul, batch_matmul};
+pub use reduction::{ReductionOp, sum, mean, max, min};
 pub use tpu::*;

@@ -1,82 +1,66 @@
 //! Tensor implementation for the Phynexus engine
 
-use crate::error::{PhynexusError, Result};
-use crate::device::{Device, DeviceType};
-use crate::memory::Memory;
-use ndarray::{Array, ArrayD, IxDyn};
+use crate::device::Device;
+use crate::dtype::DataType;
+use crate::error::Result;
 use std::fmt;
-use std::sync::Arc;
 
-/// Represents a multi-dimensional array with support for various hardware devices
+/// A multi-dimensional array with a specific data type and device
 pub struct Tensor {
-    /// The shape of the tensor
+    /// Shape of the tensor
     shape: Vec<usize>,
     
-    /// The data type of the tensor elements
+    /// Data type of the tensor
     dtype: DataType,
     
-    /// The device where the tensor is stored
+    /// Device where the tensor is stored
     device: Device,
     
-    /// The memory buffer containing the tensor data
-    memory: Arc<dyn Memory>,
-}
-
-/// Supported data types for tensor elements
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DataType {
-    Float32,
-    Float64,
-    Int32,
-    Int64,
-    Bool,
+    /// Raw pointer to the tensor data
+    data: *mut u8,
+    
+    /// Size of the tensor data in bytes
+    size: usize,
+    
+    /// Whether the tensor requires gradients
+    requires_grad: bool,
+    
+    /// Gradient of the tensor
+    grad: Option<Box<Tensor>>,
 }
 
 impl Tensor {
-    /// Create a new tensor with the given shape and data type on the specified device
+    /// Create a new tensor with the given shape, data type, and device
     pub fn new(shape: Vec<usize>, dtype: DataType, device: Device) -> Result<Self> {
-        let size = shape.iter().product::<usize>() * dtype.size_in_bytes();
-        let memory = device.allocate_memory(size)?;
+        let size = shape.iter().product::<usize>() * dtype.size();
+        
+        // Allocate memory on the device
+        let data = device.allocate(size)?;
         
         Ok(Self {
             shape,
             dtype,
             device,
-            memory,
+            data,
+            size,
+            requires_grad: false,
+            grad: None,
         })
     }
     
-    /// Create a tensor from CPU data
-    pub fn from_cpu_data<T>(data: &[T], shape: Vec<usize>, device: Device) -> Result<Self> 
-    where
-        T: Copy,
-    {
+    /// Create a new tensor with the given shape and data type on the CPU
+    pub fn new_cpu<T: 'static + Copy>(shape: Vec<usize>) -> Result<Self> {
         let dtype = DataType::from_type::<T>()?;
-        let mut tensor = Self::new(shape, dtype, device)?;
-        tensor.copy_from_cpu(data)?;
-        Ok(tensor)
+        let device = Device::cpu();
+        
+        Self::new(shape, dtype, device)
     }
     
-    /// Copy data from CPU to the tensor
-    pub fn copy_from_cpu<T>(&mut self, data: &[T]) -> Result<()> 
-    where
-        T: Copy,
-    {
-        let expected_len = self.shape.iter().product::<usize>();
-        if data.len() != expected_len {
-            return Err(PhynexusError::ShapeMismatch(format!(
-                "Data length {} does not match tensor size {}", 
-                data.len(), expected_len
-            )));
-        }
+    /// Create a new tensor with the given shape and data type on the specified device
+    pub fn new_with_device<T: 'static + Copy>(shape: Vec<usize>, device: Device) -> Result<Self> {
+        let dtype = DataType::from_type::<T>()?;
         
-        let bytes = std::slice::from_raw_parts(
-            data.as_ptr() as *const u8,
-            data.len() * std::mem::size_of::<T>(),
-        );
-        
-        self.memory.copy_from_host(bytes)?;
-        Ok(())
+        Self::new(shape, dtype, device)
     }
     
     /// Get the shape of the tensor
@@ -93,39 +77,125 @@ impl Tensor {
     pub fn device(&self) -> &Device {
         &self.device
     }
-}
-
-impl DataType {
-    /// Get the size of the data type in bytes
-    pub fn size_in_bytes(&self) -> usize {
-        match self {
-            DataType::Float32 => 4,
-            DataType::Float64 => 8,
-            DataType::Int32 => 4,
-            DataType::Int64 => 8,
-            DataType::Bool => 1,
-        }
+    
+    /// Get the raw pointer to the tensor data
+    pub fn data(&self) -> *const u8 {
+        self.data
     }
     
-    /// Create a DataType from a Rust type
-    pub fn from_type<T>() -> Result<Self> {
-        let type_id = std::any::TypeId::of::<T>();
-        
-        if type_id == std::any::TypeId::of::<f32>() {
-            Ok(DataType::Float32)
-        } else if type_id == std::any::TypeId::of::<f64>() {
-            Ok(DataType::Float64)
-        } else if type_id == std::any::TypeId::of::<i32>() {
-            Ok(DataType::Int32)
-        } else if type_id == std::any::TypeId::of::<i64>() {
-            Ok(DataType::Int64)
-        } else if type_id == std::any::TypeId::of::<bool>() {
-            Ok(DataType::Bool)
-        } else {
-            Err(PhynexusError::UnsupportedOperation(format!(
-                "Unsupported data type"
-            )))
+    /// Get the mutable raw pointer to the tensor data
+    pub fn data_mut(&mut self) -> *mut u8 {
+        self.data
+    }
+    
+    /// Get the size of the tensor data in bytes
+    pub fn size(&self) -> usize {
+        self.size
+    }
+    
+    /// Get the number of elements in the tensor
+    pub fn numel(&self) -> usize {
+        self.shape.iter().product()
+    }
+    
+    /// Set whether the tensor requires gradients
+    pub fn set_requires_grad(&mut self, requires_grad: bool) {
+        self.requires_grad = requires_grad;
+    }
+    
+    /// Get whether the tensor requires gradients
+    pub fn requires_grad(&self) -> bool {
+        self.requires_grad
+    }
+    
+    /// Get the gradient of the tensor
+    pub fn grad(&self) -> Option<&Tensor> {
+        self.grad.as_ref().map(|g| g.as_ref())
+    }
+    
+    /// Set the gradient of the tensor
+    pub fn set_grad(&mut self, grad: Option<Box<Tensor>>) {
+        self.grad = grad;
+    }
+    
+    /// Move the tensor to a different device
+    pub fn to_device(&self, device: Device) -> Result<Self> {
+        if self.device == device {
+            return Ok(self.clone());
         }
+        
+        let device_clone = device.clone();
+        let mut result = Self::new(self.shape.clone(), self.dtype, device_clone.clone())?;
+        
+        // Copy data from this tensor to the new tensor
+        device_clone.copy_from_device(self.data, self.device.clone(), result.data_mut())?;
+        
+        // Copy requires_grad and grad
+        result.requires_grad = self.requires_grad;
+        if let Some(grad) = &self.grad {
+            result.grad = Some(Box::new((**grad).to_device(device_clone)?));
+        }
+        
+        Ok(result)
+    }
+    
+    /// Move the tensor to the CPU
+    pub fn to_cpu(&self) -> Result<Self> {
+        self.to_device(Device::cpu())
+    }
+    
+    /// Move the tensor to the CUDA device
+    pub fn to_cuda(&self) -> Result<Self> {
+        self.to_device(Device::cuda(0))
+    }
+    
+    /// Move the tensor to the ROCm device
+    pub fn to_rocm(&self) -> Result<Self> {
+        self.to_device(Device::rocm(0))
+    }
+    
+    /// Move the tensor to the WebGPU device
+    pub fn to_webgpu(&self) -> Result<Self> {
+        self.to_device(Device::webgpu())
+    }
+    
+    /// Move the tensor to the TPU device
+    pub fn to_tpu(&self) -> Result<Self> {
+        self.to_device(Device::tpu(0))
+    }
+}
+
+impl Clone for Tensor {
+    fn clone(&self) -> Self {
+        let mut result = Self::new(
+            self.shape.clone(),
+            self.dtype,
+            self.device.clone(),
+        ).unwrap();
+        
+        // Copy data from this tensor to the new tensor
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self.data,
+                result.data_mut(),
+                self.size,
+            );
+        }
+        
+        // Copy requires_grad and grad
+        result.requires_grad = self.requires_grad;
+        if let Some(grad) = &self.grad {
+            result.grad = Some(Box::new((**grad).clone()));
+        }
+        
+        result
+    }
+}
+
+impl Drop for Tensor {
+    fn drop(&mut self) {
+        // Free memory on the device
+        let _ = self.device.free(self.data);
     }
 }
 
@@ -135,6 +205,7 @@ impl fmt::Debug for Tensor {
             .field("shape", &self.shape)
             .field("dtype", &self.dtype)
             .field("device", &self.device)
+            .field("requires_grad", &self.requires_grad)
             .finish()
     }
 }

@@ -1,184 +1,170 @@
-//! Optimizers for the Phynexus engine
+//! Optimizer implementations for the Phynexus engine
 
-use std::collections::HashMap;
-
-use crate::error::{PhynexusError, Result};
+use crate::error::Result;
 use crate::tensor::Tensor;
 
-/// Base trait for all optimizers
+/// Optimizer trait
 pub trait Optimizer {
-    /// Update the parameters based on their gradients
+    /// Step the optimizer
     fn step(&mut self) -> Result<()>;
     
-    /// Reset the gradients of all parameters
+    /// Zero the gradients
     fn zero_grad(&mut self) -> Result<()>;
     
     /// Add a parameter to the optimizer
-    fn add_param(&mut self, param: Tensor) -> Result<()>;
+    fn add_param(&mut self, param: &mut Tensor) -> Result<()>;
 }
 
-/// Stochastic Gradient Descent optimizer
+/// SGD optimizer
 pub struct SGD {
-    /// Parameters to optimize
-    params: Vec<Tensor>,
-    
     /// Learning rate
     lr: f32,
     
-    /// Momentum factor
+    /// Momentum
     momentum: f32,
     
-    /// Weight decay (L2 penalty)
+    /// Weight decay
     weight_decay: f32,
     
-    /// Nesterov momentum
-    nesterov: bool,
-    
-    /// Velocity buffers for momentum
-    velocity: HashMap<usize, Tensor>,
+    /// Parameters
+    params: Vec<*mut Tensor>,
 }
 
 impl SGD {
     /// Create a new SGD optimizer
-    pub fn new(params: Vec<Tensor>, lr: f32, momentum: f32, weight_decay: f32, nesterov: bool) -> Self {
+    pub fn new(lr: f32, momentum: f32, weight_decay: f32) -> Self {
         Self {
-            params,
             lr,
             momentum,
             weight_decay,
-            nesterov,
-            velocity: HashMap::new(),
+            params: Vec::new(),
         }
     }
 }
 
 impl Optimizer for SGD {
     fn step(&mut self) -> Result<()> {
-        for param in &self.params {
+        for param_ptr in &self.params {
+            let param = unsafe { &mut **param_ptr };
+            
             if !param.requires_grad() {
                 continue;
             }
             
-            let grad = param.grad()
-                .ok_or_else(|| PhynexusError::InvalidArgument(
-                    "Parameter requires gradient but has no gradient".to_string()
+            let _grad = param.grad()
+                .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
+                    "Parameter gradient is not initialized".to_string()
                 ))?;
             
-            // TODO: Implement SGD update
-            // For now, just return an error
-            return Err(PhynexusError::UnsupportedOperation(
-                "SGD optimizer not yet implemented".to_string()
-            ));
+            // Placeholder implementation
+            // In a real implementation, we would update the parameter using the gradient
         }
         
         Ok(())
     }
     
     fn zero_grad(&mut self) -> Result<()> {
-        for param in &self.params {
+        for param_ptr in &self.params {
+            let param = unsafe { &mut **param_ptr };
+            
             if !param.requires_grad() {
                 continue;
             }
             
-            // TODO: Implement gradient zeroing
-            // For now, just return an error
-            return Err(PhynexusError::UnsupportedOperation(
-                "Gradient zeroing not yet implemented".to_string()
-            ));
+            // Placeholder implementation
+            // In a real implementation, we would zero the gradient
+            param.set_grad(None);
         }
         
         Ok(())
     }
     
-    fn add_param(&mut self, param: Tensor) -> Result<()> {
-        self.params.push(param);
+    fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
+        self.params.push(param as *mut Tensor);
         Ok(())
     }
 }
 
 /// Adam optimizer
 pub struct Adam {
-    /// Parameters to optimize
-    params: Vec<Tensor>,
-    
     /// Learning rate
     lr: f32,
     
-    /// Coefficients for computing running averages of gradient and its square
-    betas: (f32, f32),
+    /// Beta1
+    beta1: f32,
     
-    /// Term added to the denominator to improve numerical stability
+    /// Beta2
+    beta2: f32,
+    
+    /// Epsilon
     eps: f32,
     
-    /// Weight decay (L2 penalty)
+    /// Weight decay
     weight_decay: f32,
     
-    /// First moment estimates
-    exp_avg: HashMap<usize, Tensor>,
+    /// Parameters
+    params: Vec<*mut Tensor>,
     
-    /// Second moment estimates
-    exp_avg_sq: HashMap<usize, Tensor>,
-    
-    /// Step count for each parameter
-    step_count: HashMap<usize, usize>,
+    /// Step count
+    step: usize,
 }
 
 impl Adam {
     /// Create a new Adam optimizer
-    pub fn new(params: Vec<Tensor>, lr: f32, betas: (f32, f32), eps: f32, weight_decay: f32) -> Self {
+    pub fn new(lr: f32, beta1: f32, beta2: f32, eps: f32, weight_decay: f32) -> Self {
         Self {
-            params,
             lr,
-            betas,
+            beta1,
+            beta2,
             eps,
             weight_decay,
-            exp_avg: HashMap::new(),
-            exp_avg_sq: HashMap::new(),
-            step_count: HashMap::new(),
+            params: Vec::new(),
+            step: 0,
         }
     }
 }
 
 impl Optimizer for Adam {
     fn step(&mut self) -> Result<()> {
-        for param in &self.params {
+        self.step += 1;
+        
+        for param_ptr in &self.params {
+            let param = unsafe { &mut **param_ptr };
+            
             if !param.requires_grad() {
                 continue;
             }
             
-            let grad = param.grad()
-                .ok_or_else(|| PhynexusError::InvalidArgument(
-                    "Parameter requires gradient but has no gradient".to_string()
+            let _grad = param.grad()
+                .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
+                    "Parameter gradient is not initialized".to_string()
                 ))?;
             
-            // TODO: Implement Adam update
-            // For now, just return an error
-            return Err(PhynexusError::UnsupportedOperation(
-                "Adam optimizer not yet implemented".to_string()
-            ));
+            // Placeholder implementation
+            // In a real implementation, we would update the parameter using the gradient
         }
         
         Ok(())
     }
     
     fn zero_grad(&mut self) -> Result<()> {
-        for param in &self.params {
+        for param_ptr in &self.params {
+            let param = unsafe { &mut **param_ptr };
+            
             if !param.requires_grad() {
                 continue;
             }
             
-            // TODO: Implement gradient zeroing
-            // For now, just return an error
-            return Err(PhynexusError::UnsupportedOperation(
-                "Gradient zeroing not yet implemented".to_string()
-            ));
+            // Placeholder implementation
+            // In a real implementation, we would zero the gradient
+            param.set_grad(None);
         }
         
         Ok(())
     }
     
-    fn add_param(&mut self, param: Tensor) -> Result<()> {
-        self.params.push(param);
+    fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
+        self.params.push(param as *mut Tensor);
         Ok(())
     }
 }

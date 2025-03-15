@@ -1,28 +1,101 @@
-//! Activation functions
+//! Activation functions for the Phynexus engine
 
-use crate::error::Result;
+use crate::error::{PhynexusError, Result};
 use crate::tensor::Tensor;
 
-/// Apply the ReLU activation function to a tensor
-pub fn relu(x: &Tensor) -> Result<Tensor> {
-    // TODO: Implement ReLU activation
-    unimplemented!("ReLU activation not yet implemented")
+/// Activation function type
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ActivationType {
+    /// Rectified linear unit
+    ReLU,
+    
+    /// Sigmoid
+    Sigmoid,
+    
+    /// Hyperbolic tangent
+    Tanh,
+    
+    /// Softmax
+    Softmax,
 }
 
-/// Apply the sigmoid activation function to a tensor
-pub fn sigmoid(x: &Tensor) -> Result<Tensor> {
-    // TODO: Implement sigmoid activation
-    unimplemented!("Sigmoid activation not yet implemented")
+/// Apply ReLU activation function
+#[allow(unused_variables)]
+pub fn relu(_x: &Tensor) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "ReLU not yet implemented".to_string()
+    ))
 }
 
-/// Apply the tanh activation function to a tensor
-pub fn tanh(x: &Tensor) -> Result<Tensor> {
-    // TODO: Implement tanh activation
-    unimplemented!("Tanh activation not yet implemented")
+/// Apply sigmoid activation function
+#[allow(unused_variables)]
+pub fn sigmoid(_x: &Tensor) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Sigmoid not yet implemented".to_string()
+    ))
 }
 
-/// Apply the softmax activation function to a tensor
-pub fn softmax(x: &Tensor, dim: i64) -> Result<Tensor> {
-    // TODO: Implement softmax activation
-    unimplemented!("Softmax activation not yet implemented")
+/// Apply tanh activation function
+#[allow(unused_variables)]
+pub fn tanh(_x: &Tensor) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Tanh not yet implemented".to_string()
+    ))
+}
+
+/// Apply softmax activation function
+#[allow(unused_variables)]
+pub fn softmax(_x: &Tensor, _dim: i64) -> Result<Tensor> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "Softmax not yet implemented".to_string()
+    ))
+}
+
+/// Apply activation function on CPU
+#[allow(unused_variables)]
+pub fn cpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CPU activation not yet implemented".to_string()
+    ))
+}
+
+/// Apply activation function on CUDA
+#[allow(unused_variables)]
+pub fn cuda_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "CUDA activation not yet implemented".to_string()
+    ))
+}
+
+/// Apply activation function on ROCm
+#[allow(unused_variables)]
+pub fn rocm_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "ROCm activation not yet implemented".to_string()
+    ))
+}
+
+/// Apply activation function on WebGPU
+#[allow(unused_variables)]
+pub fn webgpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "WebGPU activation not yet implemented".to_string()
+    ))
+}
+
+/// Apply activation function on TPU
+#[allow(unused_variables)]
+pub fn tpu_activate(tensor: &Tensor, out: &mut Tensor, activation: ActivationType) -> Result<()> {
+    // Placeholder implementation
+    Err(PhynexusError::UnsupportedOperation(
+        "TPU activation not yet implemented".to_string()
+    ))
 }
