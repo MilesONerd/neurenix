@@ -5,6 +5,7 @@ Tensor implementation for the Neurenix framework.
 import numpy as np
 from typing import List, Tuple, Union, Optional, Sequence, Any
 from enum import Enum
+from contextlib import contextmanager
 
 from neurenix.device import Device, DeviceType
 
@@ -35,15 +36,15 @@ class DType(Enum):
     def to_numpy(self) -> np.dtype:
         """Convert a Neurenix DType to a NumPy dtype."""
         if self == DType.FLOAT32:
-            return np.float32
+            return np.dtype('float32')
         elif self == DType.FLOAT64:
-            return np.float64
+            return np.dtype('float64')
         elif self == DType.INT32:
-            return np.int32
+            return np.dtype('int32')
         elif self == DType.INT64:
-            return np.int64
+            return np.dtype('int64')
         elif self == DType.BOOL:
-            return np.bool_
+            return np.dtype('bool')
         else:
             raise ValueError(f"Unsupported Neurenix dtype: {self}")
 
@@ -74,6 +75,9 @@ class Tensor:
             device: The device to store the tensor on. If None, uses the default device.
             requires_grad: Whether to track gradients for this tensor.
         """
+        # Class-level flag for gradient computation
+        if not hasattr(Tensor, '_grad_enabled'):
+            Tensor._grad_enabled = True
         from neurenix.core import get_config
         
         # Set device
@@ -157,8 +161,9 @@ class Tensor:
             raise TypeError(f"Unsupported data type: {type(data)}")
         
         # Set up gradient tracking
-        self._requires_grad = requires_grad
+        self._requires_grad = requires_grad and Tensor._grad_enabled
         self._grad = None if requires_grad else None
+        self._backward_fn = None
     
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -173,11 +178,13 @@ class Tensor:
     @property
     def size(self) -> int:
         """Get the total number of elements in the tensor."""
-        return np.prod(self._shape)
+        return int(np.prod(self._shape))
     
     @property
     def dtype(self) -> DType:
         """Get the data type of the tensor."""
+        if isinstance(self._dtype, str):
+            return DType(self._dtype)
         return self._dtype
     
     @property
@@ -195,6 +202,35 @@ class Tensor:
         """Get the gradient of the tensor."""
         return self._grad
     
+    def backward(self):
+        """
+        Compute gradients through the computation graph.
+        
+        This method computes gradients for all tensors in the computation
+        graph that require gradients. The gradients are stored in the
+        grad attribute of each tensor.
+        """
+        if not self._requires_grad:
+            return
+        if self._backward_fn is not None:
+            self._backward_fn()
+        elif self._grad is None:
+            # Initialize gradient for scalar tensors
+            if self._numpy_data.size == 1:
+                self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
+            else:
+                raise RuntimeError("grad can be implicitly created only for scalar outputs")
+            
+    @staticmethod
+    @contextmanager
+    def no_grad():
+        """Context manager to disable gradient computation."""
+        prev = Tensor._grad_enabled
+        Tensor._grad_enabled = False
+        try:
+            yield
+        finally:
+            Tensor._grad_enabled = prev
     def numpy(self) -> np.ndarray:
         """
         Convert the tensor to a NumPy array.
@@ -614,10 +650,64 @@ class Tensor:
         # Generate random values and convert to the right dtype
         random_data = np.random.randn(*shape)
         if dtype is not None:
-            random_data = random_data.astype(dtype.to_numpy())
+            random_data = np.asarray(random_data, dtype=dtype.to_numpy())
         
         return Tensor(
             random_data,
             dtype=dtype,
             device=device
         )
+    
+    @staticmethod
+    def stack(tensors: List["Tensor"], dim: int = 0) -> "Tensor":
+        """
+        Stack tensors along a new dimension.
+        
+        Args:
+            tensors: List of tensors to stack.
+            dim: Dimension along which to stack.
+            
+        Returns:
+            A new tensor containing the stacked tensors.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        numpy_tensors = [t._numpy_data for t in tensors]
+        stacked = np.stack(numpy_tensors, axis=dim)
+        return Tensor(stacked, device=tensors[0].device)
+    
+    @staticmethod
+    def cat(tensors: List["Tensor"], dim: int = 0) -> "Tensor":
+        """
+        Concatenate tensors along an existing dimension.
+        
+        Args:
+            tensors: List of tensors to concatenate.
+            dim: Dimension along which to concatenate.
+            
+        Returns:
+            A new tensor containing the concatenated tensors.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        numpy_tensors = [t._numpy_data for t in tensors]
+        concatenated = np.concatenate(numpy_tensors, axis=dim)
+        return Tensor(concatenated, device=tensors[0].device)
+    
+    def gather(self, dim: int, index: "Tensor") -> "Tensor":
+        """
+        Gather values along a dimension using indices.
+        
+        Args:
+            dim: Dimension along which to gather.
+            index: Tensor containing the indices to gather.
+            
+        Returns:
+            A new tensor containing the gathered values.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        # Convert indices to integer type for take_along_axis
+        index_array = index._numpy_data.astype(np.int64)
+        gathered = np.take_along_axis(self._numpy_data, index_array, axis=dim)
+        return Tensor(gathered, device=self.device)
