@@ -34,6 +34,7 @@ class Sequential(Module):
     
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self._modules = {}
         
         if len(args) == 1 and isinstance(args[0], dict):
             # Initialize from an ordered dict
@@ -47,6 +48,16 @@ class Sequential(Module):
         # Add any keyword arguments as named modules
         for name, module in kwargs.items():
             self.add_module(name, module)
+            
+    def add_module(self, name: str, module: Module) -> None:
+        """
+        Add a module to the sequential container.
+        
+        Args:
+            name: Name of the module
+            module: Module to add
+        """
+        self._modules[name] = module
     
     def forward(self, x: Tensor) -> Tensor:
         """

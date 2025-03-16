@@ -5,6 +5,7 @@ Tensor implementation for the Neurenix framework.
 import numpy as np
 from typing import List, Tuple, Union, Optional, Sequence, Any
 from enum import Enum
+from contextlib import contextmanager
 
 from neurenix.device import Device, DeviceType
 
@@ -32,7 +33,7 @@ class DType(Enum):
         else:
             raise ValueError(f"Unsupported NumPy dtype: {dtype}")
     
-    def to_numpy(self) -> np.dtype:
+    def to_numpy(self):
         """Convert a Neurenix DType to a NumPy dtype."""
         if self == DType.FLOAT32:
             return np.float32
@@ -178,11 +179,13 @@ class Tensor:
     @property
     def size(self) -> int:
         """Get the total number of elements in the tensor."""
-        return np.prod(self._shape)
+        return int(np.prod(self._shape))
     
     @property
     def dtype(self) -> DType:
         """Get the data type of the tensor."""
+        if isinstance(self._dtype, str):
+            return DType(self._dtype)
         return self._dtype
     
     @property
@@ -239,10 +242,205 @@ class Tensor:
         result._numpy_data = self._numpy_data.copy()
         
         return result
+        
+    def clone(self) -> "Tensor":
+        """
+        Create a clone of this tensor.
+        
+        Returns:
+            A new tensor with the same data and attributes.
+        """
+        # Create a new tensor with the same data and attributes
+        result = Tensor(
+            self._numpy_data.copy(),
+            dtype=self._dtype,
+            device=self._device,
+            requires_grad=self._requires_grad,
+        )
+        
+        # Copy gradient if it exists
+        if self._grad is not None:
+            result._grad = self._grad.clone()
+        
+        return result
     
     def __repr__(self) -> str:
         """Get a string representation of the tensor."""
         return f"Tensor(shape={self._shape}, dtype={self._dtype}, device={self._device})"
+        
+    def __add__(self, other: Union["Tensor", float, int]) -> "Tensor":
+        """
+        Add another tensor or scalar to this tensor.
+        
+        Args:
+            other: The tensor or scalar to add.
+            
+        Returns:
+            A new tensor with the result of the addition.
+        """
+        # Handle scalar addition
+        if isinstance(other, (int, float)):
+            return Tensor(self._numpy_data + other, device=self._device)
+        
+        # Handle tensor addition
+        if isinstance(other, Tensor):
+            # TODO: Use Phynexus bindings when available
+            # For now, use NumPy as a fallback
+            return Tensor(self._numpy_data + other._numpy_data, device=self._device)
+        
+        raise TypeError(f"Unsupported operand type for +: {type(other)}")
+    
+    def __sub__(self, other: Union["Tensor", float, int]) -> "Tensor":
+        """
+        Subtract another tensor or scalar from this tensor.
+        
+        Args:
+            other: The tensor or scalar to subtract.
+            
+        Returns:
+            A new tensor with the result of the subtraction.
+        """
+        # Handle scalar subtraction
+        if isinstance(other, (int, float)):
+            return Tensor(self._numpy_data - other, device=self._device)
+        
+        # Handle tensor subtraction
+        if isinstance(other, Tensor):
+            # TODO: Use Phynexus bindings when available
+            # For now, use NumPy as a fallback
+            return Tensor(self._numpy_data - other._numpy_data, device=self._device)
+        
+        raise TypeError(f"Unsupported operand type for -: {type(other)}")
+    
+    def __mul__(self, other: Union["Tensor", float, int]) -> "Tensor":
+        """
+        Multiply this tensor by another tensor or scalar.
+        
+        Args:
+            other: The tensor or scalar to multiply by.
+            
+        Returns:
+            A new tensor with the result of the multiplication.
+        """
+        # Handle scalar multiplication
+        if isinstance(other, (int, float)):
+            return Tensor(self._numpy_data * other, device=self._device)
+        
+        # Handle tensor multiplication
+        if isinstance(other, Tensor):
+            # TODO: Use Phynexus bindings when available
+            # For now, use NumPy as a fallback
+            return Tensor(self._numpy_data * other._numpy_data, device=self._device)
+        
+        raise TypeError(f"Unsupported operand type for *: {type(other)}")
+    
+    def __truediv__(self, other: Union["Tensor", float, int]) -> "Tensor":
+        """
+        Divide this tensor by another tensor or scalar.
+        
+        Args:
+            other: The tensor or scalar to divide by.
+            
+        Returns:
+            A new tensor with the result of the division.
+        """
+        # Handle scalar division
+        if isinstance(other, (int, float)):
+            return Tensor(self._numpy_data / other, device=self._device)
+        
+        # Handle tensor division
+        if isinstance(other, Tensor):
+            # TODO: Use Phynexus bindings when available
+            # For now, use NumPy as a fallback
+            return Tensor(self._numpy_data / other._numpy_data, device=self._device)
+        
+        raise TypeError(f"Unsupported operand type for /: {type(other)}")
+        
+    def __getitem__(self, index) -> "Tensor":
+        """
+        Get a slice of the tensor.
+        
+        Args:
+            index: The index or slice to get.
+            
+        Returns:
+            A new tensor with the selected elements.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        result = self._numpy_data[index]
+        
+        # If the result is a scalar, wrap it in a 0-dimensional tensor
+        if np.isscalar(result):
+            result = np.array(result)
+        
+        return Tensor(result, device=self._device)
+        
+    def reshape(self, *shape) -> "Tensor":
+        """
+        Reshape the tensor to the given shape.
+        
+        Args:
+            shape: The new shape of the tensor.
+            
+        Returns:
+            A new tensor with the given shape.
+        """
+        # Handle the case where shape is passed as a tuple or list
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
+            shape = shape[0]
+        
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        result = Tensor(
+            self._numpy_data.reshape(shape),
+            device=self._device
+        )
+        return result
+        
+    def transpose(self, dim0: int = 0, dim1: int = 1) -> "Tensor":
+        """
+        Transpose the tensor along the given dimensions.
+        
+        Args:
+            dim0: First dimension to transpose.
+            dim1: Second dimension to transpose.
+            
+        Returns:
+            A new tensor with the transposed dimensions.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        
+        # Create a list of dimensions
+        dims = list(range(self.ndim))
+        
+        # Swap the specified dimensions
+        dims[dim0], dims[dim1] = dims[dim1], dims[dim0]
+        
+        result = Tensor(
+            np.transpose(self._numpy_data, dims),
+            device=self._device
+        )
+        return result
+        
+    def gather(self, dim: int, index: "Tensor") -> "Tensor":
+        """
+        Gather values along a dimension using indices.
+        
+        Args:
+            dim: Dimension along which to gather.
+            index: Tensor containing the indices to gather.
+            
+        Returns:
+            A new tensor containing the gathered values.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        # Convert indices to integer type for take_along_axis
+        index_array = index._numpy_data.astype(np.int64)
+        gathered = np.take_along_axis(self._numpy_data, index_array, axis=dim)
+        return Tensor(gathered, device=self.device)
     
     # Activation functions
     
@@ -557,7 +755,43 @@ class Tensor:
     # Static methods for tensor creation
     
     @staticmethod
-    def zeros(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None) -> "Tensor":
+    def stack(tensors: List["Tensor"], dim: int = 0) -> "Tensor":
+        """
+        Stack tensors along a new dimension.
+        
+        Args:
+            tensors: List of tensors to stack.
+            dim: Dimension along which to stack.
+            
+        Returns:
+            A new tensor containing the stacked tensors.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        numpy_tensors = [t._numpy_data for t in tensors]
+        stacked = np.stack(numpy_tensors, axis=dim)
+        return Tensor(stacked, device=tensors[0].device)
+    
+    @staticmethod
+    def cat(tensors: List["Tensor"], dim: int = 0) -> "Tensor":
+        """
+        Concatenate tensors along an existing dimension.
+        
+        Args:
+            tensors: List of tensors to concatenate.
+            dim: Dimension along which to concatenate.
+            
+        Returns:
+            A new tensor containing the concatenated tensors.
+        """
+        # TODO: Use Phynexus bindings when available
+        # For now, use NumPy as a fallback
+        numpy_tensors = [t._numpy_data for t in tensors]
+        concatenated = np.concatenate(numpy_tensors, axis=dim)
+        return Tensor(concatenated, device=tensors[0].device)
+    
+    @staticmethod
+    def zeros(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None, requires_grad: bool = False) -> "Tensor":
         """
         Create a tensor filled with zeros.
         
@@ -565,6 +799,7 @@ class Tensor:
             shape: Shape of the tensor.
             dtype: Data type of the tensor. If None, defaults to FLOAT32.
             device: Device to store the tensor on. If None, uses the default device.
+            requires_grad: Whether the tensor requires gradients. Default: False.
             
         Returns:
             A new tensor filled with zeros.
@@ -575,11 +810,12 @@ class Tensor:
         return Tensor(
             np.zeros(shape, dtype=dtype.to_numpy()),
             dtype=dtype,
-            device=device
+            device=device,
+            requires_grad=requires_grad
         )
     
     @staticmethod
-    def ones(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None) -> "Tensor":
+    def ones(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None, requires_grad: bool = False) -> "Tensor":
         """
         Create a tensor filled with ones.
         
@@ -587,6 +823,7 @@ class Tensor:
             shape: Shape of the tensor.
             dtype: Data type of the tensor. If None, defaults to FLOAT32.
             device: Device to store the tensor on. If None, uses the default device.
+            requires_grad: Whether the tensor requires gradients. Default: False.
             
         Returns:
             A new tensor filled with ones.
@@ -597,11 +834,12 @@ class Tensor:
         return Tensor(
             np.ones(shape, dtype=dtype.to_numpy()),
             dtype=dtype,
-            device=device
+            device=device,
+            requires_grad=requires_grad
         )
     
     @staticmethod
-    def randn(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None) -> "Tensor":
+    def randn(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None, requires_grad: bool = False) -> "Tensor":
         """
         Create a tensor filled with random numbers from a normal distribution.
         
@@ -609,6 +847,7 @@ class Tensor:
             shape: Shape of the tensor.
             dtype: Data type of the tensor. If None, defaults to FLOAT32.
             device: Device to store the tensor on. If None, uses the default device.
+            requires_grad: Whether the tensor requires gradients. Default: False.
             
         Returns:
             A new tensor filled with random numbers.
@@ -619,10 +858,203 @@ class Tensor:
         # Generate random values and convert to the right dtype
         random_data = np.random.randn(*shape)
         if dtype is not None:
-            random_data = random_data.astype(dtype.to_numpy())
+            random_data = np.asarray(random_data, dtype=dtype.to_numpy())
         
         return Tensor(
             random_data,
             dtype=dtype,
-            device=device
+            device=device,
+            requires_grad=requires_grad
         )
+    
+    def backward(self):
+        """
+        Compute gradients through the computation graph.
+        
+        This method computes gradients for all tensors in the computation
+        graph that require gradients. The gradients are stored in the
+        grad attribute of each tensor.
+        """
+        if not self._requires_grad:
+            return
+        
+        # Initialize gradient for scalar tensors
+        if self._grad is None and self._numpy_data.size == 1:
+            self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
+        
+        # TODO: Implement proper backward pass when Phynexus bindings are available
+        # For now, just a placeholder
+    
+    @staticmethod
+    def exp(x: "Tensor") -> "Tensor":
+        """
+        Compute the exponential of the input tensor.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            Tensor with exponential of each element
+        """
+        return Tensor(np.exp(x._numpy_data), device=x.device)
+    
+    @staticmethod
+    def randn_like(x: "Tensor") -> "Tensor":
+        """
+        Create a tensor with the same shape as the input tensor,
+        filled with random numbers from a normal distribution.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            A new tensor with the same shape as x
+        """
+        return Tensor(np.random.randn(*x.shape), device=x.device)
+    
+    @staticmethod
+    def sum(x: "Tensor", dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
+        """
+        Sum of tensor elements along a dimension.
+        
+        Args:
+            x: Input tensor
+            dim: Dimension to reduce. If None, all dimensions are reduced.
+            keepdim: Whether to keep the reduced dimension
+            
+        Returns:
+            Sum of elements
+        """
+        return Tensor(
+            np.sum(x._numpy_data, axis=dim, keepdims=keepdim),
+            device=x.device
+        )
+    def backward(self):
+        """
+        Compute gradients through the computation graph.
+        
+        This method computes gradients for all tensors in the computation
+        graph that require gradients. The gradients are stored in the
+        grad attribute of each tensor.
+        """
+        if not self._requires_grad:
+            return
+        
+        # Initialize gradient for scalar tensors
+        if self._grad is None and self._numpy_data.size == 1:
+            self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
+        
+        # TODO: Implement proper backward pass when Phynexus bindings are available
+        # For now, just a placeholder
+    
+    @staticmethod
+    def exp(x: "Tensor") -> "Tensor":
+        """
+        Compute the exponential of the input tensor.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            Tensor with exponential of each element
+        """
+        return Tensor(np.exp(x._numpy_data), device=x.device)
+    
+    @staticmethod
+    def randn_like(x: "Tensor") -> "Tensor":
+        """
+        Create a tensor with the same shape as the input tensor,
+        filled with random numbers from a normal distribution.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            A new tensor with the same shape as x
+        """
+        return Tensor(np.random.randn(*x.shape), device=x.device)
+    
+    @staticmethod
+    def sum(x: "Tensor", dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
+        """
+        Sum of tensor elements along a dimension.
+        
+        Args:
+            x: Input tensor
+            dim: Dimension to reduce. If None, all dimensions are reduced.
+            keepdim: Whether to keep the reduced dimension
+            
+        Returns:
+            Sum of elements
+        """
+        return Tensor(
+            np.sum(x._numpy_data, axis=dim, keepdims=keepdim),
+            device=x.device
+        )
+    
+    @staticmethod
+    def exp(x: "Tensor") -> "Tensor":
+        """
+        Compute the exponential of the input tensor.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            Tensor with exponential of each element
+        """
+        return Tensor(np.exp(x._numpy_data), device=x.device)
+    
+    @staticmethod
+    def randn_like(x: "Tensor") -> "Tensor":
+        """
+        Create a tensor with the same shape as the input tensor,
+        filled with random numbers from a normal distribution.
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            A new tensor with the same shape as x
+        """
+        return Tensor(np.random.randn(*x.shape), device=x.device)
+    
+    @staticmethod
+    def sum(x: "Tensor", dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
+        """
+        Sum of tensor elements along a dimension.
+        
+        Args:
+            x: Input tensor
+            dim: Dimension to reduce. If None, all dimensions are reduced.
+            keepdim: Whether to keep the reduced dimension
+            
+        Returns:
+            Sum of elements
+        """
+        return Tensor(
+            np.sum(x._numpy_data, axis=dim, keepdims=keepdim),
+            device=x.device
+        )
+    
+    @staticmethod
+    @contextmanager
+    def no_grad():
+        """
+        Context manager to disable gradient computation.
+        
+        This context manager temporarily disables gradient computation,
+        which is useful for inference or when you want to ensure that
+        no gradients are computed for certain operations.
+        
+        Example:
+            >>> x = Tensor([1, 2, 3], requires_grad=True)
+            >>> with Tensor.no_grad():
+            ...     y = x * 2  # y will have requires_grad=False
+        """
+        # TODO: Implement proper no_grad when Phynexus bindings are available
+        # For now, just a placeholder
+        try:
+            yield
+        finally:
+            pass

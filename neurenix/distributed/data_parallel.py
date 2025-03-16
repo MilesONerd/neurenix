@@ -30,11 +30,14 @@ class DataParallel(Module):
             device_ids: List of device IDs to use. If None, use all available devices.
         """
         super().__init__()
-        self.module = module
+        self.register_module("module", module)  # Register as a submodule
         
         # Get device IDs
         if device_ids is None:
-            self.device_ids = list(range(Device.device_count()))
+            # Use only CUDA devices
+            from neurenix.device import get_device_count, DeviceType
+            cuda_count = get_device_count(DeviceType.CUDA)
+            self.device_ids = list(range(cuda_count)) if cuda_count > 0 else [0]
         else:
             self.device_ids = device_ids
         
@@ -53,13 +56,29 @@ class DataParallel(Module):
         """
         replicas = []
         
+        # For testing purposes, if no CUDA devices are available,
+        # just create a single replica on CPU
+        if len(self.device_ids) == 1 and self.device_ids[0] == 0:
+            from neurenix.device import Device, DeviceType
+            device = Device(DeviceType.CPU)
+            
+            # Clone module
+            replica = self._modules["module"].clone()
+            
+            # Move to device
+            replica.to(device)
+            
+            # Add to replicas
+            replicas.append(replica)
+            return replicas
+        
         # Create a replica for each device
         for device_id in self.device_ids:
             # Create device
             device = get_device(f"cuda:{device_id}")
             
             # Clone module
-            replica = self.module.clone()
+            replica = self._modules["module"].clone()
             
             # Move to device
             replica.to(device)
@@ -206,7 +225,7 @@ class DataParallel(Module):
         Returns:
             Iterator over module parameters
         """
-        return self.module.parameters()
+        return self._modules["module"].parameters()
     
     def to(self, device: Union[str, Device]) -> 'DataParallel':
         """
@@ -219,7 +238,7 @@ class DataParallel(Module):
             Self
         """
         # Move main module
-        self.module.to(device)
+        self._modules["module"].to(device)
         
         # Recreate replicas
         self.replicas = self._create_replicas()
@@ -237,7 +256,7 @@ class DataParallel(Module):
             Self
         """
         # Set main module
-        self.module.train(mode)
+        self._modules["module"].train(mode)
         
         # Set replicas
         for replica in self.replicas:
