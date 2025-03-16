@@ -11,6 +11,7 @@ class DeviceType(Enum):
     CUDA = "cuda"
     ROCM = "rocm"
     WEBGPU = "webgpu"  # WebGPU for WebAssembly context (client-side execution)
+    TPU = "tpu"  # Tensor Processing Unit for machine learning acceleration
 
 class Device:
     """
@@ -66,6 +67,13 @@ class Device:
                     self._available = is_webgpu_available()
                 except (ImportError, AttributeError):
                     self._available = False
+        elif device_type == DeviceType.TPU:
+            # Check if TPU is available through bindings
+            try:
+                from neurenix.binding import is_tpu_available
+                self._available = is_tpu_available()
+            except (ImportError, AttributeError):
+                self._available = False
     
     @property
     def type(self) -> DeviceType:
@@ -154,6 +162,14 @@ def get_device_count(device_type: DeviceType) -> int:
             except (ImportError, AttributeError):
                 # For now, assume no WebGPU devices if bindings are not available
                 return 0
+    elif device_type == DeviceType.TPU:
+        try:
+            # Import binding module to get TPU device count
+            from neurenix.binding import get_tpu_device_count
+            return get_tpu_device_count()
+        except (ImportError, AttributeError):
+            # For now, assume no TPU devices if bindings are not available
+            return 0
     else:
         return 0
 
@@ -180,5 +196,10 @@ def get_available_devices() -> List[Device]:
     webgpu_count = get_device_count(DeviceType.WEBGPU)
     for i in range(webgpu_count):
         devices.append(Device(DeviceType.WEBGPU, i))
+    
+    # Add TPU devices
+    tpu_count = get_device_count(DeviceType.TPU)
+    for i in range(tpu_count):
+        devices.append(Device(DeviceType.TPU, i))
     
     return devices

@@ -19,6 +19,7 @@ _config: Dict[str, Any] = {
     "device": "cpu",
     "debug": False,
     "log_level": "info",
+    "tpu_visible_devices": None,  # Control which TPU devices are visible
 }
 
 def init(config: Optional[Dict[str, Any]] = None) -> None:
