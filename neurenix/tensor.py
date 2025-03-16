@@ -224,7 +224,20 @@ class Tensor:
     @staticmethod
     @contextmanager
     def no_grad():
-        """Context manager to disable gradient computation."""
+        """
+        Context manager to disable gradient computation.
+        
+        This context manager temporarily disables gradient computation,
+        which is useful for inference or when you want to ensure that
+        no gradients are computed for certain operations.
+        
+        Example:
+            >>> x = Tensor([1, 2, 3], requires_grad=True)
+            >>> with Tensor.no_grad():
+            ...     y = x * 2  # y will have requires_grad=False
+        """
+        if not hasattr(Tensor, '_grad_enabled'):
+            Tensor._grad_enabled = True
         prev = Tensor._grad_enabled
         Tensor._grad_enabled = False
         try:
