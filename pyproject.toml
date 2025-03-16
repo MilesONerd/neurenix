@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "neurenix"
-version = "1.0.1"
+version = "1.0.2"
 description = "Empowering Intelligent Futures, One Edge at a Time."
 readme = "README.md"
 authors = [
