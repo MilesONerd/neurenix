@@ -87,6 +87,7 @@ except ImportError:
     CUDA = "cuda"
     ROCM = "rocm"
     WEBGPU = "webgpu"
+    TPU = "tpu"
     
     def get_device_count(device_type):
         """
@@ -111,6 +112,8 @@ except ImportError:
             return 0
         elif device_type == WEBGPU:
             return 0
+        elif device_type == TPU:
+            return 0  # Currently no TPU detection in fallback implementation
         else:
             raise ValueError(f"Unknown device type: {device_type}")
     
@@ -125,6 +128,14 @@ except ImportError:
             True if the device type is available, False otherwise
         """
         return get_device_count(device_type) > 0
+    def is_tpu_available():
+        """
+        Check if TPU is available.
+        
+        Returns:
+            True if TPU is available, False otherwise
+        """
+        return get_device_count(TPU) > 0
     
     def init():
         """

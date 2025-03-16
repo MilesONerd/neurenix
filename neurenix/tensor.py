@@ -86,6 +86,11 @@ class Tensor:
                 parts = device_str.split(":")
                 index = int(parts[1]) if len(parts) > 1 else 0
                 self._device = Device(DeviceType.CUDA, index)
+            elif device_str.startswith("tpu"):
+                # Extract device index if specified (e.g., "tpu:0")
+                parts = device_str.split(":")
+                index = int(parts[1]) if len(parts) > 1 else 0
+                self._device = Device(DeviceType.TPU, index)
             else:
                 raise ValueError(f"Unsupported device: {device_str}")
         else:
