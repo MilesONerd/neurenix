@@ -112,6 +112,30 @@ class Device:
     def __repr__(self) -> str:
         """Get a string representation of the device."""
         return f"Device({self.name})"
+    
+    @classmethod
+    def device_count(cls) -> int:
+        """
+        Get the total number of devices available.
+        
+        Returns:
+            The total number of devices available.
+        """
+        count = 1  # CPU is always available
+        
+        # Add CUDA devices
+        count += get_device_count(DeviceType.CUDA)
+        
+        # Add ROCm devices
+        count += get_device_count(DeviceType.ROCM)
+        
+        # Add WebGPU devices
+        count += get_device_count(DeviceType.WEBGPU)
+        
+        # Add TPU devices
+        count += get_device_count(DeviceType.TPU)
+        
+        return count
 
 def get_device_count(device_type: DeviceType) -> int:
     """
@@ -172,6 +196,41 @@ def get_device_count(device_type: DeviceType) -> int:
             return 0
     else:
         return 0
+
+def get_device(device_str: str) -> Device:
+    """
+    Get a device from a string representation.
+    
+    Args:
+        device_str: String representation of the device (e.g., 'cpu', 'cuda:0').
+        
+    Returns:
+        The corresponding device.
+    """
+    if device_str == "cpu":
+        return Device(DeviceType.CPU)
+    
+    # Parse device type and index
+    if ":" in device_str:
+        device_type_str, index_str = device_str.split(":", 1)
+        index = int(index_str)
+    else:
+        device_type_str = device_str
+        index = 0
+    
+    # Map string to device type
+    if device_type_str == "cuda":
+        device_type = DeviceType.CUDA
+    elif device_type_str == "rocm":
+        device_type = DeviceType.ROCM
+    elif device_type_str == "webgpu":
+        device_type = DeviceType.WEBGPU
+    elif device_type_str == "tpu":
+        device_type = DeviceType.TPU
+    else:
+        raise ValueError(f"Unknown device type: {device_type_str}")
+    
+    return Device(device_type, index)
 
 def get_available_devices() -> List[Device]:
     """
