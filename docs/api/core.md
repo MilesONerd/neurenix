@@ -19,6 +19,7 @@ Neurenix provides a hardware abstraction layer that allows code to run seamlessl
 - CPU
 - CUDA (NVIDIA GPUs)
 - ROCm (AMD GPUs)
+- TPU
 - WebGPU (for WebAssembly/browser execution)
 
 This abstraction enables developers to write code once and run it on any supported hardware without modification.
