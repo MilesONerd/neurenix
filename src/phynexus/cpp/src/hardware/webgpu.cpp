@@ -259,12 +259,70 @@ void webgpu_launch_compute_shader(void* shader, const std::vector<size_t>& workg
     // Real implementation would use WebGPU API through Emscripten
     emscripten::val gpu = emscripten::val::global("navigator")["gpu"];
     
-    // This is a placeholder for the actual WebGPU compute shader implementation
-    // In a real implementation, this would:
-    // 1. Create a compute pipeline
-    // 2. Set up bind groups
-    // 3. Dispatch the compute shader
-    // 4. Wait for completion
+    emscripten::val device = gpu["requestDevice"].call<emscripten::val>("then", emscripten::val::module_property("__phynexus_webgpu_device_callback"));
+    
+    emscripten::val shaderModuleDescriptor = emscripten::val::object();
+    shaderModuleDescriptor.set("code", emscripten::val(reinterpret_cast<const char*>(shader)));
+    emscripten::val shaderModule = device["createShaderModule"](shaderModuleDescriptor);
+    
+    emscripten::val computePipelineDescriptor = emscripten::val::object();
+    emscripten::val computeStage = emscripten::val::object();
+    computeStage.set("module", shaderModule);
+    computeStage.set("entryPoint", emscripten::val("main"));
+    computePipelineDescriptor.set("compute", computeStage);
+    
+    emscripten::val computePipeline = device["createComputePipeline"](computePipelineDescriptor);
+    
+    emscripten::val bindGroupLayoutDescriptor = emscripten::val::object();
+    emscripten::val entries = emscripten::val::array();
+    
+    for (size_t i = 0; args[i] != nullptr; ++i) {
+        emscripten::val entry = emscripten::val::object();
+        entry.set("binding", emscripten::val(i));
+        entry.set("visibility", emscripten::val(4)); // GPUShaderStage.COMPUTE
+        
+        emscripten::val bufferEntry = emscripten::val::object();
+        bufferEntry.set("type", emscripten::val("storage"));
+        entry.set("buffer", bufferEntry);
+        
+        entries.call<void>("push", entry);
+    }
+    
+    bindGroupLayoutDescriptor.set("entries", entries);
+    emscripten::val bindGroupLayout = device["createBindGroupLayout"](bindGroupLayoutDescriptor);
+    
+    emscripten::val bindGroupDescriptor = emscripten::val::object();
+    bindGroupDescriptor.set("layout", bindGroupLayout);
+    emscripten::val bindingEntries = emscripten::val::array();
+    
+    for (size_t i = 0; args[i] != nullptr; ++i) {
+        emscripten::val binding = emscripten::val::object();
+        binding.set("binding", emscripten::val(i));
+        binding.set("resource", emscripten::val::object());
+        binding["resource"].set("buffer", emscripten::val(args[i]));
+        
+        bindingEntries.call<void>("push", binding);
+    }
+    
+    bindGroupDescriptor.set("entries", bindingEntries);
+    emscripten::val bindGroup = device["createBindGroup"](bindGroupDescriptor);
+    
+    emscripten::val commandEncoder = device["createCommandEncoder"]();
+    
+    emscripten::val computePass = commandEncoder["beginComputePass"]();
+    computePass["setPipeline"](computePipeline);
+    computePass["setBindGroup"](0, bindGroup);
+    
+    computePass["dispatchWorkgroups"](
+        emscripten::val(workgroup_count[0]), 
+        workgroup_count.size() > 1 ? emscripten::val(workgroup_count[1]) : emscripten::val(1),
+        workgroup_count.size() > 2 ? emscripten::val(workgroup_count[2]) : emscripten::val(1)
+    );
+    
+    computePass["end"]();
+    
+    emscripten::val commandBuffer = commandEncoder["finish"]();
+    device["queue"]["submit"](emscripten::val::array(commandBuffer));
 #endif
     // No-op outside WebAssembly context
 }
@@ -305,11 +363,11 @@ void* webgpu_create_command_encoder() {
     emscripten::val gpu = emscripten::val::global("navigator")["gpu"];
     emscripten::val device = gpu["requestDevice"]();
     
-    // This is a placeholder for the actual WebGPU command encoder creation
-    // In a real implementation, this would create a command encoder object
+    emscripten::val commandEncoderDescriptor = emscripten::val::object();
+    emscripten::val commandEncoder = device["createCommandEncoder"](commandEncoderDescriptor);
     
-    // For now, return a dummy pointer
-    return (void*)1;
+    emscripten::val* encoderPtr = new emscripten::val(commandEncoder);
+    return static_cast<void*>(encoderPtr);
 #else
     // WebGPU not available outside WebAssembly context
     return nullptr;
@@ -352,11 +410,18 @@ void webgpu_submit_command_encoder(void* encoder) {
     // This is a simplified implementation
     // Real implementation would use WebGPU API through Emscripten
     
-    // This is a placeholder for the actual WebGPU command submission
-    // In a real implementation, this would:
-    // 1. Finish the command encoder
-    // 2. Get a command buffer
-    // 3. Submit the command buffer to the queue
+    emscripten::val* encoderPtr = static_cast<emscripten::val*>(encoder);
+    emscripten::val commandEncoder = *encoderPtr;
+    
+    emscripten::val commandBuffer = commandEncoder["finish"]();
+    
+    emscripten::val gpu = emscripten::val::global("navigator")["gpu"];
+    emscripten::val device = gpu["requestDevice"].call<emscripten::val>("then", emscripten::val::module_property("__phynexus_webgpu_device_callback"));
+    emscripten::val queue = device["queue"];
+    
+    emscripten::val commandBuffers = emscripten::val::array();
+    commandBuffers.call<void>("push", commandBuffer);
+    queue["submit"](commandBuffers);
 #endif
     // No-op outside WebAssembly context
 }
