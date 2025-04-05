@@ -9,12 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/cluster"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/rpc"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/scheduler"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/worker"
 )
-
-// This is a placeholder example that demonstrates how to use the Go components
-// for distributed training in Neurenix. In a real implementation, this would
-// import the actual Neurenix Go packages and use them to coordinate distributed
-// training across multiple nodes.
 
 var (
 	role = flag.String("role", "coordinator", "Role of this node (coordinator or worker)")
