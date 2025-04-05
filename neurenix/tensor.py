@@ -867,6 +867,27 @@ class Tensor:
             requires_grad=requires_grad
         )
     
+    @staticmethod
+    def tensor(data: Union[int, float, bool, List, Tuple, np.ndarray], dtype: Optional[Union[DType, str]] = None, device: Optional[Device] = None, requires_grad: bool = False) -> "Tensor":
+        """
+        Create a tensor with the given data.
+        
+        Args:
+            data: Data to create tensor from. Can be a scalar, list, tuple, or numpy array.
+            dtype: Data type of the tensor. If None, inferred from data.
+            device: Device to store the tensor on. If None, uses the default device.
+            requires_grad: Whether the tensor requires gradients. Default: False.
+            
+        Returns:
+            A new tensor with the given data.
+        """
+        return Tensor(
+            data,
+            dtype=dtype,
+            device=device,
+            requires_grad=requires_grad
+        )
+    
     def backward(self):
         """
         Compute gradients through the computation graph.
