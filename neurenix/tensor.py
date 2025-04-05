@@ -128,9 +128,12 @@ class Tensor:
             self._dtype = dtype
             self._data = None  # Will be allocated on the device
             
-            # TODO: Allocate memory on the device when Phynexus bindings are available
-            # For now, use NumPy as a fallback
-            self._numpy_data = np.zeros(shape, dtype=dtype.to_numpy())
+            try:
+                from neurenix.binding import allocate_tensor
+                self._data = allocate_tensor(shape, dtype, self._device)
+                self._numpy_data = np.zeros(shape, dtype=dtype.to_numpy())  # Fallback for CPU operations
+            except (ImportError, AttributeError):
+                self._numpy_data = np.zeros(shape, dtype=dtype.to_numpy())
             
         elif isinstance(data, Tensor):
             # Create a new tensor from an existing tensor
@@ -138,9 +141,12 @@ class Tensor:
             self._dtype = data.dtype if dtype is None else dtype
             self._data = None  # Will be a copy of the source tensor's data
             
-            # TODO: Copy data from the source tensor when Phynexus bindings are available
-            # For now, use NumPy as a fallback
-            self._numpy_data = data._numpy_data.copy()
+            try:
+                from neurenix.binding import copy_tensor
+                self._data = copy_tensor(data, self._device)
+                self._numpy_data = data._numpy_data.copy()  # Fallback for CPU operations
+            except (ImportError, AttributeError):
+                self._numpy_data = data._numpy_data.copy()
             
         elif isinstance(data, (list, tuple)):
             # Create a tensor from a Python list or tuple
@@ -228,9 +234,13 @@ class Tensor:
         Returns:
             A NumPy array with the tensor data.
         """
-        # TODO: Copy data from the device when Phynexus bindings are available
-        # For now, just return the NumPy data
-        return self._numpy_data
+        try:
+            from neurenix.binding import copy_to_numpy
+            if self._data is not None:
+                return copy_to_numpy(self)
+            return self._numpy_data
+        except (ImportError, AttributeError):
+            return self._numpy_data
     
     def to(self, device: Device, non_blocking: bool = False) -> "Tensor":
         """
@@ -429,15 +439,17 @@ class Tensor:
         Returns:
             A new tensor with the selected elements.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = self._numpy_data[index]
-        
-        # If the result is a scalar, wrap it in a 0-dimensional tensor
-        if np.isscalar(result):
-            result = np.array(result)
-        
-        return Tensor(result, device=self._device)
+        try:
+            from neurenix.binding import get_item
+            return get_item(self, index)
+        except (ImportError, AttributeError):
+            result = self._numpy_data[index]
+            
+            # If the result is a scalar, wrap it in a 0-dimensional tensor
+            if np.isscalar(result):
+                result = np.array(result)
+            
+            return Tensor(result, device=self._device)
         
     def reshape(self, *shape) -> "Tensor":
         """
@@ -501,12 +513,14 @@ class Tensor:
         Returns:
             A new tensor containing the gathered values.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        # Convert indices to integer type for take_along_axis
-        index_array = index._numpy_data.astype(np.int64)
-        gathered = np.take_along_axis(self._numpy_data, index_array, axis=dim)
-        return Tensor(gathered, device=self.device)
+        try:
+            from neurenix.binding import gather
+            return gather(self, dim, index)
+        except (ImportError, AttributeError):
+            # Convert indices to integer type for take_along_axis
+            index_array = index._numpy_data.astype(np.int64)
+            gathered = np.take_along_axis(self._numpy_data, index_array, axis=dim)
+            return Tensor(gathered, device=self.device)
     
     # Activation functions
     
@@ -1003,8 +1017,11 @@ class Tensor:
         if self._grad is None and self._numpy_data.size == 1:
             self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
         
-        # TODO: Implement proper backward pass when Phynexus bindings are available
-        # For now, just a placeholder
+        try:
+            from neurenix.binding import backward
+            backward(self)
+        except (ImportError, AttributeError):
+            pass
     
     @staticmethod
     def exp(x: "Tensor") -> "Tensor":
@@ -1065,8 +1082,11 @@ class Tensor:
         if self._grad is None and self._numpy_data.size == 1:
             self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
         
-        # TODO: Implement proper backward pass when Phynexus bindings are available
-        # For now, just a placeholder
+        try:
+            from neurenix.binding import backward
+            backward(self)
+        except (ImportError, AttributeError):
+            pass
     
     @staticmethod
     def exp(x: "Tensor") -> "Tensor":
@@ -1173,9 +1193,15 @@ class Tensor:
             >>> with Tensor.no_grad():
             ...     y = x * 2  # y will have requires_grad=False
         """
-        # TODO: Implement proper no_grad when Phynexus bindings are available
-        # For now, just a placeholder
         try:
-            yield
-        finally:
-            pass
+            from neurenix.binding import set_grad_enabled
+            old_value = set_grad_enabled(False)
+            try:
+                yield
+            finally:
+                set_grad_enabled(old_value)
+        except (ImportError, AttributeError):
+            try:
+                yield
+            finally:
+                pass
