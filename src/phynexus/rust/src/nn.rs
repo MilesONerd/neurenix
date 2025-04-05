@@ -26,7 +26,7 @@ impl Linear {
     pub fn new(in_features: usize, out_features: usize, bias: bool, device: Device) -> Result<Self> {
         use crate::ops::init::{kaiming_uniform_with_device, zeros_with_device};
         
-        let weight = kaiming_uniform_with_device(&[out_features, in_features], device)?;
+        let weight = kaiming_uniform_with_device(&[out_features, in_features], device.clone())?;
         
         let bias = if bias {
             Some(zeros_with_device(&[out_features], device)?)
@@ -140,7 +140,7 @@ impl Conv2d {
         }
         
         let weight_shape = vec![out_channels, in_channels / groups, kernel_size[0], kernel_size[1]];
-        let weight = kaiming_uniform_with_device(&weight_shape, device)?;
+        let weight = kaiming_uniform_with_device(&weight_shape, device.clone())?;
         
         let bias = if bias {
             Some(zeros_with_device(&[out_channels], device)?)
