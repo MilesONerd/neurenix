@@ -62,11 +62,31 @@ class KMeans:
         if self.random_state is not None:
             np.random.seed(self.random_state)
         
-        # Initialize cluster centers
-        # For simplicity, we'll use random initialization
-        # In a real implementation, we'd use k-means++ initialization
-        idx = np.random.choice(n_samples, self.n_clusters, replace=False)
-        self.cluster_centers_ = X[idx].clone()
+        X_np = X.numpy()
+        centers = []
+        
+        first_idx = np.random.randint(n_samples)
+        centers.append(X_np[first_idx])
+        
+        for _ in range(1, self.n_clusters):
+            distances = np.zeros(n_samples)
+            for i in range(n_samples):
+                min_dist = float('inf')
+                for center in centers:
+                    dist = np.sum((X_np[i] - center) ** 2)
+                    min_dist = min(min_dist, dist)
+                distances[i] = min_dist
+            
+            distances_sum = np.sum(distances)
+            if distances_sum > 0:
+                probabilities = distances / distances_sum
+                next_idx = np.random.choice(n_samples, p=probabilities)
+            else:
+                next_idx = np.random.randint(n_samples)
+            
+            centers.append(X_np[next_idx])
+        
+        self.cluster_centers_ = Tensor(np.array(centers))
         
         # Initialize labels and inertia
         self.labels_ = Tensor.zeros(n_samples, dtype=Tensor.int64)
@@ -400,17 +420,46 @@ class SpectralClustering:
         n_samples = X.shape[0]
         laplacian = Tensor.eye(n_samples) - self.affinity_matrix_ / degrees.unsqueeze(1)
         
-        # Compute eigenvalues and eigenvectors
-        # In a real implementation, we'd use a specialized eigenvalue solver
-        # For now, we'll use a placeholder
+        try:
+            import torch
+            laplacian_torch = torch.tensor(laplacian.numpy())
+            eigenvalues, eigenvectors_torch = torch.linalg.eigh(laplacian_torch)
+            
+            eigenvectors = Tensor.from_torch(eigenvectors_torch[:, 1:self.n_clusters+1])
+        except (ImportError, AttributeError):
+            try:
+                eigenvalues, eigenvectors_np = np.linalg.eigh(laplacian.numpy())
+                
+                eigenvectors = Tensor(eigenvectors_np[:, 1:self.n_clusters+1])
+            except:
+                n_eigenvectors = self.n_clusters
+                eigenvectors_np = np.zeros((n_samples, n_eigenvectors))
+                
+                vectors = np.random.randn(n_samples, n_eigenvectors)
+                
+                q, _ = np.linalg.qr(vectors)
+                
+                for i in range(n_eigenvectors):
+                    v = q[:, i].copy()
+                    
+                    for _ in range(100):
+                        v_new = laplacian.numpy() @ v
+                        v_new = v_new / np.linalg.norm(v_new)
+                        
+                        # Check for convergence
+                        if np.abs(np.dot(v, v_new)) > 0.9999:
+                            break
+                        
+                        v = v_new
+                    
+                    eigenvectors_np[:, i] = v
+                
+                eigenvectors = Tensor(eigenvectors_np)
         
-        # Cluster the eigenvectors
-        # For now, we'll use K-Means as a placeholder
+        row_norms = eigenvectors.norm(dim=1, keepdim=True)
+        eigenvectors = eigenvectors / row_norms
+        
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=self.random_state)
-        
-        # Placeholder for eigenvectors
-        # In a real implementation, we'd compute the actual eigenvectors
-        eigenvectors = Tensor.randn(n_samples, self.n_clusters)
         
         self.labels_ = kmeans.fit_predict(eigenvectors)
         
