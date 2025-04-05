@@ -19,6 +19,7 @@ class Module:
         """Initialize a new module."""
         self._parameters: Dict[str, Tensor] = {}
         self._modules: Dict[str, "Module"] = {}
+        self._buffers: Dict[str, Tensor] = {}
         self._training = True
         self._id = str(uuid.uuid4())
     
@@ -59,6 +60,22 @@ class Module:
             self._modules.pop(name, None)
         else:
             self._modules[name] = module
+            
+    def register_buffer(self, name: str, tensor: Optional[Tensor]) -> None:
+        """
+        Register a buffer with the module.
+        
+        Buffers are module states that should be saved along with parameters but
+        are not parameters (e.g., running mean in batch normalization).
+        
+        Args:
+            name: The name of the buffer.
+            tensor: The tensor to register as buffer, or None to remove the buffer.
+        """
+        if tensor is None:
+            self._buffers.pop(name, None)
+        else:
+            self._buffers[name] = tensor
     
     def parameters(self) -> List[Tensor]:
         """
@@ -108,7 +125,10 @@ class Module:
     def __setattr__(self, name: str, value: Any) -> None:
         """Set an attribute of the module."""
         if isinstance(value, Tensor):
-            self.register_parameter(name, value)
+            if name.startswith('_') or hasattr(self.__class__, name):
+                object.__setattr__(self, name, value)
+            else:
+                self.register_parameter(name, value)
         elif isinstance(value, Module):
             self.register_module(name, value)
         else:
@@ -176,6 +196,10 @@ class Module:
         for name, param in self._parameters.items():
             if param is not None:
                 self._parameters[name] = param.to(device)
+        
+        for name, buffer in self._buffers.items():
+            if buffer is not None:
+                self._buffers[name] = buffer.to(device)
         
         # Move submodules
         for name, module in self._modules.items():
