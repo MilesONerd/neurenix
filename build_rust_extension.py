@@ -54,8 +54,16 @@ def build_rust_extension():
         else:
             lib_ext = ".so"
         
+        import sysconfig
+        ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+        
+        if ext_suffix:
+            target_file = f"{lib_name}{ext_suffix}"
+        else:
+            target_file = f"{lib_name}{lib_ext}"
+        
         lib_path = os.path.join(rust_path, "target", "release", f"lib{lib_name}{lib_ext}")
-        target_path = os.path.join(target_dir, f"{lib_name}{lib_ext}")
+        target_path = os.path.join(target_dir, target_file)
         
         if os.path.exists(lib_path):
             import shutil

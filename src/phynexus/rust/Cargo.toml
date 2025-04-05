@@ -8,8 +8,8 @@ license = "Apache-2.0"
 repository = "https://github.com/MilesONerd/Neurenix"
 
 [lib]
-name = "phynexus"
-crate-type = ["rlib", "cdylib"]
+name = "_phynexus"
+crate-type = ["cdylib"]
 
 [dependencies]
 ndarray = "0.15"
@@ -18,7 +18,7 @@ num-traits = "0.2"
 thiserror = "1.0"
 log = "0.4"
 env_logger = "0.10"
-pyo3 = { version = "0.18", features = ["extension-module", "abi3-py38"] }
+pyo3 = { version = "0.18", features = ["extension-module", "abi3-py38", "multiple-pymethods"] }
 numpy = { version = "0.18", features = ["nalgebra"] }
 nalgebra = "0.32"
 rand = "0.8"

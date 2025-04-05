@@ -9,8 +9,28 @@ pub fn zeros(shape: &[usize]) -> Result<Tensor> {
     Tensor::zeros(shape)
 }
 
+pub fn zeros_with_device(shape: &[usize], device: crate::device::Device) -> Result<Tensor> {
+    let mut tensor = Tensor::zeros(shape)?;
+    
+    if device != crate::device::Device::cpu() {
+        tensor = tensor.to_device(device)?;
+    }
+    
+    Ok(tensor)
+}
+
 pub fn ones(shape: &[usize]) -> Result<Tensor> {
     Tensor::ones(shape)
+}
+
+pub fn ones_with_device(shape: &[usize], device: crate::device::Device) -> Result<Tensor> {
+    let mut tensor = Tensor::ones(shape)?;
+    
+    if device != crate::device::Device::cpu() {
+        tensor = tensor.to_device(device)?;
+    }
+    
+    Ok(tensor)
 }
 
 pub fn uniform(shape: &[usize], low: f32, high: f32) -> Result<Tensor> {
