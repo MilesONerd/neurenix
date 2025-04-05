@@ -27,6 +27,36 @@ class SimCLR(Module):
         International Conference on Machine Learning (ICML).
     """
     
+    @staticmethod
+    def _get_encoder_output_dim(encoder: Module) -> int:
+        """
+        Determine the output dimension of an encoder by passing a dummy input.
+        
+        Args:
+            encoder: The encoder module
+            
+        Returns:
+            Output dimension of the encoder
+        """
+        if hasattr(encoder, 'layers') and len(encoder.layers) > 0:
+            last_layer = encoder.layers[-1]
+            if hasattr(last_layer, 'out_features'):
+                return last_layer.out_features
+        
+        if hasattr(encoder, 'fc') and hasattr(encoder.fc, 'out_features'):
+            return encoder.fc.out_features
+        
+        import torch
+        device = next(encoder.parameters()).device
+        dummy_input = torch.randn(1, 3, 224, 224, device=device)  # Assume standard image input
+        with torch.no_grad():
+            output = encoder(dummy_input)
+        
+        if len(output.shape) == 2:
+            return output.shape[1]
+        else:
+            return output.numel() // output.shape[0]
+    
     def __init__(
         self,
         encoder: Module,
@@ -47,9 +77,7 @@ class SimCLR(Module):
         self.temperature = temperature
         
         # Get the output dimension of the encoder
-        # In a real implementation, we'd need a way to determine this
-        # For now, we'll assume it's 512
-        encoder_out_dim = 512
+        encoder_out_dim = self._get_encoder_output_dim(encoder)
         
         # Projection head (MLP with one hidden layer)
         self.projection = Sequential([
@@ -126,6 +154,59 @@ class BYOL(Module):
         Advances in Neural Information Processing Systems (NeurIPS).
     """
     
+    @staticmethod
+    def _get_encoder_output_dim(encoder: Module) -> int:
+        """
+        Determine the output dimension of an encoder by passing a dummy input.
+        
+        Args:
+            encoder: The encoder module
+            
+        Returns:
+            Output dimension of the encoder
+        """
+        if hasattr(encoder, 'layers') and len(encoder.layers) > 0:
+            last_layer = encoder.layers[-1]
+            if hasattr(last_layer, 'out_features'):
+                return last_layer.out_features
+        
+        if hasattr(encoder, 'fc') and hasattr(encoder.fc, 'out_features'):
+            return encoder.fc.out_features
+        
+        import torch
+        device = next(encoder.parameters()).device
+        dummy_input = torch.randn(1, 3, 224, 224, device=device)  # Assume standard image input
+        with torch.no_grad():
+            output = encoder(dummy_input)
+        
+        if len(output.shape) == 2:
+            return output.shape[1]
+        else:
+            return output.numel() // output.shape[0]
+            
+    @staticmethod
+    def _clone_module(module: Module) -> Module:
+        """
+        Create a deep copy of a module.
+        
+        Args:
+            module: Module to clone
+            
+        Returns:
+            Cloned module
+        """
+        import copy
+        import torch
+        
+        if hasattr(module, '__class__'):
+            cloned = copy.deepcopy(module)
+            
+            cloned.load_state_dict(module.state_dict())
+            
+            return cloned
+        else:
+            return copy.deepcopy(module)
+    
     def __init__(
         self,
         encoder: Module,
@@ -147,9 +228,7 @@ class BYOL(Module):
         self.momentum = momentum
         
         # Get the output dimension of the encoder
-        # In a real implementation, we'd need a way to determine this
-        # For now, we'll assume it's 512
-        encoder_out_dim = 512
+        encoder_out_dim = self._get_encoder_output_dim(encoder)
         
         # Online network
         self.online_encoder = encoder
@@ -164,8 +243,7 @@ class BYOL(Module):
             Linear(hidden_dim, projection_dim),
         ])
         
-        # Target network
-        self.target_encoder = encoder  # In a real implementation, we'd create a deep copy
+        self.target_encoder = self._clone_module(encoder)
         self.target_projector = Sequential([
             Linear(encoder_out_dim, hidden_dim),
             ReLU(),
@@ -266,6 +344,59 @@ class MoCo(Module):
         IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
     """
     
+    @staticmethod
+    def _get_encoder_output_dim(encoder: Module) -> int:
+        """
+        Determine the output dimension of an encoder by passing a dummy input.
+        
+        Args:
+            encoder: The encoder module
+            
+        Returns:
+            Output dimension of the encoder
+        """
+        if hasattr(encoder, 'layers') and len(encoder.layers) > 0:
+            last_layer = encoder.layers[-1]
+            if hasattr(last_layer, 'out_features'):
+                return last_layer.out_features
+        
+        if hasattr(encoder, 'fc') and hasattr(encoder.fc, 'out_features'):
+            return encoder.fc.out_features
+        
+        import torch
+        device = next(encoder.parameters()).device
+        dummy_input = torch.randn(1, 3, 224, 224, device=device)  # Assume standard image input
+        with torch.no_grad():
+            output = encoder(dummy_input)
+        
+        if len(output.shape) == 2:
+            return output.shape[1]
+        else:
+            return output.numel() // output.shape[0]
+            
+    @staticmethod
+    def _clone_module(module: Module) -> Module:
+        """
+        Create a deep copy of a module.
+        
+        Args:
+            module: Module to clone
+            
+        Returns:
+            Cloned module
+        """
+        import copy
+        import torch
+        
+        if hasattr(module, '__class__'):
+            cloned = copy.deepcopy(module)
+            
+            cloned.load_state_dict(module.state_dict())
+            
+            return cloned
+        else:
+            return copy.deepcopy(module)
+    
     def __init__(
         self,
         encoder: Module,
@@ -291,16 +422,13 @@ class MoCo(Module):
         self.T = T
         
         # Get the output dimension of the encoder
-        # In a real implementation, we'd need a way to determine this
-        # For now, we'll assume it's 512
-        encoder_out_dim = 512
+        encoder_out_dim = self._get_encoder_output_dim(encoder)
         
         # Query encoder
         self.encoder_q = encoder
         self.projector_q = Linear(encoder_out_dim, dim)
         
-        # Key encoder
-        self.encoder_k = encoder  # In a real implementation, we'd create a deep copy
+        self.encoder_k = self._clone_module(encoder)
         self.projector_k = Linear(encoder_out_dim, dim)
         
         # Initialize key encoder with the same parameters as the query encoder
