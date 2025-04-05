@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/cluster"
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/rpc"
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/scheduler"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/cluster"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/rpc"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/scheduler"
 )
 
 var (

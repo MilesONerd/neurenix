@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/cluster"
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/rpc"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/cluster"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/rpc"
 )
 
 // TaskHandler represents a handler for a specific task type.

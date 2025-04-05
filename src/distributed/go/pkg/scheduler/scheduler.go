@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/cluster"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/cluster"
 )
 
 // TaskStatus represents the status of a task.
