@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/MilesONerd/framework/src/distributed/go/pkg/worker"
+	"github.com/MilesONerd/neurenix/src/distributed/go/pkg/worker"
 )
 
 var (
