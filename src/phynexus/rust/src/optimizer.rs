@@ -1,66 +1,55 @@
-//! Optimizer implementations for the Phynexus engine
 
 use crate::error::Result;
 use crate::tensor::Tensor;
 
-/// Optimizer trait
 pub trait Optimizer {
-    /// Step the optimizer
     fn step(&mut self) -> Result<()>;
     
-    /// Zero the gradients
     fn zero_grad(&mut self) -> Result<()>;
     
-    /// Add a parameter to the optimizer
     fn add_param(&mut self, param: &mut Tensor) -> Result<()>;
 }
 
-/// SGD optimizer
 pub struct SGD {
-    /// Learning rate
-    #[allow(dead_code)]
     lr: f32,
     
-    /// Momentum
-    #[allow(dead_code)]
     momentum: f32,
     
-    /// Weight decay
-    #[allow(dead_code)]
     weight_decay: f32,
     
-    /// Parameters
     params: Vec<*mut Tensor>,
+    
+    velocity: Vec<Vec<f32>>,
 }
 
 impl SGD {
-    /// Create a new SGD optimizer
     pub fn new(lr: f32, momentum: f32, weight_decay: f32) -> Self {
         Self {
             lr,
             momentum,
             weight_decay,
             params: Vec::new(),
+            velocity: Vec::new(),
         }
     }
 }
 
 impl Optimizer for SGD {
     fn step(&mut self) -> Result<()> {
-        for param_ptr in &self.params {
+        for (idx, param_ptr) in self.params.iter().enumerate() {
             let param = unsafe { &mut **param_ptr };
             
             if !param.requires_grad() {
                 continue;
             }
             
-            let _grad = param.grad()
+            let grad = param.grad()
                 .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
                     "Parameter gradient is not initialized".to_string()
                 ))?;
             
             let data = param.data_mut()?;
-            let grad_data = _grad.data()?;
+            let grad_data = grad.data()?;
             
             if self.weight_decay > 0.0 {
                 for i in 0..data.len() {
@@ -69,10 +58,16 @@ impl Optimizer for SGD {
             }
             
             if self.momentum > 0.0 {
-            }
-            
-            for i in 0..data.len() {
-                data[i] -= self.lr * grad_data[i];
+                let velocity = &mut self.velocity[idx];
+                
+                for i in 0..data.len() {
+                    velocity[i] = self.momentum * velocity[i] + grad_data[i];
+                    data[i] -= self.lr * velocity[i];
+                }
+            } else {
+                for i in 0..data.len() {
+                    data[i] -= self.lr * grad_data[i];
+                }
             }
         }
         
@@ -94,42 +89,34 @@ impl Optimizer for SGD {
     }
     
     fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
+        let param_size = param.data()?.len();
         self.params.push(param as *mut Tensor);
+        self.velocity.push(vec![0.0; param_size]);
         Ok(())
     }
 }
 
-/// Adam optimizer
 pub struct Adam {
-    /// Learning rate
-    #[allow(dead_code)]
     lr: f32,
     
-    /// Beta1
-    #[allow(dead_code)]
     beta1: f32,
     
-    /// Beta2
-    #[allow(dead_code)]
     beta2: f32,
     
-    /// Epsilon
-    #[allow(dead_code)]
     eps: f32,
     
-    /// Weight decay
-    #[allow(dead_code)]
     weight_decay: f32,
     
-    /// Parameters
     params: Vec<*mut Tensor>,
     
-    /// Step count
+    m: Vec<Vec<f32>>,
+    
+    v: Vec<Vec<f32>>,
+    
     step: usize,
 }
 
 impl Adam {
-    /// Create a new Adam optimizer
     pub fn new(lr: f32, beta1: f32, beta2: f32, eps: f32, weight_decay: f32) -> Self {
         Self {
             lr,
@@ -138,6 +125,8 @@ impl Adam {
             eps,
             weight_decay,
             params: Vec::new(),
+            m: Vec::new(),
+            v: Vec::new(),
             step: 0,
         }
     }
@@ -147,20 +136,20 @@ impl Optimizer for Adam {
     fn step(&mut self) -> Result<()> {
         self.step += 1;
         
-        for param_ptr in &self.params {
+        for (idx, param_ptr) in self.params.iter().enumerate() {
             let param = unsafe { &mut **param_ptr };
             
             if !param.requires_grad() {
                 continue;
             }
             
-            let _grad = param.grad()
+            let grad = param.grad()
                 .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
                     "Parameter gradient is not initialized".to_string()
                 ))?;
             
             let data = param.data_mut()?;
-            let grad_data = _grad.data()?;
+            let grad_data = grad.data()?;
             
             if self.weight_decay > 0.0 {
                 for i in 0..data.len() {
@@ -168,11 +157,20 @@ impl Optimizer for Adam {
                 }
             }
             
-            if self.momentum > 0.0 {
-            }
+            let m = &mut self.m[idx];
+            let v = &mut self.v[idx];
+            
+            let beta1_t = self.beta1.powi(self.step as i32);
+            let beta2_t = self.beta2.powi(self.step as i32);
             
             for i in 0..data.len() {
-                data[i] -= self.lr * grad_data[i];
+                m[i] = self.beta1 * m[i] + (1.0 - self.beta1) * grad_data[i];
+                v[i] = self.beta2 * v[i] + (1.0 - self.beta2) * grad_data[i] * grad_data[i];
+                
+                let m_hat = m[i] / (1.0 - beta1_t);
+                let v_hat = v[i] / (1.0 - beta2_t);
+                
+                data[i] -= self.lr * m_hat / (v_hat.sqrt() + self.eps);
             }
         }
         
@@ -194,7 +192,10 @@ impl Optimizer for Adam {
     }
     
     fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
+        let param_size = param.data()?.len();
         self.params.push(param as *mut Tensor);
+        self.m.push(vec![0.0; param_size]);
+        self.v.push(vec![0.0; param_size]);
         Ok(())
     }
 }
