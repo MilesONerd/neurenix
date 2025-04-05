@@ -48,13 +48,11 @@ def init(config: Optional[Dict[str, Any]] = None) -> None:
     logger.info(f"Neurenix v{version()} initialized")
     logger.debug(f"Configuration: {_config}")
     
-    # TODO: Initialize the Phynexus engine when bindings are available
     try:
-        # This will be implemented when Rust bindings are available
-        # import phynexus
-        # phynexus.init()
-        pass
-    except ImportError:
+        from neurenix.binding import init_phynexus_engine
+        init_phynexus_engine()
+        logger.info("Phynexus engine initialized successfully")
+    except (ImportError, AttributeError):
         logger.warning("Phynexus engine not available, using fallback implementations")
 
 def version() -> str:
