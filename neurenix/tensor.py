@@ -339,9 +339,11 @@ class Tensor:
         
         # Handle tensor addition
         if isinstance(other, Tensor):
-            # TODO: Use Phynexus bindings when available
-            # For now, use NumPy as a fallback
-            return Tensor(self._numpy_data + other._numpy_data, device=self._device)
+            try:
+                from neurenix.binding import add
+                return add(self, other)
+            except (ImportError, AttributeError):
+                return Tensor(self._numpy_data + other._numpy_data, device=self._device)
         
         raise TypeError(f"Unsupported operand type for +: {type(other)}")
     
@@ -361,9 +363,11 @@ class Tensor:
         
         # Handle tensor subtraction
         if isinstance(other, Tensor):
-            # TODO: Use Phynexus bindings when available
-            # For now, use NumPy as a fallback
-            return Tensor(self._numpy_data - other._numpy_data, device=self._device)
+            try:
+                from neurenix.binding import subtract
+                return subtract(self, other)
+            except (ImportError, AttributeError):
+                return Tensor(self._numpy_data - other._numpy_data, device=self._device)
         
         raise TypeError(f"Unsupported operand type for -: {type(other)}")
     
@@ -383,9 +387,11 @@ class Tensor:
         
         # Handle tensor multiplication
         if isinstance(other, Tensor):
-            # TODO: Use Phynexus bindings when available
-            # For now, use NumPy as a fallback
-            return Tensor(self._numpy_data * other._numpy_data, device=self._device)
+            try:
+                from neurenix.binding import multiply
+                return multiply(self, other)
+            except (ImportError, AttributeError):
+                return Tensor(self._numpy_data * other._numpy_data, device=self._device)
         
         raise TypeError(f"Unsupported operand type for *: {type(other)}")
     
@@ -405,9 +411,11 @@ class Tensor:
         
         # Handle tensor division
         if isinstance(other, Tensor):
-            # TODO: Use Phynexus bindings when available
-            # For now, use NumPy as a fallback
-            return Tensor(self._numpy_data / other._numpy_data, device=self._device)
+            try:
+                from neurenix.binding import divide
+                return divide(self, other)
+            except (ImportError, AttributeError):
+                return Tensor(self._numpy_data / other._numpy_data, device=self._device)
         
         raise TypeError(f"Unsupported operand type for /: {type(other)}")
         
@@ -445,13 +453,15 @@ class Tensor:
         if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
             shape = shape[0]
         
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            self._numpy_data.reshape(shape),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import reshape
+            return reshape(self, shape)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                self._numpy_data.reshape(shape),
+                device=self._device
+            )
+            return result
         
     def transpose(self, dim0: int = 0, dim1: int = 1) -> "Tensor":
         """
@@ -464,20 +474,21 @@ class Tensor:
         Returns:
             A new tensor with the transposed dimensions.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        
-        # Create a list of dimensions
-        dims = list(range(self.ndim))
-        
-        # Swap the specified dimensions
-        dims[dim0], dims[dim1] = dims[dim1], dims[dim0]
-        
-        result = Tensor(
-            np.transpose(self._numpy_data, dims),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import transpose
+            return transpose(self, dim0, dim1)
+        except (ImportError, AttributeError):
+            # Create a list of dimensions
+            dims = list(range(self.ndim))
+            
+            # Swap the specified dimensions
+            dims[dim0], dims[dim1] = dims[dim1], dims[dim0]
+            
+            result = Tensor(
+                np.transpose(self._numpy_data, dims),
+                device=self._device
+            )
+            return result
         
     def gather(self, dim: int, index: "Tensor") -> "Tensor":
         """
@@ -509,14 +520,16 @@ class Tensor:
         Returns:
             A new tensor with the ReLU activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        if inplace:
-            self._numpy_data = np.maximum(self._numpy_data, 0)
-            return self
-        else:
-            result = Tensor(np.maximum(self._numpy_data, 0), device=self._device)
-            return result
+        try:
+            from neurenix.binding import relu
+            return relu(self, inplace)
+        except (ImportError, AttributeError):
+            if inplace:
+                self._numpy_data = np.maximum(self._numpy_data, 0)
+                return self
+            else:
+                result = Tensor(np.maximum(self._numpy_data, 0), device=self._device)
+                return result
     
     def sigmoid(self) -> "Tensor":
         """
@@ -525,10 +538,12 @@ class Tensor:
         Returns:
             A new tensor with the sigmoid activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(1 / (1 + np.exp(-self._numpy_data)), device=self._device)
-        return result
+        try:
+            from neurenix.binding import sigmoid
+            return sigmoid(self)
+        except (ImportError, AttributeError):
+            result = Tensor(1 / (1 + np.exp(-self._numpy_data)), device=self._device)
+            return result
     
     def tanh(self) -> "Tensor":
         """
@@ -537,10 +552,12 @@ class Tensor:
         Returns:
             A new tensor with the tanh activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(np.tanh(self._numpy_data), device=self._device)
-        return result
+        try:
+            from neurenix.binding import tanh
+            return tanh(self)
+        except (ImportError, AttributeError):
+            result = Tensor(np.tanh(self._numpy_data), device=self._device)
+            return result
     
     def softmax(self, dim: int = -1) -> "Tensor":
         """
@@ -552,13 +569,15 @@ class Tensor:
         Returns:
             A new tensor with the softmax activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        # Compute softmax values along the specified dimension
-        exp_x = np.exp(self._numpy_data - np.max(self._numpy_data, axis=dim, keepdims=True))
-        softmax_values = exp_x / np.sum(exp_x, axis=dim, keepdims=True)
-        result = Tensor(softmax_values, device=self._device)
-        return result
+        try:
+            from neurenix.binding import softmax
+            return softmax(self, dim)
+        except (ImportError, AttributeError):
+            # Compute softmax values along the specified dimension
+            exp_x = np.exp(self._numpy_data - np.max(self._numpy_data, axis=dim, keepdims=True))
+            softmax_values = exp_x / np.sum(exp_x, axis=dim, keepdims=True)
+            result = Tensor(softmax_values, device=self._device)
+            return result
     
     def log_softmax(self, dim: int = -1) -> "Tensor":
         """
@@ -570,15 +589,17 @@ class Tensor:
         Returns:
             A new tensor with the log softmax activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        # Compute log softmax values along the specified dimension
-        max_val = np.max(self._numpy_data, axis=dim, keepdims=True)
-        exp_x = np.exp(self._numpy_data - max_val)
-        sum_exp_x = np.sum(exp_x, axis=dim, keepdims=True)
-        log_softmax_values = self._numpy_data - max_val - np.log(sum_exp_x)
-        result = Tensor(log_softmax_values, device=self._device)
-        return result
+        try:
+            from neurenix.binding import log_softmax
+            return log_softmax(self, dim)
+        except (ImportError, AttributeError):
+            # Compute log softmax values along the specified dimension
+            max_val = np.max(self._numpy_data, axis=dim, keepdims=True)
+            exp_x = np.exp(self._numpy_data - max_val)
+            sum_exp_x = np.sum(exp_x, axis=dim, keepdims=True)
+            log_softmax_values = self._numpy_data - max_val - np.log(sum_exp_x)
+            result = Tensor(log_softmax_values, device=self._device)
+            return result
     
     def leaky_relu(self, negative_slope: float = 0.01, inplace: bool = False) -> "Tensor":
         """
@@ -591,17 +612,19 @@ class Tensor:
         Returns:
             A new tensor with the leaky ReLU activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        if inplace:
-            self._numpy_data = np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope)
-            return self
-        else:
-            result = Tensor(
-                np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope),
-                device=self._device
-            )
-            return result
+        try:
+            from neurenix.binding import leaky_relu
+            return leaky_relu(self, negative_slope, inplace)
+        except (ImportError, AttributeError):
+            if inplace:
+                self._numpy_data = np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope)
+                return self
+            else:
+                result = Tensor(
+                    np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope),
+                    device=self._device
+                )
+                return result
     
     def elu(self, alpha: float = 1.0, inplace: bool = False) -> "Tensor":
         """
@@ -614,25 +637,27 @@ class Tensor:
         Returns:
             A new tensor with the ELU activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        if inplace:
-            self._numpy_data = np.where(
-                self._numpy_data > 0,
-                self._numpy_data,
-                alpha * (np.exp(self._numpy_data) - 1)
-            )
-            return self
-        else:
-            result = Tensor(
-                np.where(
+        try:
+            from neurenix.binding import elu
+            return elu(self, alpha, inplace)
+        except (ImportError, AttributeError):
+            if inplace:
+                self._numpy_data = np.where(
                     self._numpy_data > 0,
                     self._numpy_data,
                     alpha * (np.exp(self._numpy_data) - 1)
-                ),
-                device=self._device
-            )
-            return result
+                )
+                return self
+            else:
+                result = Tensor(
+                    np.where(
+                        self._numpy_data > 0,
+                        self._numpy_data,
+                        alpha * (np.exp(self._numpy_data) - 1)
+                    ),
+                    device=self._device
+                )
+                return result
     
     def selu(self, inplace: bool = False) -> "Tensor":
         """
@@ -648,25 +673,27 @@ class Tensor:
         alpha = 1.6732632423543772848170429916717
         scale = 1.0507009873554804934193349852946
         
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        if inplace:
-            self._numpy_data = scale * np.where(
-                self._numpy_data > 0,
-                self._numpy_data,
-                alpha * (np.exp(self._numpy_data) - 1)
-            )
-            return self
-        else:
-            result = Tensor(
-                scale * np.where(
+        try:
+            from neurenix.binding import selu
+            return selu(self, inplace)
+        except (ImportError, AttributeError):
+            if inplace:
+                self._numpy_data = scale * np.where(
                     self._numpy_data > 0,
                     self._numpy_data,
                     alpha * (np.exp(self._numpy_data) - 1)
-                ),
-                device=self._device
-            )
-            return result
+                )
+                return self
+            else:
+                result = Tensor(
+                    scale * np.where(
+                        self._numpy_data > 0,
+                        self._numpy_data,
+                        alpha * (np.exp(self._numpy_data) - 1)
+                    ),
+                    device=self._device
+                )
+                return result
     
     def gelu(self, approximate: bool = False) -> "Tensor":
         """
@@ -678,27 +705,29 @@ class Tensor:
         Returns:
             A new tensor with the GELU activation applied.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        if approximate:
-            # Approximation: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
-            sqrt_2_over_pi = np.sqrt(2 / np.pi)
-            result = Tensor(
-                0.5 * self._numpy_data * (
-                    1 + np.tanh(
-                        sqrt_2_over_pi * (self._numpy_data + 0.044715 * np.power(self._numpy_data, 3))
-                    )
-                ),
-                device=self._device
-            )
-        else:
-            # Exact formula: 0.5 * x * (1 + erf(x / sqrt(2)))
-            from scipy import special
-            result = Tensor(
-                0.5 * self._numpy_data * (1 + special.erf(self._numpy_data / np.sqrt(2))),
-                device=self._device
-            )
-        return result
+        try:
+            from neurenix.binding import gelu
+            return gelu(self, approximate)
+        except (ImportError, AttributeError):
+            if approximate:
+                # Approximation: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+                sqrt_2_over_pi = np.sqrt(2 / np.pi)
+                result = Tensor(
+                    0.5 * self._numpy_data * (
+                        1 + np.tanh(
+                            sqrt_2_over_pi * (self._numpy_data + 0.044715 * np.power(self._numpy_data, 3))
+                        )
+                    ),
+                    device=self._device
+                )
+            else:
+                # Exact formula: 0.5 * x * (1 + erf(x / sqrt(2)))
+                from scipy import special
+                result = Tensor(
+                    0.5 * self._numpy_data * (1 + special.erf(self._numpy_data / np.sqrt(2))),
+                    device=self._device
+                )
+            return result
     
     # Tensor operations
     
