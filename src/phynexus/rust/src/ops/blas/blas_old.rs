@@ -93,11 +93,19 @@ pub fn gemm(
             Ok(())
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
             // TODO: Implement ROCm GEMM
@@ -158,11 +166,19 @@ pub fn dot(x: &Tensor, y: &Tensor) -> Result<f32> {
             Ok(result)
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
             // TODO: Implement ROCm dot product
@@ -259,11 +275,19 @@ pub fn gemv(a: &Tensor, x: &Tensor, y: &mut Tensor, alpha: f32, beta: f32, trans
             Ok(())
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
             // TODO: Implement ROCm GEMV
