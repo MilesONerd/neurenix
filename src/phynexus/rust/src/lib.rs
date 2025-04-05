@@ -1,5 +1,8 @@
 //! Phynexus: A high-performance tensor library for embedded devices
 
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+
 // Re-export core modules
 pub mod device;
 pub mod error;
@@ -27,4 +30,19 @@ pub use tensor_ops::{
 pub fn init() -> error::Result<()> {
     // Initialize hardware backends
     Ok(())
+}
+
+#[pymodule]
+fn _phynexus(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add("__version__", "1.0.2")?;
+    
+    m.add_function(wrap_pyfunction!(py_init, m)?)?;
+    
+    
+    Ok(())
+}
+
+#[pyfunction]
+fn py_init() -> PyResult<()> {
+    init().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))
 }
