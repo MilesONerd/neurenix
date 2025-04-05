@@ -21,6 +21,7 @@ env_logger = "0.10"
 pyo3 = { version = "0.18", features = ["extension-module", "abi3-py38"] }
 numpy = { version = "0.18", features = ["nalgebra"] }
 nalgebra = "0.32"
+rand = "0.8"
 
 [dev-dependencies]
 criterion = "0.4"

@@ -163,6 +163,300 @@ impl Tensor {
     pub fn to_tpu(&self) -> Result<Self> {
         self.to_device(Device::tpu(0))
     }
+    
+    pub fn zeros(shape: &[usize]) -> Result<Self> {
+        let size = shape.iter().product();
+        let dtype = DataType::Float32;
+        let device = Device::cpu();
+        
+        let mut tensor = Self::new(shape.to_vec(), dtype, device)?;
+        
+        unsafe {
+            std::ptr::write_bytes(tensor.data_mut(), 0, size * dtype.size());
+        }
+        
+        Ok(tensor)
+    }
+    
+    pub fn ones(shape: &[usize]) -> Result<Self> {
+        let mut tensor = Self::zeros(shape)?;
+        let size = shape.iter().product();
+        let dtype = DataType::Float32;
+        
+        unsafe {
+            let ptr = tensor.data_mut() as *mut f32;
+            for i in 0..size {
+                *ptr.add(i) = 1.0;
+            }
+        }
+        
+        Ok(tensor)
+    }
+    
+    pub fn matmul(&self, other: &Self) -> Result<Self> {
+        if self.shape.len() != 2 || other.shape.len() != 2 {
+            return Err(crate::error::PhynexusError::ShapeMismatch(format!(
+                "matmul requires 2D tensors, got shapes {:?} and {:?}",
+                self.shape, other.shape
+            )));
+        }
+        
+        if self.shape[1] != other.shape[0] {
+            return Err(crate::error::PhynexusError::ShapeMismatch(format!(
+                "matmul shape mismatch: {:?} and {:?}",
+                self.shape, other.shape
+            )));
+        }
+        
+        let m = self.shape[0];
+        let k = self.shape[1];
+        let n = other.shape[1];
+        
+        let mut result = Self::zeros(&[m, n])?;
+        
+        unsafe {
+            let a_ptr = self.data() as *const f32;
+            let b_ptr = other.data() as *const f32;
+            let c_ptr = result.data_mut() as *mut f32;
+            
+            for i in 0..m {
+                for j in 0..n {
+                    let mut sum = 0.0;
+                    for l in 0..k {
+                        sum += *a_ptr.add(i * k + l) * *b_ptr.add(l * n + j);
+                    }
+                    *c_ptr.add(i * n + j) = sum;
+                }
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn add(&self, other: &Self) -> Result<Self> {
+        if self.shape != other.shape {
+            return Err(crate::error::PhynexusError::ShapeMismatch(format!(
+                "add shape mismatch: {:?} and {:?}",
+                self.shape, other.shape
+            )));
+        }
+        
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let a_ptr = result.data_mut() as *mut f32;
+            let b_ptr = other.data() as *const f32;
+            
+            for i in 0..size {
+                *a_ptr.add(i) += *b_ptr.add(i);
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn add_scalar(&self, scalar: f32) -> Result<Self> {
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let ptr = result.data_mut() as *mut f32;
+            
+            for i in 0..size {
+                *ptr.add(i) += scalar;
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn mul(&self, other: &Self) -> Result<Self> {
+        if self.shape != other.shape {
+            return Err(crate::error::PhynexusError::ShapeMismatch(format!(
+                "mul shape mismatch: {:?} and {:?}",
+                self.shape, other.shape
+            )));
+        }
+        
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let a_ptr = result.data_mut() as *mut f32;
+            let b_ptr = other.data() as *const f32;
+            
+            for i in 0..size {
+                *a_ptr.add(i) *= *b_ptr.add(i);
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn sigmoid(&self) -> Result<Self> {
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let ptr = result.data_mut() as *mut f32;
+            
+            for i in 0..size {
+                let x = *ptr.add(i);
+                *ptr.add(i) = 1.0 / (1.0 + (-x).exp());
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn tanh(&self) -> Result<Self> {
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let ptr = result.data_mut() as *mut f32;
+            
+            for i in 0..size {
+                let x = *ptr.add(i);
+                *ptr.add(i) = x.tanh();
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn neg(&self) -> Result<Self> {
+        let mut result = self.clone();
+        let size = self.numel();
+        
+        unsafe {
+            let ptr = result.data_mut() as *mut f32;
+            
+            for i in 0..size {
+                *ptr.add(i) = -*ptr.add(i);
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn chunk(&self, chunks: usize, dim: usize) -> Result<Vec<Self>> {
+        if dim >= self.shape.len() {
+            return Err(crate::error::PhynexusError::InvalidArgument(format!(
+                "Dimension out of range: dim={}, ndim={}",
+                dim, self.shape.len()
+            )));
+        }
+        
+        let dim_size = self.shape[dim];
+        let chunk_size = (dim_size + chunks - 1) / chunks; // Ceiling division
+        
+        let mut result = Vec::with_capacity(chunks);
+        
+        for i in 0..chunks {
+            let start = i * chunk_size;
+            if start >= dim_size {
+                break;
+            }
+            
+            let end = (start + chunk_size).min(dim_size);
+            let size = end - start;
+            
+            let mut new_shape = self.shape.clone();
+            new_shape[dim] = size;
+            
+            let mut chunk = Self::zeros(&new_shape)?;
+            
+            
+            if self.shape.len() == 2 && dim == 1 {
+                let rows = self.shape[0];
+                let cols = self.shape[1];
+                
+                unsafe {
+                    let src_ptr = self.data() as *const f32;
+                    let dst_ptr = chunk.data_mut() as *mut f32;
+                    
+                    for row in 0..rows {
+                        for col in 0..size {
+                            *dst_ptr.add(row * size + col) = *src_ptr.add(row * cols + start + col);
+                        }
+                    }
+                }
+            }
+            
+            result.push(chunk);
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn transpose(&self, dim0: usize, dim1: usize) -> Result<Self> {
+        if dim0 >= self.shape.len() || dim1 >= self.shape.len() {
+            return Err(crate::error::PhynexusError::InvalidArgument(format!(
+                "Dimension out of range: dim0={}, dim1={}, ndim={}",
+                dim0, dim1, self.shape.len()
+            )));
+        }
+        
+        let mut new_shape = self.shape.clone();
+        new_shape.swap(dim0, dim1);
+        
+        let mut result = Self::new(new_shape, self.dtype, self.device.clone())?;
+        
+        
+        let ndim = self.shape.len();
+        
+        let mut strides = vec![1; ndim];
+        for i in (0..ndim-1).rev() {
+            strides[i] = strides[i+1] * self.shape[i+1];
+        }
+        
+        let mut new_strides = strides.clone();
+        new_strides.swap(dim0, dim1);
+        
+        let mut indices = vec![0; ndim];
+        let numel = self.numel();
+        
+        for i in 0..numel {
+            let mut src_idx = 0;
+            for d in 0..ndim {
+                src_idx += indices[d] * strides[d];
+            }
+            
+            let mut dst_idx = 0;
+            for d in 0..ndim {
+                dst_idx += indices[d] * new_strides[d];
+            }
+            
+            unsafe {
+                let src_ptr = self.data.add(src_idx * self.dtype.size());
+                let dst_ptr = result.data_mut().add(dst_idx * self.dtype.size());
+                std::ptr::copy_nonoverlapping(src_ptr, dst_ptr, self.dtype.size());
+            }
+            
+            for d in (0..ndim).rev() {
+                indices[d] += 1;
+                if indices[d] < self.shape[d] {
+                    break;
+                }
+                indices[d] = 0;
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn transpose_2d(&self) -> Result<Self> {
+        if self.shape.len() != 2 {
+            return Err(crate::error::PhynexusError::InvalidArgument(format!(
+                "transpose_2d requires a 2D tensor, got shape {:?}",
+                self.shape
+            )));
+        }
+        
+        self.transpose(0, 1)
+    }
 }
 
 impl Clone for Tensor {
