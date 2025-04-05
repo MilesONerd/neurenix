@@ -60,27 +60,29 @@ class Linear(Module):
         Returns:
             Output tensor of shape (..., out_features).
         """
-        # TODO: Implement the actual linear transformation using Phynexus
-        # For now, use NumPy as a fallback
-        x_np = x.numpy()
-        weight_np = self.weight.numpy()
-        
-        # Reshape input for matrix multiplication
-        orig_shape = x_np.shape
-        x_reshaped = x_np.reshape(-1, self.in_features)
-        
-        # Perform the linear transformation
-        output = np.matmul(x_reshaped, weight_np.T)
-        
-        # Add bias if present
-        if self.bias is not None:
-            output += self.bias.numpy()
-        
-        # Reshape output to match input shape
-        output = output.reshape(*orig_shape[:-1], self.out_features)
-        
-        # Create a new tensor from the output
-        return Tensor(output, device=x.device)
+        try:
+            from neurenix.binding import linear
+            return linear(x, self.weight, self.bias)
+        except (ImportError, AttributeError):
+            x_np = x.numpy()
+            weight_np = self.weight.numpy()
+            
+            # Reshape input for matrix multiplication
+            orig_shape = x_np.shape
+            x_reshaped = x_np.reshape(-1, self.in_features)
+            
+            # Perform the linear transformation
+            output = np.matmul(x_reshaped, weight_np.T)
+            
+            # Add bias if present
+            if self.bias is not None:
+                output += self.bias.numpy()
+            
+            # Reshape output to match input shape
+            output = output.reshape(*orig_shape[:-1], self.out_features)
+            
+            # Create a new tensor from the output
+            return Tensor(output, device=x.device)
     
     def __repr__(self) -> str:
         """Get a string representation of the linear layer."""
