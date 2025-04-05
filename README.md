@@ -20,6 +20,20 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 - **Declarative API**: Simpler and more intuitive interface than traditional frameworks
 - **LLM Fine-tuning**: Simplified tools for tuning language models
 - **Hugging Face Integration**: Compatibility with pre-existing models
+- **Hot-swappable backend functionality**:  
+  1- Added DeviceManager class for runtime device switching  
+  2- Created Genesis system for automatic hardware detection and selection  
+  3- Modified Tensor class to support hot-swapping between devices  
+
+- **ONNX support**:  
+  1- Implemented ONNXConverter for model import/export  
+  2- Added convenience functions for easy ONNX integration  
+  3- Support for converting between Neurenix and other ML frameworks  
+
+- **API support**:  
+  1- Added RESTful, WebSocket, and gRPC server implementations  
+  2- Created APIManager for centralized server management  
+  3- Provided convenience functions for serving models  
 
 ## Documentation
 
