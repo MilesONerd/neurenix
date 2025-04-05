@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package neurenix.distributed;
+
+option go_package = "github.com/MilesONerd/neurenix/src/distributed/go/pkg/rpc";
+
+service WorkerService {
+  // Register a worker with the coordinator
+  rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
+  
+  // Unregister a worker from the coordinator
+  rpc UnregisterWorker(UnregisterWorkerRequest) returns (UnregisterWorkerResponse);
+  
+  // Send heartbeat from worker to coordinator
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+service CoordinatorService {
+  // Assign a task to a worker
+  rpc AssignTask(AssignTaskRequest) returns (AssignTaskResponse);
+  
+  // Get worker status
+  rpc GetWorkerStatus(GetWorkerStatusRequest) returns (GetWorkerStatusResponse);
+}
+
+// Worker registration
+message RegisterWorkerRequest {
+  string worker_id = 1;
+  string address = 2;
+  int32 gpu_count = 3;
+  int64 total_ram = 4;
+}
+
+message RegisterWorkerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Worker unregistration
+message UnregisterWorkerRequest {
+  string worker_id = 1;
+}
+
+message UnregisterWorkerResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Heartbeat
+message HeartbeatRequest {
+  string worker_id = 1;
+  int32 status = 2;
+  repeated string running_task_ids = 3;
+  int64 available_ram = 4;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Task assignment
+message AssignTaskRequest {
+  string task_id = 1;
+  string task_type = 2;
+  string worker_id = 3;
+  map<string, string> task_data = 4;
+}
+
+message AssignTaskResponse {
+  bool success = 1;
+  string message = 2;
+  map<string, string> result = 3;
+}
+
+// Worker status
+message GetWorkerStatusRequest {
+  string worker_id = 1;
+}
+
+message GetWorkerStatusResponse {
+  string worker_id = 1;
+  int32 status = 2;
+  repeated string running_task_ids = 3;
+  int64 available_ram = 4;
+}

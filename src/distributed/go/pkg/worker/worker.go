@@ -206,17 +206,66 @@ func (w *Worker) SetStatus(status cluster.NodeStatus) {
 
 // registerWithCoordinator registers the worker with the coordinator.
 func (w *Worker) registerWithCoordinator() error {
-	// This is a placeholder implementation
-	// Real implementation would use RPC to register with coordinator
 	log.Printf("Registering worker %s with coordinator", w.id)
+	
+	conn, err := w.rpcClient.GetConnection()
+	if err != nil {
+		return fmt.Errorf("failed to get RPC connection: %v", err)
+	}
+	
+	client := rpc.NewWorkerServiceClient(conn)
+	
+	req := &rpc.RegisterWorkerRequest{
+		WorkerId:  w.id,
+		Address:   w.address,
+		GpuCount:  int32(w.gpuCount),
+		TotalRam:  w.totalRAM,
+	}
+	
+	ctx, cancel := context.WithTimeout(w.ctx, 10*time.Second)
+	defer cancel()
+	
+	resp, err := client.RegisterWorker(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to register worker: %v", err)
+	}
+	
+	if !resp.Success {
+		return fmt.Errorf("registration failed: %s", resp.Message)
+	}
+	
+	log.Printf("Worker %s registered successfully", w.id)
 	return nil
 }
 
 // unregisterFromCoordinator unregisters the worker from the coordinator.
 func (w *Worker) unregisterFromCoordinator() error {
-	// This is a placeholder implementation
-	// Real implementation would use RPC to unregister from coordinator
 	log.Printf("Unregistering worker %s from coordinator", w.id)
+	
+	conn, err := w.rpcClient.GetConnection()
+	if err != nil {
+		return fmt.Errorf("failed to get RPC connection: %v", err)
+	}
+	
+	client := rpc.NewWorkerServiceClient(conn)
+	
+	req := &rpc.UnregisterWorkerRequest{
+		WorkerId: w.id,
+	}
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	resp, err := client.UnregisterWorker(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to unregister worker: %v", err)
+	}
+	
+	if !resp.Success {
+		return fmt.Errorf("unregistration failed: %s", resp.Message)
+	}
+	
+	log.Printf("Worker %s unregistered successfully", w.id)
 	return nil
 }
 
@@ -230,9 +279,47 @@ func (w *Worker) heartbeat() {
 		case <-w.ctx.Done():
 			return
 		case <-ticker.C:
-			// This is a placeholder implementation
-			// Real implementation would use RPC to send heartbeat to coordinator
 			log.Printf("Sending heartbeat from worker %s", w.id)
+			
+			conn, err := w.rpcClient.GetConnection()
+			if err != nil {
+				log.Printf("Failed to get RPC connection for heartbeat: %v", err)
+				continue
+			}
+			
+			client := rpc.NewWorkerServiceClient(conn)
+			
+			w.mu.RLock()
+			runningTaskIds := make([]string, 0, len(w.runningTasks))
+			for taskID := range w.runningTasks {
+				runningTaskIds = append(runningTaskIds, taskID)
+			}
+			status := w.status
+			availRAM := w.availRAM
+			w.mu.RUnlock()
+			
+			req := &rpc.HeartbeatRequest{
+				WorkerId:       w.id,
+				Status:         rpc.NodeStatusToInt32(status),
+				RunningTaskIds: runningTaskIds,
+				AvailableRam:   availRAM,
+			}
+			
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			resp, err := client.Heartbeat(ctx, req)
+			cancel()
+			
+			if err != nil {
+				log.Printf("Failed to send heartbeat: %v", err)
+				continue
+			}
+			
+			if !resp.Success {
+				log.Printf("Heartbeat failed: %s", resp.Message)
+				continue
+			}
+			
+			log.Printf("Heartbeat sent successfully")
 		}
 	}
 }

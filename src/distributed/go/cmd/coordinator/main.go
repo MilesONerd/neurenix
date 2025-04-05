@@ -40,8 +40,18 @@ func main() {
 	}
 
 	// Register services
-	// This is a placeholder implementation
-	// Real implementation would register gRPC services
+	coordinatorService := &CoordinatorServiceImpl{
+		cluster:   c,
+		scheduler: s,
+	}
+	
+	rpc.RegisterCoordinatorServiceServer(server.GetServer(), coordinatorService)
+	
+	workerService := &WorkerServiceImpl{
+		cluster: c,
+	}
+	
+	rpc.RegisterWorkerServiceServer(server.GetServer(), workerService)
 
 	// Create context with cancellation
 	ctx, cancel := context.WithCancel(context.Background())
