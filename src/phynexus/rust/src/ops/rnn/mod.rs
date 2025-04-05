@@ -40,7 +40,7 @@ pub fn lstm_forward(
     let batch_size = input.shape()[1];
     let input_dim = input.shape()[2];
     
-    let device = input.device();
+    let _device = input.device();
     let num_directions = if bidirectional { 2 } else { 1 };
     let total_hidden_size = hidden_size * num_directions;
     
@@ -49,7 +49,7 @@ pub fn lstm_forward(
         output_shape = vec![batch_size, seq_len, total_hidden_size];
     }
     
-    let mut output = Tensor::zeros(&output_shape)?;
+    let output = Tensor::zeros(&output_shape)?;
     let mut final_state = state.clone();
     
     
@@ -120,7 +120,7 @@ pub fn gru_forward(
     let batch_size = input.shape()[1];
     let input_dim = input.shape()[2];
     
-    let device = input.device();
+    let _device = input.device();
     let num_directions = if bidirectional { 2 } else { 1 };
     let total_hidden_size = hidden_size * num_directions;
     
@@ -129,7 +129,7 @@ pub fn gru_forward(
         output_shape = vec![batch_size, seq_len, total_hidden_size];
     }
     
-    let mut output = Tensor::zeros(&output_shape)?;
+    let output = Tensor::zeros(&output_shape)?;
     let mut final_h = h.clone();
     
     

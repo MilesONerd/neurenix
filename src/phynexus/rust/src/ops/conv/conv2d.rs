@@ -49,8 +49,8 @@ pub fn conv2d(
     let out_height = ((in_height + 2 * padding_h - dilation_h * (kernel_height - 1) - 1) / stride_h) + 1;
     let out_width = ((in_width + 2 * padding_w - dilation_w * (kernel_width - 1) - 1) / stride_w) + 1;
     
-    let device = input.device();
-    let mut output = Tensor::zeros(&[batch_size, out_channels, out_height, out_width])?;
+    let _device = input.device();
+    let output = Tensor::zeros(&[batch_size, out_channels, out_height, out_width])?;
     
     Ok(output)
 }

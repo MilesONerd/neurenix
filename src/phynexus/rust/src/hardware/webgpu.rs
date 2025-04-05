@@ -68,7 +68,7 @@ impl Backend for WebGpuBackend {
     
     /// Allocate memory on a WebGPU device
     #[allow(unused_variables)]
-    fn allocate(&self, size: usize, device_index: usize) -> Result<*mut u8> {
+    fn allocate(&self, _size: usize, _device_index: usize) -> Result<*mut u8> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
@@ -102,7 +102,7 @@ impl Backend for WebGpuBackend {
     
     /// Free memory on a WebGPU device
     #[allow(unused_variables)]
-    fn free(&self, ptr: *mut u8, device_index: usize) -> Result<()> {
+    fn free(&self, _ptr: *mut u8, _device_index: usize) -> Result<()> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
@@ -139,7 +139,7 @@ impl Backend for WebGpuBackend {
     
     /// Copy data from host to WebGPU device
     #[allow(unused_variables)]
-    fn copy_host_to_device(&self, host_ptr: *const u8, device_ptr: *mut u8, size: usize, device_index: usize) -> Result<()> {
+    fn copy_host_to_device(&self, _host_ptr: *const u8, _device_ptr: *mut u8, _size: usize, _device_index: usize) -> Result<()> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
@@ -183,7 +183,7 @@ impl Backend for WebGpuBackend {
     
     /// Copy data from WebGPU device to host
     #[allow(unused_variables)]
-    fn copy_device_to_host(&self, device_ptr: *const u8, host_ptr: *mut u8, size: usize, device_index: usize) -> Result<()> {
+    fn copy_device_to_host(&self, _device_ptr: *const u8, _host_ptr: *mut u8, _size: usize, _device_index: usize) -> Result<()> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
@@ -227,7 +227,7 @@ impl Backend for WebGpuBackend {
     
     /// Copy data from WebGPU device to WebGPU device
     #[allow(unused_variables)]
-    fn copy_device_to_device(&self, src_ptr: *const u8, dst_ptr: *mut u8, size: usize, src_device_index: usize, dst_device_index: usize) -> Result<()> {
+    fn copy_device_to_device(&self, _src_ptr: *const u8, _dst_ptr: *mut u8, _size: usize, _src_device_index: usize, _dst_device_index: usize) -> Result<()> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
@@ -268,7 +268,7 @@ impl Backend for WebGpuBackend {
     
     /// Synchronize a WebGPU device
     #[allow(unused_variables)]
-    fn synchronize(&self, device_index: usize) -> Result<()> {
+    fn synchronize(&self, _device_index: usize) -> Result<()> {
         #[cfg(feature = "webgpu")]
         {
             unsafe {
