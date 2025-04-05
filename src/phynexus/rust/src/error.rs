@@ -27,6 +27,9 @@ pub enum PhynexusError {
     #[error("Invalid shape: {0}")]
     InvalidShape(String),
     
+    #[error("Invalid value: {0}")]
+    InvalidValue(String),
+    
     /// Device error
     #[error("Device error: {0}")]
     DeviceError(String),
