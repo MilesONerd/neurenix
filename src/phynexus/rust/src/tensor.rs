@@ -163,6 +163,73 @@ impl Tensor {
     pub fn to_tpu(&self) -> Result<Self> {
         self.to_device(Device::tpu(0))
     }
+    
+    pub fn transpose(&self, dim0: usize, dim1: usize) -> Result<Self> {
+        if dim0 >= self.shape.len() || dim1 >= self.shape.len() {
+            return Err(crate::error::PhynexusError::InvalidArgument(format!(
+                "Dimension out of range: dim0={}, dim1={}, ndim={}",
+                dim0, dim1, self.shape.len()
+            )));
+        }
+        
+        let mut new_shape = self.shape.clone();
+        new_shape.swap(dim0, dim1);
+        
+        let mut result = Self::new(new_shape, self.dtype, self.device.clone())?;
+        
+        
+        let ndim = self.shape.len();
+        
+        let mut strides = vec![1; ndim];
+        for i in (0..ndim-1).rev() {
+            strides[i] = strides[i+1] * self.shape[i+1];
+        }
+        
+        let mut new_strides = strides.clone();
+        new_strides.swap(dim0, dim1);
+        
+        let mut indices = vec![0; ndim];
+        let numel = self.numel();
+        
+        for i in 0..numel {
+            let mut src_idx = 0;
+            for d in 0..ndim {
+                src_idx += indices[d] * strides[d];
+            }
+            
+            let mut dst_idx = 0;
+            for d in 0..ndim {
+                dst_idx += indices[d] * new_strides[d];
+            }
+            
+            unsafe {
+                let src_ptr = self.data.add(src_idx * self.dtype.size());
+                let dst_ptr = result.data_mut().add(dst_idx * self.dtype.size());
+                std::ptr::copy_nonoverlapping(src_ptr, dst_ptr, self.dtype.size());
+            }
+            
+            for d in (0..ndim).rev() {
+                indices[d] += 1;
+                if indices[d] < self.shape[d] {
+                    break;
+                }
+                indices[d] = 0;
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    pub fn transpose_2d(&self) -> Result<Self> {
+        if self.shape.len() != 2 {
+            return Err(crate::error::PhynexusError::InvalidArgument(format!(
+                "transpose_2d requires a 2D tensor, got shape {:?}",
+                self.shape
+            )));
+        }
+        
+        self.transpose(0, 1)
+    }
 }
 
 impl Clone for Tensor {
