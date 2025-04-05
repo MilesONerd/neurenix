@@ -88,6 +88,12 @@ func (s *RPCServer) RegisterService(desc *grpc.ServiceDesc, impl interface{}) er
 	return nil
 }
 
+func (s *RPCServer) GetServer() *grpc.Server {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.server
+}
+
 // RPCClient represents an RPC client.
 type RPCClient struct {
 	conn    *grpc.ClientConn
