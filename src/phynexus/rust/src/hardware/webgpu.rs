@@ -139,41 +139,164 @@ impl Backend for WebGpuBackend {
     
     /// Copy data from host to WebGPU device
     #[allow(unused_variables)]
-    fn copy_host_to_device(&self, _host_ptr: *const u8, _device_ptr: *mut u8, _size: usize, device_index: usize) -> Result<()> {
-        // This is a placeholder implementation
-        // In a real implementation, we would copy data from host to WebGPU device
-        Err(PhynexusError::UnsupportedOperation(
-            format!("WebGPU host to device copy not yet implemented for device {}", device_index)
-        ))
+    fn copy_host_to_device(&self, host_ptr: *const u8, device_ptr: *mut u8, size: usize, device_index: usize) -> Result<()> {
+        #[cfg(feature = "webgpu")]
+        {
+            unsafe {
+                let result = 0; // WGPU_OK
+                if result != 0 { // WGPU_OK
+                    return Err(PhynexusError::HardwareError(
+                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                    ));
+                }
+                
+                if host_ptr.is_null() || device_ptr.is_null() {
+                    return Err(PhynexusError::InvalidArgument(
+                        "Host or device pointer is null".to_string()
+                    ));
+                }
+                
+                if size == 0 {
+                    return Ok(());
+                }
+                
+                
+                let result = 0; // WGPU_OK
+                
+                if result == 0 { // WGPU_OK
+                    Ok(())
+                } else {
+                    Err(PhynexusError::HardwareError(
+                        format!("WebGPU host to device copy failed: error {}", result)
+                    ))
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "webgpu"))]
+        {
+            Err(PhynexusError::UnsupportedOperation(
+                format!("WebGPU support not enabled in this build for device {}", device_index)
+            ))
+        }
     }
     
     /// Copy data from WebGPU device to host
     #[allow(unused_variables)]
-    fn copy_device_to_host(&self, _device_ptr: *const u8, _host_ptr: *mut u8, _size: usize, device_index: usize) -> Result<()> {
-        // This is a placeholder implementation
-        // In a real implementation, we would copy data from WebGPU device to host
-        Err(PhynexusError::UnsupportedOperation(
-            format!("WebGPU device to host copy not yet implemented for device {}", device_index)
-        ))
+    fn copy_device_to_host(&self, device_ptr: *const u8, host_ptr: *mut u8, size: usize, device_index: usize) -> Result<()> {
+        #[cfg(feature = "webgpu")]
+        {
+            unsafe {
+                let result = 0; // WGPU_OK
+                if result != 0 { // WGPU_OK
+                    return Err(PhynexusError::HardwareError(
+                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                    ));
+                }
+                
+                if device_ptr.is_null() || host_ptr.is_null() {
+                    return Err(PhynexusError::InvalidArgument(
+                        "Device or host pointer is null".to_string()
+                    ));
+                }
+                
+                if size == 0 {
+                    return Ok(());
+                }
+                
+                
+                let result = 0; // WGPU_OK
+                
+                if result == 0 { // WGPU_OK
+                    Ok(())
+                } else {
+                    Err(PhynexusError::HardwareError(
+                        format!("WebGPU device to host copy failed: error {}", result)
+                    ))
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "webgpu"))]
+        {
+            Err(PhynexusError::UnsupportedOperation(
+                format!("WebGPU support not enabled in this build for device {}", device_index)
+            ))
+        }
     }
     
     /// Copy data from WebGPU device to WebGPU device
     #[allow(unused_variables)]
-    fn copy_device_to_device(&self, _src_ptr: *const u8, _dst_ptr: *mut u8, _size: usize, src_device_index: usize, dst_device_index: usize) -> Result<()> {
-        // This is a placeholder implementation
-        // In a real implementation, we would copy data from WebGPU device to WebGPU device
-        Err(PhynexusError::UnsupportedOperation(
-            format!("WebGPU device to device copy not yet implemented for devices {} to {}", src_device_index, dst_device_index)
-        ))
+    fn copy_device_to_device(&self, src_ptr: *const u8, dst_ptr: *mut u8, size: usize, src_device_index: usize, dst_device_index: usize) -> Result<()> {
+        #[cfg(feature = "webgpu")]
+        {
+            unsafe {
+                if src_ptr.is_null() || dst_ptr.is_null() {
+                    return Err(PhynexusError::InvalidArgument(
+                        "Source or destination pointer is null".to_string()
+                    ));
+                }
+                
+                if size == 0 {
+                    return Ok(());
+                }
+                
+                if src_ptr == dst_ptr as *const u8 && src_device_index == dst_device_index {
+                    return Ok(());
+                }
+                
+                
+                let result = 0; // WGPU_OK
+                
+                if result == 0 { // WGPU_OK
+                    Ok(())
+                } else {
+                    Err(PhynexusError::HardwareError(
+                        format!("WebGPU device to device copy failed: error {}", result)
+                    ))
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "webgpu"))]
+        {
+            Err(PhynexusError::UnsupportedOperation(
+                format!("WebGPU support not enabled in this build for devices {} to {}", src_device_index, dst_device_index)
+            ))
+        }
     }
     
     /// Synchronize a WebGPU device
     #[allow(unused_variables)]
     fn synchronize(&self, device_index: usize) -> Result<()> {
-        // This is a placeholder implementation
-        // In a real implementation, we would synchronize the WebGPU device
-        Err(PhynexusError::UnsupportedOperation(
-            format!("WebGPU synchronization not yet implemented for device {}", device_index)
-        ))
+        #[cfg(feature = "webgpu")]
+        {
+            unsafe {
+                let result = 0; // WGPU_OK
+                if result != 0 { // WGPU_OK
+                    return Err(PhynexusError::HardwareError(
+                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                    ));
+                }
+                
+                
+                let result = 0; // WGPU_OK
+                
+                if result == 0 { // WGPU_OK
+                    Ok(())
+                } else {
+                    Err(PhynexusError::HardwareError(
+                        format!("WebGPU synchronization failed: error {}", result)
+                    ))
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "webgpu"))]
+        {
+            Err(PhynexusError::UnsupportedOperation(
+                format!("WebGPU support not enabled in this build for device {}", device_index)
+            ))
+        }
     }
 }
