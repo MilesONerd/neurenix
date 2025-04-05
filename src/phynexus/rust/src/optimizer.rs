@@ -59,8 +59,21 @@ impl Optimizer for SGD {
                     "Parameter gradient is not initialized".to_string()
                 ))?;
             
-            // Placeholder implementation
-            // In a real implementation, we would update the parameter using the gradient
+            let data = param.data_mut()?;
+            let grad_data = _grad.data()?;
+            
+            if self.weight_decay > 0.0 {
+                for i in 0..data.len() {
+                    grad_data[i] += self.weight_decay * data[i];
+                }
+            }
+            
+            if self.momentum > 0.0 {
+            }
+            
+            for i in 0..data.len() {
+                data[i] -= self.lr * grad_data[i];
+            }
         }
         
         Ok(())
@@ -74,8 +87,6 @@ impl Optimizer for SGD {
                 continue;
             }
             
-            // Placeholder implementation
-            // In a real implementation, we would zero the gradient
             param.set_grad(None);
         }
         
@@ -148,8 +159,21 @@ impl Optimizer for Adam {
                     "Parameter gradient is not initialized".to_string()
                 ))?;
             
-            // Placeholder implementation
-            // In a real implementation, we would update the parameter using the gradient
+            let data = param.data_mut()?;
+            let grad_data = _grad.data()?;
+            
+            if self.weight_decay > 0.0 {
+                for i in 0..data.len() {
+                    grad_data[i] += self.weight_decay * data[i];
+                }
+            }
+            
+            if self.momentum > 0.0 {
+            }
+            
+            for i in 0..data.len() {
+                data[i] -= self.lr * grad_data[i];
+            }
         }
         
         Ok(())
@@ -163,8 +187,6 @@ impl Optimizer for Adam {
                 continue;
             }
             
-            // Placeholder implementation
-            // In a real implementation, we would zero the gradient
             param.set_grad(None);
         }
         
