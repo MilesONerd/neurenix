@@ -323,6 +323,115 @@ def get_optimal_device():
     
     return get_device("cpu")
 
+def matmul(a, b):
+    """
+    Perform matrix multiplication.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        import numpy as np
+        result = np.matmul(a._numpy_data, b._numpy_data)
+        return Tensor(result, device=a.device)
+
+def add(a, b):
+    """
+    Add two tensors.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = a._numpy_data + b._numpy_data
+        return Tensor(result, device=a.device)
+
+def subtract(a, b):
+    """
+    Subtract two tensors.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = a._numpy_data - b._numpy_data
+        return Tensor(result, device=a.device)
+
+def multiply(a, b):
+    """
+    Multiply two tensors element-wise.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = a._numpy_data * b._numpy_data
+        return Tensor(result, device=a.device)
+
+def divide(a, b):
+    """
+    Divide two tensors element-wise.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = a._numpy_data / b._numpy_data
+        return Tensor(result, device=a.device)
+
+def reshape(a, shape):
+    """
+    Reshape a tensor.
+    
+    Args:
+        a: Tensor to reshape
+        shape: New shape
+        
+    Returns:
+        Reshaped tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = a._numpy_data.reshape(shape)
+        return Tensor(result, device=a.device)
+
+def transpose(a, dim0, dim1):
+    """
+    Transpose a tensor.
+    
+    Args:
+        a: Tensor to transpose
+        dim0: First dimension to swap
+        dim1: Second dimension to swap
+        
+    Returns:
+        Transposed tensor
+    """
+    if not _HAS_PHYNEXUS:
+        dims = list(range(len(a._numpy_data.shape)))
+        dims[dim0], dims[dim1] = dims[dim1], dims[dim0]
+        result = np.transpose(a._numpy_data, dims)
+        return Tensor(result, device=a.device)
+
 # Initialize the Phynexus engine
 init()
 
