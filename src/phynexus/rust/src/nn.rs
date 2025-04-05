@@ -24,12 +24,12 @@ pub struct Linear {
 impl Linear {
     /// Create a new linear layer
     pub fn new(in_features: usize, out_features: usize, bias: bool, device: Device) -> Result<Self> {
-        use crate::ops::init::{kaiming_uniform, zeros};
+        use crate::ops::init::{kaiming_uniform_with_device, zeros_with_device};
         
-        let weight = kaiming_uniform(&[out_features, in_features], device)?;
+        let weight = kaiming_uniform_with_device(&[out_features, in_features], device)?;
         
         let bias = if bias {
-            Some(zeros(&[out_features], device)?)
+            Some(zeros_with_device(&[out_features], device)?)
         } else {
             None
         };
@@ -106,7 +106,7 @@ impl Conv2d {
         bias: bool,
         device: Device,
     ) -> Result<Self> {
-        use crate::ops::init::{kaiming_uniform, zeros};
+        use crate::ops::init::{kaiming_uniform_with_device, zeros_with_device};
         
         if kernel_size.len() != 2 {
             return Err(crate::error::PhynexusError::InvalidShape(
@@ -140,10 +140,10 @@ impl Conv2d {
         }
         
         let weight_shape = vec![out_channels, in_channels / groups, kernel_size[0], kernel_size[1]];
-        let weight = kaiming_uniform(&weight_shape, device)?;
+        let weight = kaiming_uniform_with_device(&weight_shape, device)?;
         
         let bias = if bias {
-            Some(zeros(&[out_channels], device)?)
+            Some(zeros_with_device(&[out_channels], device)?)
         } else {
             None
         };
@@ -293,8 +293,9 @@ impl Module for LSTM {
         let hidden_size = self.hidden_size * (if self.bidirectional { 2 } else { 1 });
         let device = input.device();
         
-        let h0 = Tensor::zeros(&[self.num_layers, batch_size, hidden_size], device)?;
-        let c0 = Tensor::zeros(&[self.num_layers, batch_size, hidden_size], device)?;
+        use crate::ops::init::zeros_with_device;
+        let h0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device)?;
+        let c0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device)?;
         
         let initial_state = LSTMState { h: h0, c: c0 };
         

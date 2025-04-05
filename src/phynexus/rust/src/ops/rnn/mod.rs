@@ -2,6 +2,7 @@
 use crate::tensor::Tensor;
 use crate::error::{PhynexusError, Result};
 
+#[derive(Clone)]
 pub struct LSTMState {
     pub h: Tensor,
     pub c: Tensor,
@@ -52,7 +53,7 @@ pub fn lstm_forward(
     let mut final_state = state.clone();
     
     
-    for t in 0..seq_len {
+    for _t in 0..seq_len {
         let xt = if batch_first {
             Tensor::zeros(&[batch_size, input_dim])?
         } else {
@@ -132,7 +133,7 @@ pub fn gru_forward(
     let mut final_h = h.clone();
     
     
-    for t in 0..seq_len {
+    for _t in 0..seq_len {
         let xt = if batch_first {
             Tensor::zeros(&[batch_size, input_dim])?
         } else {
