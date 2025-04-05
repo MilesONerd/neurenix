@@ -432,6 +432,185 @@ def transpose(a, dim0, dim1):
         result = np.transpose(a._numpy_data, dims)
         return Tensor(result, device=a.device)
 
+def relu(x, inplace=False):
+    """
+    Apply ReLU activation function.
+    
+    Args:
+        x: Input tensor
+        inplace: Whether to perform the operation in-place
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        if inplace:
+            x._numpy_data = np.maximum(x._numpy_data, 0)
+            return x
+        else:
+            result = np.maximum(x._numpy_data, 0)
+            return Tensor(result, device=x.device)
+
+def sigmoid(x):
+    """
+    Apply sigmoid activation function.
+    
+    Args:
+        x: Input tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = 1 / (1 + np.exp(-x._numpy_data))
+        return Tensor(result, device=x.device)
+
+def tanh(x):
+    """
+    Apply tanh activation function.
+    
+    Args:
+        x: Input tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        result = np.tanh(x._numpy_data)
+        return Tensor(result, device=x.device)
+
+def softmax(x, dim=1):
+    """
+    Apply softmax activation function.
+    
+    Args:
+        x: Input tensor
+        dim: Dimension along which to apply softmax
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        exp_x = np.exp(x._numpy_data - np.max(x._numpy_data, axis=dim, keepdims=True))
+        result = exp_x / np.sum(exp_x, axis=dim, keepdims=True)
+        return Tensor(result, device=x.device)
+
+def log_softmax(x, dim=1):
+    """
+    Apply log softmax activation function.
+    
+    Args:
+        x: Input tensor
+        dim: Dimension along which to apply log softmax
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        max_val = np.max(x._numpy_data, axis=dim, keepdims=True)
+        exp_x = np.exp(x._numpy_data - max_val)
+        sum_exp_x = np.sum(exp_x, axis=dim, keepdims=True)
+        result = x._numpy_data - max_val - np.log(sum_exp_x)
+        return Tensor(result, device=x.device)
+
+def leaky_relu(x, negative_slope=0.01, inplace=False):
+    """
+    Apply leaky ReLU activation function.
+    
+    Args:
+        x: Input tensor
+        negative_slope: Controls the angle of the negative slope
+        inplace: Whether to perform the operation in-place
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        if inplace:
+            x._numpy_data = np.where(x._numpy_data > 0, x._numpy_data, x._numpy_data * negative_slope)
+            return x
+        else:
+            result = np.where(x._numpy_data > 0, x._numpy_data, x._numpy_data * negative_slope)
+            return Tensor(result, device=x.device)
+
+def elu(x, alpha=1.0, inplace=False):
+    """
+    Apply ELU activation function.
+    
+    Args:
+        x: Input tensor
+        alpha: Controls the value to which the function saturates for negative inputs
+        inplace: Whether to perform the operation in-place
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        if inplace:
+            x._numpy_data = np.where(
+                x._numpy_data > 0,
+                x._numpy_data,
+                alpha * (np.exp(x._numpy_data) - 1)
+            )
+            return x
+        else:
+            result = np.where(
+                x._numpy_data > 0,
+                x._numpy_data,
+                alpha * (np.exp(x._numpy_data) - 1)
+            )
+            return Tensor(result, device=x.device)
+
+def selu(x, inplace=False):
+    """
+    Apply SELU activation function.
+    
+    Args:
+        x: Input tensor
+        inplace: Whether to perform the operation in-place
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        alpha = 1.6732632423543772848170429916717
+        scale = 1.0507009873554804934193349852946
+        
+        if inplace:
+            x._numpy_data = scale * np.where(
+                x._numpy_data > 0,
+                x._numpy_data,
+                alpha * (np.exp(x._numpy_data) - 1)
+            )
+            return x
+        else:
+            result = scale * np.where(
+                x._numpy_data > 0,
+                x._numpy_data,
+                alpha * (np.exp(x._numpy_data) - 1)
+            )
+            return Tensor(result, device=x.device)
+
+def gelu(x, approximate=False):
+    """
+    Apply GELU activation function.
+    
+    Args:
+        x: Input tensor
+        approximate: Whether to use an approximation of the GELU function
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        if approximate:
+            sqrt_2_over_pi = np.sqrt(2 / np.pi)
+            result = 0.5 * x._numpy_data * (1 + np.tanh(sqrt_2_over_pi * (x._numpy_data + 0.044715 * np.power(x._numpy_data, 3))))
+        else:
+            result = 0.5 * x._numpy_data * (1 + np.math.erf(x._numpy_data / np.sqrt(2)))
+        
+        return Tensor(result, device=x.device)
+
 # Initialize the Phynexus engine
 init()
 
