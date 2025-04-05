@@ -71,12 +71,13 @@ class RpcContext:
         if self._initialized:
             return
         
-        # Initialize RPC (placeholder for actual implementation)
         print(f"Initializing RPC: rank={self.rank}, world_size={self.world_size}, backend={self.backend}")
         
-        # Start worker thread
         self._worker_thread = threading.Thread(target=self._worker, daemon=True)
         self._worker_thread.start()
+        
+        self._server_thread = threading.Thread(target=self._run_server, daemon=True)
+        self._server_thread.start()
         
         # Mark as initialized
         self._initialized = True
@@ -86,11 +87,16 @@ class RpcContext:
         if not self._initialized:
             return
         
-        # Clean up RPC (placeholder for actual implementation)
         print("Shutting down RPC")
         
         # Mark as not initialized
         self._initialized = False
+        
+        if hasattr(self, '_worker_thread') and self._worker_thread.is_alive():
+            self._worker_thread.join(timeout=1.0)
+            
+        if hasattr(self, '_server_thread') and self._server_thread.is_alive():
+            self._server_thread.join(timeout=1.0)
     
     def register_function(self, name: str, func: Callable):
         """
@@ -114,6 +120,67 @@ class RpcContext:
             
             # Sleep to avoid busy waiting
             time.sleep(0.01)
+            
+    def _run_server(self):
+        """Run RPC server to handle incoming requests."""
+        import socket
+        import pickle
+        import struct
+        
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        
+        server_addr = ('localhost', 50000 + self.rank)
+        server_socket.bind(server_addr)
+        
+        server_socket.listen(5)
+        print(f"RPC server listening on {server_addr}")
+        
+        while self._initialized:
+            try:
+                client_socket, client_addr = server_socket.accept()
+                
+                handler_thread = threading.Thread(
+                    target=self._handle_connection,
+                    args=(client_socket, client_addr),
+                    daemon=True
+                )
+                handler_thread.start()
+            except Exception as e:
+                if self._initialized:  # Only log if still running
+                    print(f"Error accepting connection: {e}")
+                    time.sleep(0.1)  # Avoid busy waiting on error
+        
+        server_socket.close()
+        
+    def _handle_connection(self, client_socket, client_addr):
+        """Handle an incoming RPC connection."""
+        import pickle
+        import struct
+        
+        try:
+            length_data = client_socket.recv(4)
+            if not length_data:
+                return
+            
+            message_length = struct.unpack('>I', length_data)[0]
+            
+            data = b''
+            while len(data) < message_length:
+                chunk = client_socket.recv(min(4096, message_length - len(data)))
+                if not chunk:
+                    break
+                data += chunk
+            
+            request = pickle.loads(data)
+            
+            with self._lock:
+                self._request_queue.append(request)
+            
+        except Exception as e:
+            print(f"Error handling connection from {client_addr}: {e}")
+        finally:
+            client_socket.close()
     
     def _process_request(self, request: Dict[str, Any]):
         """
@@ -187,11 +254,28 @@ class RpcContext:
             "kwargs": kwargs,
         }
         
-        # Send request (placeholder for actual implementation)
-        # In a real implementation, this would send the request to the destination rank
-        # For now, we'll simulate it by adding the request to our own queue
-        with self._lock:
-            self._request_queue.append(request)
+        if dst_rank == self.rank:
+            with self._lock:
+                self._request_queue.append(request)
+        else:
+            try:
+                import socket
+                import pickle
+                import struct
+                
+                dst_addr = ('localhost', 50000 + dst_rank)
+                
+                serialized_request = pickle.dumps(request)
+                
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect(dst_addr)
+                    
+                    sock.sendall(struct.pack('>I', len(serialized_request)))
+                    sock.sendall(serialized_request)
+            except Exception as e:
+                print(f"Error sending RPC request to rank {dst_rank}: {e}")
+                with self._lock:
+                    self._request_queue.append(request)
         
         if not sync:
             # Asynchronous call
