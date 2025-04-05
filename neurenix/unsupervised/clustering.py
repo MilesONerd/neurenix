@@ -446,6 +446,7 @@ class SpectralClustering:
                         v_new = laplacian.numpy() @ v
                         v_new = v_new / np.linalg.norm(v_new)
                         
+                        # Check for convergence
                         if np.abs(np.dot(v, v_new)) > 0.9999:
                             break
                         

@@ -127,10 +127,68 @@ def fine_tune(
             batch_data = [train_data[i] for i in batch_indices]
             batch_labels = [train_labels[i] for i in batch_indices]
             
-            # Stack tensors into batches
-            # Note: In a real implementation, we'd want to handle variable-sized inputs
-            batch_data_tensor = Tensor.stack(batch_data)
-            batch_labels_tensor = Tensor.stack(batch_labels)
+            try:
+                batch_data_tensor = Tensor.stack(batch_data)
+            except (ValueError, RuntimeError):
+                shapes = [data.shape for data in batch_data]
+                max_dims = []
+                
+                for i in range(max(len(shape) for shape in shapes)):
+                    max_dim = max((shape[i] if i < len(shape) else 0) for shape in shapes)
+                    max_dims.append(max_dim)
+                
+                padded_batch = []
+                for data in batch_data:
+                    if len(data.shape) < len(max_dims):
+                        for _ in range(len(max_dims) - len(data.shape)):
+                            data = data.unsqueeze(-1)
+                    
+                    padding = []
+                    for i, dim in enumerate(data.shape):
+                        pad_size = max_dims[i] - dim
+                        padding.append((0, pad_size))
+                    
+                    padded_data = Tensor.pad(data, padding, value=0)
+                    padded_batch.append(padded_data)
+                
+                batch_data_tensor = Tensor.stack(padded_batch)
+            
+            try:
+                batch_labels_tensor = Tensor.stack(batch_labels)
+            except (ValueError, RuntimeError):
+                if all(isinstance(label.item() if label.numel() == 1 else None, int) for label in batch_labels):
+                    num_classes = max(label.item() for label in batch_labels) + 1
+                    one_hot_labels = []
+                    
+                    for label in batch_labels:
+                        one_hot = Tensor.zeros(num_classes)
+                        one_hot[label.item()] = 1
+                        one_hot_labels.append(one_hot)
+                    
+                    batch_labels_tensor = Tensor.stack(one_hot_labels)
+                else:
+                    shapes = [label.shape for label in batch_labels]
+                    max_dims = []
+                    
+                    for i in range(max(len(shape) for shape in shapes)):
+                        max_dim = max((shape[i] if i < len(shape) else 0) for shape in shapes)
+                        max_dims.append(max_dim)
+                    
+                    padded_batch = []
+                    for label in batch_labels:
+                        if len(label.shape) < len(max_dims):
+                            for _ in range(len(max_dims) - len(label.shape)):
+                                label = label.unsqueeze(-1)
+                        
+                        padding = []
+                        for i, dim in enumerate(label.shape):
+                            pad_size = max_dims[i] - dim
+                            padding.append((0, pad_size))
+                        
+                        padded_label = Tensor.pad(label, padding, value=0)
+                        padded_batch.append(padded_label)
+                    
+                    batch_labels_tensor = Tensor.stack(padded_batch)
             
             # Zero gradients
             optimizer.zero_grad()

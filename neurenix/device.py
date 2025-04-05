@@ -171,13 +171,41 @@ def get_device_count(device_type: DeviceType) -> int:
         
         # In WebAssembly context, there's at most one WebGPU device
         if sys.platform == "emscripten" or "pyodide" in sys.modules:
-            # Return 1 if WebGPU is available in the browser
             try:
-                # This is a simplified check, in a real implementation
-                # we would check if the browser supports WebGPU
-                return 1
-            except:
-                return 0
+                import js
+                
+                if hasattr(js.navigator, 'gpu') and hasattr(js.navigator.gpu, 'requestAdapter'):
+                    adapter_promise = js.navigator.gpu.requestAdapter()
+                    
+                    def check_adapter(adapter):
+                        return 1 if adapter else 0
+                    
+                    result = js.Promise.resolve(adapter_promise).then(check_adapter).catch(lambda _: 0)
+                    
+                    return result.valueOf()
+                else:
+                    return 0
+            except ImportError:
+                try:
+                    import emscripten
+                    
+                    check_webgpu_js = """
+                    function checkWebGPU() {
+                        if (navigator.gpu && navigator.gpu.requestAdapter) {
+                            return navigator.gpu.requestAdapter()
+                                .then(adapter => adapter ? 1 : 0)
+                                .catch(() => 0);
+                        }
+                        return Promise.resolve(0);
+                    }
+                    """
+                    
+                    emscripten.run_script(check_webgpu_js)
+                    result = emscripten.run_script_int("checkWebGPU()")
+                    
+                    return result
+                except ImportError:
+                    return 0
         else:
             # If not in WebAssembly context, check through bindings
             try:
