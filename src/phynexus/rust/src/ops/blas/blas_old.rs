@@ -108,18 +108,34 @@ pub fn gemm(
             }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
@@ -181,18 +197,34 @@ pub fn dot(x: &Tensor, y: &Tensor) -> Result<f32> {
             }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
@@ -290,18 +322,34 @@ pub fn gemv(a: &Tensor, x: &Tensor, y: &mut Tensor, alpha: f32, beta: f32, trans
             }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
