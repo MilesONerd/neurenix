@@ -194,25 +194,49 @@ pub fn conv2d(
             Ok(output)
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA conv2d
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA conv2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA conv2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm conv2d
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm conv2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm conv2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU conv2d
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU conv2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU conv2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
@@ -355,19 +379,49 @@ pub fn conv_transpose2d(
             Ok(output)
         },
         DeviceType::CUDA => {
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA conv_transpose2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA conv_transpose2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm conv_transpose2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm conv_transpose2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU conv_transpose2d not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU conv_transpose2d implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
