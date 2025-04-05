@@ -4,6 +4,16 @@ mod conv2d;
 
 pub use conv2d::*;
 
+pub struct Conv2dParams {
+    pub stride: Vec<usize>,
+    
+    pub padding: Vec<usize>,
+    
+    pub dilation: Vec<usize>,
+    
+    pub groups: usize,
+}
+
 use crate::error::{PhynexusError, Result};
 use crate::tensor::Tensor;
 

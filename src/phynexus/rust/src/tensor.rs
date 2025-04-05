@@ -165,7 +165,7 @@ impl Tensor {
     }
     
     pub fn zeros(shape: &[usize]) -> Result<Self> {
-        let size = shape.iter().product();
+        let size: usize = shape.iter().product();
         let dtype = DataType::Float32;
         let device = Device::cpu();
         
@@ -180,7 +180,7 @@ impl Tensor {
     
     pub fn ones(shape: &[usize]) -> Result<Self> {
         let mut tensor = Self::zeros(shape)?;
-        let size = shape.iter().product();
+        let size: usize = shape.iter().product();
         let dtype = DataType::Float32;
         
         unsafe {
@@ -456,6 +456,35 @@ impl Tensor {
         }
         
         self.transpose(0, 1)
+    }
+    
+    pub fn reshape(&self, new_shape: &[usize]) -> Result<Self> {
+        let new_size: usize = new_shape.iter().product();
+        let old_size = self.numel();
+        
+        if new_size != old_size {
+            return Err(crate::error::PhynexusError::InvalidShape(format!(
+                "Cannot reshape tensor of size {} to shape {:?} with size {}",
+                old_size, new_shape, new_size
+            )));
+        }
+        
+        let mut result = Self::new(new_shape.to_vec(), self.dtype, self.device.clone())?;
+        
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self.data,
+                result.data_mut(),
+                self.size,
+            );
+        }
+        
+        result.requires_grad = self.requires_grad;
+        if let Some(grad) = &self.grad {
+            result.grad = Some(Box::new((**grad).reshape(new_shape)?));
+        }
+        
+        Ok(result)
     }
 }
 
