@@ -741,13 +741,15 @@ class Tensor:
         Returns:
             A new tensor with the result of the matrix multiplication.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.matmul(self._numpy_data, other._numpy_data),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import matmul
+            return matmul(self, other)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.matmul(self._numpy_data, other._numpy_data),
+                device=self._device
+            )
+            return result
     
     def mean(self, dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
         """
@@ -760,13 +762,15 @@ class Tensor:
         Returns:
             A new tensor with the mean values.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.mean(self._numpy_data, axis=dim, keepdims=keepdim),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import mean
+            return mean(self, dim, keepdim)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.mean(self._numpy_data, axis=dim, keepdims=keepdim),
+                device=self._device
+            )
+            return result
     
     def sum(self, dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
         """
@@ -779,13 +783,15 @@ class Tensor:
         Returns:
             A new tensor with the sum values.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.sum(self._numpy_data, axis=dim, keepdims=keepdim),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import sum_tensor
+            return sum_tensor(self, dim, keepdim)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.sum(self._numpy_data, axis=dim, keepdims=keepdim),
+                device=self._device
+            )
+            return result
     
     def abs(self) -> "Tensor":
         """
@@ -794,13 +800,15 @@ class Tensor:
         Returns:
             A new tensor with the absolute values.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.abs(self._numpy_data),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import abs_tensor
+            return abs_tensor(self)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.abs(self._numpy_data),
+                device=self._device
+            )
+            return result
     
     def clamp(self, min: Optional[float] = None, max: Optional[float] = None) -> "Tensor":
         """
@@ -813,13 +821,15 @@ class Tensor:
         Returns:
             A new tensor with clamped values.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.clip(self._numpy_data, min, max),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import clamp
+            return clamp(self, min, max)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.clip(self._numpy_data, min, max),
+                device=self._device
+            )
+            return result
     
     def log1p(self) -> "Tensor":
         """
@@ -828,13 +838,15 @@ class Tensor:
         Returns:
             A new tensor with the result of log(1 + x).
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        result = Tensor(
-            np.log1p(self._numpy_data),
-            device=self._device
-        )
-        return result
+        try:
+            from neurenix.binding import log1p
+            return log1p(self)
+        except (ImportError, AttributeError):
+            result = Tensor(
+                np.log1p(self._numpy_data),
+                device=self._device
+            )
+            return result
     
     # Static methods for tensor creation
     
@@ -850,11 +862,13 @@ class Tensor:
         Returns:
             A new tensor containing the stacked tensors.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        numpy_tensors = [t._numpy_data for t in tensors]
-        stacked = np.stack(numpy_tensors, axis=dim)
-        return Tensor(stacked, device=tensors[0].device)
+        try:
+            from neurenix.binding import stack_tensors
+            return stack_tensors(tensors, dim)
+        except (ImportError, AttributeError):
+            numpy_tensors = [t._numpy_data for t in tensors]
+            stacked = np.stack(numpy_tensors, axis=dim)
+            return Tensor(stacked, device=tensors[0].device)
     
     @staticmethod
     def cat(tensors: List["Tensor"], dim: int = 0) -> "Tensor":
@@ -868,11 +882,13 @@ class Tensor:
         Returns:
             A new tensor containing the concatenated tensors.
         """
-        # TODO: Use Phynexus bindings when available
-        # For now, use NumPy as a fallback
-        numpy_tensors = [t._numpy_data for t in tensors]
-        concatenated = np.concatenate(numpy_tensors, axis=dim)
-        return Tensor(concatenated, device=tensors[0].device)
+        try:
+            from neurenix.binding import cat_tensors
+            return cat_tensors(tensors, dim)
+        except (ImportError, AttributeError):
+            numpy_tensors = [t._numpy_data for t in tensors]
+            concatenated = np.concatenate(numpy_tensors, axis=dim)
+            return Tensor(concatenated, device=tensors[0].device)
     
     @staticmethod
     def zeros(shape: Sequence[int], dtype: Optional[DType] = None, device: Optional[Device] = None, requires_grad: bool = False) -> "Tensor":
