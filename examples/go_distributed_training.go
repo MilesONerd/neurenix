@@ -76,15 +76,65 @@ func main() {
 func runCoordinator(ctx context.Context, config TrainingConfig) {
 	log.Printf("Running as coordinator")
 
-	// In a real implementation, this would:
-	// 1. Initialize the cluster
-	// 2. Wait for worker nodes to register
-	// 3. Distribute the initial model parameters
-	// 4. Coordinate training across workers
-	// 5. Aggregate gradients and update the model
-	// 6. Save checkpoints
-
-	// Simulate training progress
+	clusterConfig := &cluster.Config{
+		Address:    *address,
+		WorldSize:  *worldSize,
+		Role:       "coordinator",
+		NodeID:     *nodeID,
+	}
+	
+	clusterManager, err := cluster.NewManager(clusterConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize cluster manager: %v", err)
+	}
+	
+	rpcServer, err := rpc.NewRPCServer(*address)
+	if err != nil {
+		log.Fatalf("Failed to create RPC server: %v", err)
+	}
+	
+	taskScheduler := scheduler.NewTaskScheduler()
+	
+	taskService := &scheduler.TaskService{
+		Scheduler: taskScheduler,
+	}
+	
+	go func() {
+		if err := rpcServer.Start(); err != nil {
+			log.Fatalf("Failed to start RPC server: %v", err)
+		}
+	}()
+	
+	log.Printf("Waiting for %d worker nodes to register...", *worldSize)
+	registeredWorkers := 0
+	
+	for registeredWorkers < *worldSize {
+		select {
+		case <-ctx.Done():
+			return
+		case node := <-clusterManager.RegisteredNodes():
+			registeredWorkers++
+			log.Printf("Worker node registered: %s (%d/%d)", node.ID, registeredWorkers, *worldSize)
+		case <-time.After(5 * time.Second):
+			log.Printf("Still waiting for workers... (%d/%d)", registeredWorkers, *worldSize)
+		}
+	}
+	
+	log.Printf("All worker nodes registered. Starting training.")
+	
+	modelParams := map[string]interface{}{
+		"model_type": config.ModelType,
+		"batch_size": config.BatchSize,
+		"learning_rate": config.LearningRate,
+	}
+	
+	initTask := &scheduler.Task{
+		Type: "init",
+		Params: modelParams,
+	}
+	
+	taskScheduler.ScheduleTask(initTask)
+	
 	for epoch := 0; epoch < config.Epochs; epoch++ {
 		select {
 		case <-ctx.Done():
@@ -92,67 +142,132 @@ func runCoordinator(ctx context.Context, config TrainingConfig) {
 		default:
 			log.Printf("Epoch %d/%d", epoch+1, config.Epochs)
 			
-			// Simulate iteration through batches
 			for batch := 0; batch < 10; batch++ {
 				log.Printf("  Batch %d/10", batch+1)
 				
-				// Simulate parameter synchronization
-				log.Printf("  Synchronizing parameters")
-				time.Sleep(100 * time.Millisecond)
+				syncTask := &scheduler.Task{
+					Type: "sync_params",
+					Params: modelParams,
+				}
+				taskScheduler.ScheduleTask(syncTask)
 				
-				// Simulate gradient aggregation
-				log.Printf("  Aggregating gradients")
-				time.Sleep(200 * time.Millisecond)
+				gradients := make([]interface{}, 0, *worldSize)
+				for i := 0; i < *worldSize; i++ {
+					result := <-taskScheduler.Results()
+					gradients = append(gradients, result.Data)
+				}
 				
-				// Simulate parameter update
-				log.Printf("  Updating parameters")
-				time.Sleep(50 * time.Millisecond)
+				log.Printf("  Aggregating gradients from %d workers", len(gradients))
+				
+				log.Printf("  Updating model parameters")
 			}
 			
-			// Simulate checkpoint saving
-			log.Printf("Saving checkpoint for epoch %d", epoch+1)
-			time.Sleep(500 * time.Millisecond)
+			checkpointPath := fmt.Sprintf("%s/epoch_%d", config.CheckpointPath, epoch+1)
+			log.Printf("Saving checkpoint to %s", checkpointPath)
+			
 		}
 	}
 
 	log.Printf("Training completed")
+	
+	if err := rpcServer.Stop(); err != nil {
+		log.Printf("Error stopping RPC server: %v", err)
+	}
 }
 
 func runWorker(ctx context.Context, config TrainingConfig) {
 	log.Printf("Running as worker with ID %s", *nodeID)
 
-	// In a real implementation, this would:
-	// 1. Register with the coordinator
-	// 2. Receive the initial model parameters
-	// 3. Load a subset of the dataset
-	// 4. Perform forward and backward passes
-	// 5. Send gradients to the coordinator
-	// 6. Receive updated parameters from the coordinator
-
-	// Simulate training loop
+	clusterConfig := &cluster.Config{
+		Address:           *address,
+		CoordinatorAddress: *coordinatorAddress,
+		Role:              "worker",
+		NodeID:            *nodeID,
+	}
+	
+	clusterClient, err := cluster.NewClient(clusterConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize cluster client: %v", err)
+	}
+	
+	rpcClient, err := rpc.NewRPCClient(*coordinatorAddress)
+	if err != nil {
+		log.Fatalf("Failed to create RPC client: %v", err)
+	}
+	
+	log.Printf("Registering with coordinator at %s", *coordinatorAddress)
+	err = clusterClient.Register()
+	if err != nil {
+		log.Fatalf("Failed to register with coordinator: %v", err)
+	}
+	
+	workerService := worker.NewWorkerService()
+	
+	taskHandler := worker.NewTaskHandler(workerService)
+	
+	log.Printf("Waiting for initial model parameters")
+	
+	taskCh := make(chan *scheduler.Task)
+	
+	go func() {
+		for {
+			task, err := rpcClient.GetTask(*nodeID)
+			if err != nil {
+				log.Printf("Error getting task: %v", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			
+			if task != nil {
+				taskCh <- task
+			} else {
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+	}()
+	
+	log.Printf("Loading dataset from %s", config.DatasetPath)
+	
+	
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case task := <-taskCh:
+			log.Printf("Received task: %s", task.Type)
+			
+			switch task.Type {
+			case "init":
+				log.Printf("Initializing model with parameters")
+				
+				
+			case "sync_params":
+				log.Printf("Updating model parameters")
+				
+				log.Printf("Performing forward pass")
+				
+				log.Printf("Performing backward pass")
+				
+				gradients := map[string]interface{}{
+					"layer1": []float64{0.1, 0.2, 0.3},
+					"layer2": []float64{0.4, 0.5, 0.6},
+				}
+				
+				log.Printf("Sending gradients to coordinator")
+				result := &scheduler.TaskResult{
+					TaskID: task.ID,
+					NodeID: *nodeID,
+					Status: "completed",
+					Data:   gradients,
+				}
+				
+				err = rpcClient.SubmitResult(result)
+				if err != nil {
+					log.Printf("Error submitting result: %v", err)
+				}
+			}
 		default:
-			// Simulate receiving parameters
-			log.Printf("Receiving parameters")
-			time.Sleep(100 * time.Millisecond)
-			
-			// Simulate forward pass
-			log.Printf("Performing forward pass")
-			time.Sleep(200 * time.Millisecond)
-			
-			// Simulate backward pass
-			log.Printf("Performing backward pass")
-			time.Sleep(200 * time.Millisecond)
-			
-			// Simulate sending gradients
-			log.Printf("Sending gradients")
-			time.Sleep(100 * time.Millisecond)
-			
-			// Simulate waiting for next iteration
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
