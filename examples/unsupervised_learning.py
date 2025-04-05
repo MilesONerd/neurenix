@@ -164,12 +164,25 @@ def main():
     kmeans = KMeans(n_clusters=5, random_state=42)
     cluster_labels = kmeans.fit_predict(data_tensor)
     
-    # Evaluate clustering (adjusted Rand index)
-    # In a real implementation, we'd compute the ARI
-    # For now, we'll just print a placeholder
+    from sklearn.metrics import adjusted_rand_score
+    
+    pred_labels = cluster_labels.numpy()
+    
+    ari = adjusted_rand_score(true_labels, pred_labels)
+    
+    from sklearn.metrics import homogeneity_score, completeness_score, v_measure_score
+    
+    homogeneity = homogeneity_score(true_labels, pred_labels)
+    completeness = completeness_score(true_labels, pred_labels)
+    v_measure = v_measure_score(true_labels, pred_labels)
+    
     print("Clustering evaluation:")
-    print("- Number of clusters: 5")
-    print("- Cluster sizes:", [np.sum(cluster_labels.numpy() == i) for i in range(5)])
+    print(f"- Number of clusters: {kmeans.n_clusters}")
+    print(f"- Adjusted Rand Index: {ari:.4f}")
+    print(f"- Homogeneity: {homogeneity:.4f}")
+    print(f"- Completeness: {completeness:.4f}")
+    print(f"- V-measure: {v_measure:.4f}")
+    print("- Cluster sizes:", [np.sum(pred_labels == i) for i in range(kmeans.n_clusters)])
     
     # Part 4: Variational Autoencoder (VAE)
     print("\nPart 4: Variational Autoencoder")

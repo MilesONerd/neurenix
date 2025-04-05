@@ -57,8 +57,28 @@ html = f"""
             outputDiv.innerHTML = `<p>Model loaded: ${{model.name}}</p>`;
             outputDiv.innerHTML += `<p>Layers: ${{Object.keys(model.layers).join(', ')}}</p>`;
             
-            // In a real implementation, you would run the model here
-            // using WebAssembly
+            // Create input tensor (same as in Python example)
+            const inputData = new Float32Array(10);
+            for (let i = 0; i < 10; i++) {{
+                inputData[i] = Math.random() * 2 - 1; // Random values between -1 and 1
+            }}
+            
+            // Create input tensor
+            const inputTensor = model.createTensor([1, 10], inputData);
+            
+            // Run the model
+            console.log("Running model inference...");
+            const startTime = performance.now();
+            const outputTensor = await model.forward(inputTensor);
+            const endTime = performance.now();
+            
+            // Get output data
+            const outputData = await outputTensor.getData();
+            
+            // Display results
+            outputDiv.innerHTML += `<p>Inference time: ${{(endTime - startTime).toFixed(2)}} ms</p>`;
+            outputDiv.innerHTML += `<p>Input: [${{Array.from(inputData).map(x => x.toFixed(4)).join(', ')}}]</p>`;
+            outputDiv.innerHTML += `<p>Output: [${{Array.from(outputData).map(x => x.toFixed(4)).join(', ')}}]</p>`;
         }}
         
         runModel().catch(error => {{
