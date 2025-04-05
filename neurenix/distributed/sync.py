@@ -9,6 +9,11 @@ from typing import Dict, List, Optional, Tuple, Union, Any
 
 import numpy as np
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from neurenix.nn.module import Module
 from neurenix.tensor import Tensor
 from neurenix.distributed.distributed import get_world_size, get_rank
@@ -159,16 +164,51 @@ class SyncBatchNorm(Module):
         sum_x = x_reshaped.sum(dim=(0, 2))
         sum_x2 = (x_reshaped ** 2).sum(dim=(0, 2))
         
-        # Synchronize statistics across processes
-        # In a real implementation, this would use all_reduce
-        # For now, we'll simulate it
         world_size = get_world_size()
+        rank = get_rank()
         
-        # Simulate all_reduce for sum_x, sum_x2, and num_elements
-        # In a real implementation, this would use a communication backend
-        global_sum_x = sum_x * world_size  # Simulated all_reduce
-        global_sum_x2 = sum_x2 * world_size  # Simulated all_reduce
-        global_num_elements = num_elements * world_size  # Simulated all_reduce
+        try:
+            import torch.distributed as dist
+            
+            sum_x_tensor = Tensor.to_torch(sum_x)
+            sum_x2_tensor = Tensor.to_torch(sum_x2)
+            num_elements_tensor = torch.tensor([num_elements], dtype=torch.float32, device=sum_x_tensor.device)
+            
+            dist.all_reduce(sum_x_tensor, op=dist.ReduceOp.SUM)
+            dist.all_reduce(sum_x2_tensor, op=dist.ReduceOp.SUM)
+            dist.all_reduce(num_elements_tensor, op=dist.ReduceOp.SUM)
+            
+            global_sum_x = Tensor.from_torch(sum_x_tensor)
+            global_sum_x2 = Tensor.from_torch(sum_x2_tensor)
+            global_num_elements = num_elements_tensor.item()
+            
+        except (ImportError, AttributeError):
+            try:
+                from mpi4py import MPI
+                
+                comm = MPI.COMM_WORLD
+                
+                sum_x_np = sum_x.numpy()
+                sum_x2_np = sum_x2.numpy()
+                num_elements_np = np.array([num_elements], dtype=np.float32)
+                
+                global_sum_x_np = np.zeros_like(sum_x_np)
+                global_sum_x2_np = np.zeros_like(sum_x2_np)
+                global_num_elements_np = np.zeros_like(num_elements_np)
+                
+                comm.Allreduce(sum_x_np, global_sum_x_np, op=MPI.SUM)
+                comm.Allreduce(sum_x2_np, global_sum_x2_np, op=MPI.SUM)
+                comm.Allreduce(num_elements_np, global_num_elements_np, op=MPI.SUM)
+                
+                global_sum_x = Tensor(global_sum_x_np)
+                global_sum_x2 = Tensor(global_sum_x2_np)
+                global_num_elements = float(global_num_elements_np[0])
+                
+            except ImportError:
+                print("Warning: Neither torch.distributed nor MPI is available. Simulating all_reduce.")
+                global_sum_x = sum_x * world_size
+                global_sum_x2 = sum_x2 * world_size
+                global_num_elements = num_elements * world_size
         
         # Compute global mean and variance
         global_mean = global_sum_x / global_num_elements
