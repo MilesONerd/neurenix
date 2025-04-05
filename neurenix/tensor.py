@@ -3,11 +3,15 @@ Tensor implementation for the Neurenix framework.
 """
 
 import numpy as np
+import logging
 from typing import List, Tuple, Union, Optional, Sequence, Any
 from enum import Enum
 from contextlib import contextmanager
 
 from neurenix.device import Device, DeviceType
+from neurenix.device_manager import DeviceManager, Genesis
+
+logger = logging.getLogger("neurenix")
 
 class DType(Enum):
     """Data types supported by Neurenix tensors."""
@@ -77,25 +81,37 @@ class Tensor:
         """
         from neurenix.core import get_config
         
+        self._device_manager = DeviceManager()
+        
         # Set device
         if device is None:
-            device_str = get_config().get("device", "cpu")
-            if device_str == "cpu":
-                self._device = Device(DeviceType.CPU)
-            elif device_str.startswith("cuda"):
-                # Extract device index if specified (e.g., "cuda:0")
-                parts = device_str.split(":")
-                index = int(parts[1]) if len(parts) > 1 else 0
-                self._device = Device(DeviceType.CUDA, index)
-            elif device_str.startswith("tpu"):
-                # Extract device index if specified (e.g., "tpu:0")
-                parts = device_str.split(":")
-                index = int(parts[1]) if len(parts) > 1 else 0
-                self._device = Device(DeviceType.TPU, index)
-            else:
-                raise ValueError(f"Unsupported device: {device_str}")
+            try:
+                genesis = Genesis()
+                if shape is not None:
+                    self._device = genesis.select_device(tensor_shape=shape)
+                else:
+                    self._device = self._device_manager.active_device
+            except Exception as e:
+                logger.warning(f"Genesis device selection failed: {e}. Using default device.")
+                device_str = get_config().get("device", "cpu")
+                if device_str == "cpu":
+                    self._device = Device(DeviceType.CPU)
+                elif device_str.startswith("cuda"):
+                    # Extract device index if specified (e.g., "cuda:0")
+                    parts = device_str.split(":")
+                    index = int(parts[1]) if len(parts) > 1 else 0
+                    self._device = Device(DeviceType.CUDA, index)
+                elif device_str.startswith("tpu"):
+                    # Extract device index if specified (e.g., "tpu:0")
+                    parts = device_str.split(":")
+                    index = int(parts[1]) if len(parts) > 1 else 0
+                    self._device = Device(DeviceType.TPU, index)
+                else:
+                    raise ValueError(f"Unsupported device: {device_str}")
         else:
             self._device = device
+            
+        self._device_manager.register_tensor(id(self))
         
         # Handle different input types
         if data is None:
@@ -216,18 +232,22 @@ class Tensor:
         # For now, just return the NumPy data
         return self._numpy_data
     
-    def to(self, device: Device) -> "Tensor":
+    def to(self, device: Device, non_blocking: bool = False) -> "Tensor":
         """
         Move the tensor to the specified device.
         
         Args:
             device: The target device.
+            non_blocking: If True, the copy will be performed asynchronously.
+                          Only has an effect for CUDA/ROCm devices.
             
         Returns:
             A new tensor on the target device.
         """
         if device == self._device:
             return self
+        
+        self._device_manager.active_device = device
         
         # Create a new tensor on the target device
         result = Tensor(
@@ -237,11 +257,46 @@ class Tensor:
             requires_grad=self._requires_grad,
         )
         
-        # TODO: Copy data to the new device when Phynexus bindings are available
-        # For now, just copy the NumPy data
-        result._numpy_data = self._numpy_data.copy()
+        try:
+            from neurenix.binding import copy_tensor_to_device
+            copy_tensor_to_device(self, result, non_blocking)
+        except (ImportError, AttributeError):
+            result._numpy_data = self._numpy_data.copy()
+            
+            logger.debug(f"Using NumPy fallback for device transfer to {device}")
+        
+        if not non_blocking:
+            self._device_manager.synchronize(device)
         
         return result
+        
+    def hot_swap_device(self, device: Device) -> None:
+        """
+        Hot-swap the tensor to a different device without creating a new tensor.
+        
+        This method changes the device of the tensor in-place, which is more
+        efficient than creating a new tensor with the to() method.
+        
+        Args:
+            device: The target device.
+        """
+        if device == self._device:
+            return
+            
+        self._device_manager.active_device = device
+        
+        try:
+            from neurenix.binding import hot_swap_tensor_device
+            hot_swap_tensor_device(self, device)
+        except (ImportError, AttributeError):
+            temp_tensor = self.to(device)
+            self._numpy_data = temp_tensor._numpy_data
+            
+            logger.debug(f"Using NumPy fallback for hot-swapping to {device}")
+        
+        self._device = device
+        
+        self._device_manager.synchronize(device)
         
     def clone(self) -> "Tensor":
         """
