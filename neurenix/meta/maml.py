@@ -67,9 +67,15 @@ class MAML(MetaLearningModel):
         # Clone the model to create a task-specific model
         adapted_model = self.clone_model()
         
-        # Create a loss function
-        # In a real implementation, this would be configurable
-        loss_fn = MSELoss()
+        try:
+            if len(support_y.shape) > 1 and support_y.shape[1] > 1:
+                loss_fn = CrossEntropyLoss()
+            elif support_y.dtype == Tensor.int64 or support_y.dtype == Tensor.int32:
+                loss_fn = CrossEntropyLoss()
+            else:
+                loss_fn = MSELoss()
+        except:
+            loss_fn = MSELoss()
         
         # Perform inner loop adaptation
         for _ in range(steps):

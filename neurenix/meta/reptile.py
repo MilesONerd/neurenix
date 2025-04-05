@@ -65,14 +65,25 @@ class Reptile(MetaLearningModel):
         # Clone the model to create a task-specific model
         adapted_model = self.clone_model()
         
-        # Create a loss function
-        # In a real implementation, this would be configurable
-        loss_fn = MSELoss()
+        try:
+            if len(support_y.shape) > 1 and support_y.shape[1] > 1:
+                loss_fn = CrossEntropyLoss()
+            elif support_y.dtype == Tensor.int64 or support_y.dtype == Tensor.int32:
+                loss_fn = CrossEntropyLoss()
+            else:
+                loss_fn = MSELoss()
+        except:
+            loss_fn = MSELoss()
         
-        # Create an optimizer for the inner loop
-        # In a real implementation, this would be configurable
-        from neurenix.optim import SGD
-        inner_optimizer = SGD(adapted_model.parameters(), lr=self.inner_lr)
+        try:
+            try:
+                from neurenix.optim import Adam
+                inner_optimizer = Adam(adapted_model.parameters(), lr=self.inner_lr)
+            except ImportError:
+                from neurenix.optim import SGD
+                inner_optimizer = SGD(adapted_model.parameters(), lr=self.inner_lr)
+        except ImportError:
+            inner_optimizer = None
         
         # Perform inner loop adaptation
         for _ in range(steps):
