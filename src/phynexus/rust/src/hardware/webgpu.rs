@@ -75,7 +75,7 @@ impl Backend for WebGpuBackend {
                 let result = 0; // WGPU_OK
                 if result != 0 { // WGPU_OK
                     return Err(PhynexusError::HardwareError(
-                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                        format!("Failed to set WebGPU device: error {}", result)
                     ));
                 }
                 
@@ -95,7 +95,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for device {}", device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }
@@ -109,7 +109,7 @@ impl Backend for WebGpuBackend {
                 let result = 0; // WGPU_OK
                 if result != 0 { // WGPU_OK
                     return Err(PhynexusError::HardwareError(
-                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                        format!("Failed to set WebGPU device: error {}", result)
                     ));
                 }
                 
@@ -132,7 +132,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for device {}", device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }
@@ -146,7 +146,7 @@ impl Backend for WebGpuBackend {
                 let result = 0; // WGPU_OK
                 if result != 0 { // WGPU_OK
                     return Err(PhynexusError::HardwareError(
-                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                        format!("Failed to set WebGPU device: error {}", result)
                     ));
                 }
                 
@@ -176,7 +176,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for device {}", device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }
@@ -190,7 +190,7 @@ impl Backend for WebGpuBackend {
                 let result = 0; // WGPU_OK
                 if result != 0 { // WGPU_OK
                     return Err(PhynexusError::HardwareError(
-                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                        format!("Failed to set WebGPU device: error {}", result)
                     ));
                 }
                 
@@ -220,7 +220,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for device {}", device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }
@@ -261,7 +261,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for devices {} to {}", src_device_index, dst_device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }
@@ -275,7 +275,7 @@ impl Backend for WebGpuBackend {
                 let result = 0; // WGPU_OK
                 if result != 0 { // WGPU_OK
                     return Err(PhynexusError::HardwareError(
-                        format!("Failed to set WebGPU device {}: error {}", device_index, result)
+                        format!("Failed to set WebGPU device: error {}", result)
                     ));
                 }
                 
@@ -295,7 +295,7 @@ impl Backend for WebGpuBackend {
         #[cfg(not(feature = "webgpu"))]
         {
             Err(PhynexusError::UnsupportedOperation(
-                format!("WebGPU support not enabled in this build for device {}", device_index)
+                "WebGPU support not enabled in this build".to_string()
             ))
         }
     }

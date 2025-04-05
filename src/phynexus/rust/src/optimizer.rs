@@ -43,30 +43,42 @@ impl Optimizer for SGD {
                 continue;
             }
             
-            let grad = param.grad()
-                .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
-                    "Parameter gradient is not initialized".to_string()
-                ))?;
-            
-            let data = param.data_mut()?;
-            let grad_data = grad.data()?;
-            
-            if self.weight_decay > 0.0 {
-                for i in 0..data.len() {
-                    grad_data[i] += self.weight_decay * data[i];
-                }
-            }
-            
-            if self.momentum > 0.0 {
-                let velocity = &mut self.velocity[idx];
+            let grad_data = if let Some(grad) = param.grad() {
+                let grad_ptr = grad.data() as *const f32;
+                let grad_size = grad.numel();
+                let mut grad_vec = Vec::with_capacity(grad_size);
                 
-                for i in 0..data.len() {
-                    velocity[i] = self.momentum * velocity[i] + grad_data[i];
-                    data[i] -= self.lr * velocity[i];
+                unsafe {
+                    for i in 0..grad_size {
+                        grad_vec.push(*grad_ptr.add(i));
+                    }
                 }
+                
+                grad_vec
             } else {
-                for i in 0..data.len() {
-                    data[i] -= self.lr * grad_data[i];
+                continue; // Skip parameters without gradients
+            };
+            
+            let param_ptr = param.data_mut() as *mut f32;
+            let param_size = param.numel();
+            
+            let velocity = &mut self.velocity[idx];
+            
+            for i in 0..param_size {
+                unsafe {
+                    let param_val = *param_ptr.add(i);
+                    let mut grad_val = grad_data[i];
+                    
+                    if self.weight_decay > 0.0 {
+                        grad_val += self.weight_decay * param_val;
+                    }
+                    
+                    if self.momentum > 0.0 {
+                        velocity[i] = self.momentum * velocity[i] + grad_val;
+                        *param_ptr.add(i) -= self.lr * velocity[i];
+                    } else {
+                        *param_ptr.add(i) -= self.lr * grad_val;
+                    }
                 }
             }
         }
@@ -89,7 +101,7 @@ impl Optimizer for SGD {
     }
     
     fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
-        let param_size = param.data()?.len();
+        let param_size = param.numel();
         self.params.push(param as *mut Tensor);
         self.velocity.push(vec![0.0; param_size]);
         Ok(())
@@ -143,34 +155,50 @@ impl Optimizer for Adam {
                 continue;
             }
             
-            let grad = param.grad()
-                .ok_or_else(|| crate::error::PhynexusError::UninitializedError(
-                    "Parameter gradient is not initialized".to_string()
-                ))?;
-            
-            let data = param.data_mut()?;
-            let grad_data = grad.data()?;
-            
-            if self.weight_decay > 0.0 {
-                for i in 0..data.len() {
-                    grad_data[i] += self.weight_decay * data[i];
+            let grad_data = if let Some(grad) = param.grad() {
+                let grad_ptr = grad.data() as *const f32;
+                let grad_size = grad.numel();
+                let mut grad_vec = Vec::with_capacity(grad_size);
+                
+                unsafe {
+                    for i in 0..grad_size {
+                        grad_vec.push(*grad_ptr.add(i));
+                    }
                 }
-            }
+                
+                grad_vec
+            } else {
+                continue; // Skip parameters without gradients
+            };
+            
+            let param_ptr = param.data_mut() as *mut f32;
+            let param_size = param.numel();
             
             let m = &mut self.m[idx];
             let v = &mut self.v[idx];
             
-            let beta1_t = self.beta1.powi(self.step as i32);
-            let beta2_t = self.beta2.powi(self.step as i32);
+            let bias_correction1 = 1.0 - self.beta1.powi(self.step as i32);
+            let bias_correction2 = 1.0 - self.beta2.powi(self.step as i32);
             
-            for i in 0..data.len() {
-                m[i] = self.beta1 * m[i] + (1.0 - self.beta1) * grad_data[i];
-                v[i] = self.beta2 * v[i] + (1.0 - self.beta2) * grad_data[i] * grad_data[i];
-                
-                let m_hat = m[i] / (1.0 - beta1_t);
-                let v_hat = v[i] / (1.0 - beta2_t);
-                
-                data[i] -= self.lr * m_hat / (v_hat.sqrt() + self.eps);
+            for i in 0..param_size {
+                unsafe {
+                    let param_val = *param_ptr.add(i);
+                    let mut grad_val = grad_data[i];
+                    
+                    if self.weight_decay > 0.0 {
+                        grad_val += self.weight_decay * param_val;
+                    }
+                    
+                    m[i] = self.beta1 * m[i] + (1.0 - self.beta1) * grad_val;
+                    
+                    v[i] = self.beta2 * v[i] + (1.0 - self.beta2) * grad_val * grad_val;
+                    
+                    let m_hat = m[i] / bias_correction1;
+                    
+                    let v_hat = v[i] / bias_correction2;
+                    
+                    *param_ptr.add(i) -= self.lr * m_hat / (v_hat.sqrt() + self.eps);
+                }
             }
         }
         
@@ -192,7 +220,7 @@ impl Optimizer for Adam {
     }
     
     fn add_param(&mut self, param: &mut Tensor) -> Result<()> {
-        let param_size = param.data()?.len();
+        let param_size = param.numel();
         self.params.push(param as *mut Tensor);
         self.m.push(vec![0.0; param_size]);
         self.v.push(vec![0.0; param_size]);

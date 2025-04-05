@@ -56,7 +56,7 @@ impl Module for Linear {
             ));
         }
         
-        let mut output = matmul(input, &self.weight.transpose()?)?;
+        let mut output = matmul(input, &self.weight.transpose(0, 1)?)?;
         
         if let Some(bias) = &self.bias {
             output = output.add(bias)?;
@@ -294,8 +294,8 @@ impl Module for LSTM {
         let device = input.device();
         
         use crate::ops::init::zeros_with_device;
-        let h0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device)?;
-        let c0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device)?;
+        let h0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device.clone())?;
+        let c0 = zeros_with_device(&[self.num_layers, batch_size, hidden_size], device.clone())?;
         
         let initial_state = LSTMState { h: h0, c: c0 };
         
