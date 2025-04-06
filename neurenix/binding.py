@@ -612,7 +612,10 @@ def gelu(x, approximate=False):
         return Tensor(result, device=x.device)
 
 # Initialize the Phynexus engine
-init()
+if _HAS_PHYNEXUS:
+    py_init()
+else:
+    init()
 
 # Register shutdown function
 import atexit
