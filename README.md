@@ -107,7 +107,9 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - FPGA support via multiple frameworks:  
     - OpenCL for cross-vendor FPGA programming  
     - Xilinx Vitis for Xilinx FPGAs  
-    - Intel OpenVINO for Intel FPGAs  
+    - Intel OpenVINO for Intel FPGAs
+
+- **DatasetHub**: mechanism that allows users to easily load datasets by providing a URL or file path
 
 ## Documentation
 
