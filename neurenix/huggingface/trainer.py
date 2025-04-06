@@ -82,7 +82,7 @@ class Trainer:
             callbacks=callbacks,
         )
     
-    def _create_training_args(self, args: Dict[str, Any]) -> HFTrainingArguments:
+    def _create_training_args(self, args: Dict[str, Any]) -> "transformers.TrainingArguments":
         """
         Create Hugging Face training arguments.
         
