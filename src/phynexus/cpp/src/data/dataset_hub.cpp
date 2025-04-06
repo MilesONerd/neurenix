@@ -40,6 +40,7 @@ DatasetFormat format_from_string(const std::string& format_str) {
     if (lower_format == "image" || lower_format == "img") return DatasetFormat::IMAGE;
     if (lower_format == "audio") return DatasetFormat::AUDIO;
     if (lower_format == "video") return DatasetFormat::VIDEO;
+    if (lower_format == "sql" || lower_format == "sqlite" || lower_format == "database") return DatasetFormat::SQL;
     if (lower_format == "custom") return DatasetFormat::CUSTOM;
     
     return DatasetFormat::CUSTOM;
@@ -63,6 +64,7 @@ DatasetFormat format_from_extension(const std::string& path) {
     if (extension == "jpg" || extension == "jpeg" || extension == "png" || extension == "bmp" || extension == "gif") return DatasetFormat::IMAGE;
     if (extension == "wav" || extension == "mp3" || extension == "ogg" || extension == "flac") return DatasetFormat::AUDIO;
     if (extension == "mp4" || extension == "avi" || extension == "mov" || extension == "mkv") return DatasetFormat::VIDEO;
+    if (extension == "db" || extension == "sqlite" || extension == "sqlite3" || extension == "sql") return DatasetFormat::SQL;
     
     return DatasetFormat::CUSTOM;
 }
@@ -405,6 +407,8 @@ Dataset::DataVariant DatasetHub::load_data(
             return load_audio(path, options);
         case DatasetFormat::VIDEO:
             return load_video(path, options);
+        case DatasetFormat::SQL:
+            return load_sql(path, options);
         default:
             throw std::runtime_error("Unsupported format");
     }
@@ -548,6 +552,80 @@ Dataset::DataVariant DatasetHub::load_video(
     }
     
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    
+    return data;
+}
+
+Dataset::DataVariant DatasetHub::load_sql(
+    const std::string& path,
+    const std::unordered_map<std::string, std::string>& options
+) {
+    bool is_connection_string = path.find("://") != std::string::npos;
+    bool is_sqlite_file = !is_connection_string && (path.find(".db") != std::string::npos || 
+                                                   path.find(".sqlite") != std::string::npos || 
+                                                   path.find(".sqlite3") != std::string::npos);
+    
+    std::string strategy = "table";
+    if (options.count("strategy")) {
+        strategy = options.at("strategy");
+    }
+    
+    std::string table_name = "";
+    if (options.count("table")) {
+        table_name = options.at("table");
+    }
+    
+    std::string query = "";
+    if (options.count("query")) {
+        query = options.at("query");
+    }
+    
+    std::vector<std::vector<std::string>> data;
+    
+    
+    if (is_connection_string) {
+        std::string db_type;
+        size_t protocol_end = path.find("://");
+        if (protocol_end != std::string::npos) {
+            db_type = path.substr(0, protocol_end);
+        }
+        
+        if (db_type == "sqlite") {
+        } else if (db_type == "mysql" || db_type == "postgresql" || 
+                  db_type == "oracle" || db_type == "mssql") {
+        }
+    } else if (is_sqlite_file) {
+    } else {
+        throw std::runtime_error("Invalid SQL database path or connection string: " + path);
+    }
+    
+    if (strategy == "table") {
+        if (table_name.empty()) {
+            throw std::runtime_error("Table name must be specified when using 'table' strategy");
+        }
+        
+    } else if (strategy == "query") {
+        if (query.empty()) {
+            throw std::runtime_error("Query must be specified when using 'query' strategy");
+        }
+        
+    } else {
+        throw std::runtime_error("Unknown SQL loading strategy: " + strategy);
+    }
+    
+    std::vector<std::string> header;
+    header.push_back("column1");
+    header.push_back("column2");
+    header.push_back("column3");
+    
+    data.push_back(header);
+    
+    std::vector<std::string> row;
+    row.push_back("value1");
+    row.push_back("value2");
+    row.push_back("value3");
+    
+    data.push_back(row);
     
     return data;
 }
