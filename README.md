@@ -143,6 +143,21 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Dataset management with partitioning support
   - Integration with Arrow for efficient data processing
 
+- **SHAP (SHapley Additive exPlanations)**:
+  - KernelSHAP for model-agnostic explanations
+  - TreeSHAP for tree-based models
+  - DeepSHAP for deep learning models
+
+- **LIME (Local Interpretable Model-agnostic Explanations)**:
+  - Support for tabular, text, and image data
+  - Customizable sampling and kernel functions
+
+- **Additional Explanation Techniques**
+  - Feature importance analysis
+  - Partial dependence plots
+  - Counterfactual explanations
+  - Activation visualization
+
 ## Documentation
 
 [Neurenix Documentation](https://neurenix.readthedocs.io/en/latest/)
