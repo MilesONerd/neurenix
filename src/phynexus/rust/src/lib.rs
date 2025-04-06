@@ -22,6 +22,7 @@ pub mod data;
 pub mod continual;
 pub mod async_train;
 pub mod explainable;
+pub mod multiscale;
 
 // Re-export core types
 pub use device::Device;
@@ -53,6 +54,7 @@ fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     continual::register_continual(py, m)?;
     async_train::register_async_train(py, m)?;
     explainable::register_explainable(py, m)?;
+    multiscale::register_multiscale(py, m)?;
     
     Ok(())
 }
