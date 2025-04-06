@@ -14,6 +14,8 @@ pub mod dtype;
 pub mod learning;
 pub mod nn;
 pub mod optimizer;
+pub mod quantization;
+pub mod python;
 
 // Re-export core types
 pub use device::Device;
