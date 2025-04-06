@@ -12,6 +12,13 @@ class DeviceType(Enum):
     ROCM = "rocm"
     WEBGPU = "webgpu"  # WebGPU for WebAssembly context (client-side execution)
     TPU = "tpu"  # Tensor Processing Unit for machine learning acceleration
+    VULKAN = "vulkan"  # Vulkan for cross-platform GPU acceleration
+    OPENCL = "opencl"  # OpenCL for cross-platform GPU acceleration
+    ONEAPI = "oneapi"  # oneAPI for cross-platform acceleration
+    DIRECTML = "directml"  # DirectML for Windows-specific acceleration
+    ONEDNN = "onednn"  # oneDNN for optimized deep learning primitives
+    MKLDNN = "mkldnn"  # MKL-DNN for optimized deep learning primitives
+    TENSORRT = "tensorrt"  # TensorRT for NVIDIA-specific optimizations
 
 class Device:
     """
@@ -72,6 +79,48 @@ class Device:
                 self._available = is_tpu_available()
             except (ImportError, AttributeError):
                 self._available = False
+        elif device_type == DeviceType.VULKAN:
+            try:
+                from neurenix.binding import is_vulkan_available
+                self._available = is_vulkan_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.OPENCL:
+            try:
+                from neurenix.binding import is_opencl_available
+                self._available = is_opencl_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.ONEAPI:
+            try:
+                from neurenix.binding import is_oneapi_available
+                self._available = is_oneapi_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.DIRECTML:
+            try:
+                from neurenix.binding import is_directml_available
+                self._available = is_directml_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.ONEDNN:
+            try:
+                from neurenix.binding import is_onednn_available
+                self._available = is_onednn_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.MKLDNN:
+            try:
+                from neurenix.binding import is_mkldnn_available
+                self._available = is_mkldnn_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.TENSORRT:
+            try:
+                from neurenix.binding import is_tensorrt_available
+                self._available = is_tensorrt_available()
+            except (ImportError, AttributeError):
+                self._available = False
     
     @property
     def type(self) -> DeviceType:
@@ -94,6 +143,22 @@ class Device:
             return f"ROCm:{self._index}"
         elif self._type == DeviceType.WEBGPU:
             return f"WebGPU:{self._index}"
+        elif self._type == DeviceType.TPU:
+            return f"TPU:{self._index}"
+        elif self._type == DeviceType.VULKAN:
+            return f"Vulkan:{self._index}"
+        elif self._type == DeviceType.OPENCL:
+            return f"OpenCL:{self._index}"
+        elif self._type == DeviceType.ONEAPI:
+            return f"oneAPI:{self._index}"
+        elif self._type == DeviceType.DIRECTML:
+            return f"DirectML:{self._index}"
+        elif self._type == DeviceType.ONEDNN:
+            return f"oneDNN:{self._index}"
+        elif self._type == DeviceType.MKLDNN:
+            return f"MKL-DNN:{self._index}"
+        elif self._type == DeviceType.TENSORRT:
+            return f"TensorRT:{self._index}"
         else:
             return f"{self._type}:{self._index}"
     
@@ -132,6 +197,20 @@ class Device:
         
         # Add TPU devices
         count += get_device_count(DeviceType.TPU)
+        
+        count += get_device_count(DeviceType.VULKAN)
+        
+        count += get_device_count(DeviceType.OPENCL)
+        
+        count += get_device_count(DeviceType.ONEAPI)
+        
+        count += get_device_count(DeviceType.DIRECTML)
+        
+        count += get_device_count(DeviceType.ONEDNN)
+        
+        count += get_device_count(DeviceType.MKLDNN)
+        
+        count += get_device_count(DeviceType.TENSORRT)
         
         return count
 
@@ -220,6 +299,48 @@ def get_device_count(device_type: DeviceType) -> int:
         except (ImportError, AttributeError):
             # For now, assume no TPU devices if bindings are not available
             return 0
+    elif device_type == DeviceType.VULKAN:
+        try:
+            from neurenix.binding import get_vulkan_device_count
+            return get_vulkan_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.OPENCL:
+        try:
+            from neurenix.binding import get_opencl_device_count
+            return get_opencl_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.ONEAPI:
+        try:
+            from neurenix.binding import get_oneapi_device_count
+            return get_oneapi_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.DIRECTML:
+        try:
+            from neurenix.binding import get_directml_device_count
+            return get_directml_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.ONEDNN:
+        try:
+            from neurenix.binding import get_onednn_device_count
+            return get_onednn_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.MKLDNN:
+        try:
+            from neurenix.binding import get_mkldnn_device_count
+            return get_mkldnn_device_count()
+        except (ImportError, AttributeError):
+            return 0
+    elif device_type == DeviceType.TENSORRT:
+        try:
+            from neurenix.binding import get_tensorrt_device_count
+            return get_tensorrt_device_count()
+        except (ImportError, AttributeError):
+            return 0
     else:
         return 0
 
@@ -253,6 +374,20 @@ def get_device(device_str: str) -> Device:
         device_type = DeviceType.WEBGPU
     elif device_type_str == "tpu":
         device_type = DeviceType.TPU
+    elif device_type_str == "vulkan":
+        device_type = DeviceType.VULKAN
+    elif device_type_str == "opencl":
+        device_type = DeviceType.OPENCL
+    elif device_type_str == "oneapi":
+        device_type = DeviceType.ONEAPI
+    elif device_type_str == "directml":
+        device_type = DeviceType.DIRECTML
+    elif device_type_str == "onednn":
+        device_type = DeviceType.ONEDNN
+    elif device_type_str == "mkldnn":
+        device_type = DeviceType.MKLDNN
+    elif device_type_str == "tensorrt":
+        device_type = DeviceType.TENSORRT
     else:
         raise ValueError(f"Unknown device type: {device_type_str}")
     
@@ -286,5 +421,33 @@ def get_available_devices() -> List[Device]:
     tpu_count = get_device_count(DeviceType.TPU)
     for i in range(tpu_count):
         devices.append(Device(DeviceType.TPU, i))
+    
+    vulkan_count = get_device_count(DeviceType.VULKAN)
+    for i in range(vulkan_count):
+        devices.append(Device(DeviceType.VULKAN, i))
+    
+    opencl_count = get_device_count(DeviceType.OPENCL)
+    for i in range(opencl_count):
+        devices.append(Device(DeviceType.OPENCL, i))
+    
+    oneapi_count = get_device_count(DeviceType.ONEAPI)
+    for i in range(oneapi_count):
+        devices.append(Device(DeviceType.ONEAPI, i))
+    
+    directml_count = get_device_count(DeviceType.DIRECTML)
+    for i in range(directml_count):
+        devices.append(Device(DeviceType.DIRECTML, i))
+    
+    onednn_count = get_device_count(DeviceType.ONEDNN)
+    for i in range(onednn_count):
+        devices.append(Device(DeviceType.ONEDNN, i))
+    
+    mkldnn_count = get_device_count(DeviceType.MKLDNN)
+    for i in range(mkldnn_count):
+        devices.append(Device(DeviceType.MKLDNN, i))
+    
+    tensorrt_count = get_device_count(DeviceType.TENSORRT)
+    for i in range(tensorrt_count):
+        devices.append(Device(DeviceType.TENSORRT, i))
     
     return devices
