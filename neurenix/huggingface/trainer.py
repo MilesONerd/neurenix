@@ -33,7 +33,7 @@ class Trainer:
     
     def __init__(
         self,
-        model: Union[HuggingFaceModel, transformers.PreTrainedModel],
+        model: Union[HuggingFaceModel, "transformers.PreTrainedModel"],
         args: Optional[Dict[str, Any]] = None,
         train_dataset = None,
         eval_dataset = None,
@@ -190,7 +190,7 @@ class FineTuningTrainer(Trainer):
     
     def __init__(
         self,
-        model: Union[HuggingFaceModel, transformers.PreTrainedModel],
+        model: Union[HuggingFaceModel, "transformers.PreTrainedModel"],
         args: Optional[Dict[str, Any]] = None,
         train_dataset = None,
         eval_dataset = None,
