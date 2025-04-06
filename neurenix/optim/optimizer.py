@@ -35,9 +35,11 @@ class Optimizer:
         for group in self._parameter_groups:
             for param in group["params"]:
                 if param.grad is not None:
-                    # TODO: Implement proper gradient zeroing with Phynexus
-                    # For now, just set the NumPy array to zeros
-                    param._grad._numpy_data.fill(0)
+                    try:
+                        from neurenix.binding import zero_grad
+                        zero_grad(param)
+                    except (ImportError, AttributeError):
+                        param._grad._numpy_data.fill(0)
     
     def step(self) -> None:
         """

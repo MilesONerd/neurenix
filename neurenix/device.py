@@ -36,7 +36,6 @@ class Device:
         self._available = True  # Default to available, will be updated if needed
         
         if device_type == DeviceType.CUDA:
-            # TODO: Check if CUDA is available when Phynexus bindings are available
             try:
                 # Import binding module to check CUDA availability
                 from neurenix.binding import is_cuda_available
@@ -44,7 +43,6 @@ class Device:
             except (ImportError, AttributeError):
                 self._available = False
         elif device_type == DeviceType.ROCM:
-            # TODO: Check if ROCm is available when Phynexus bindings are available
             try:
                 # Import binding module to check ROCm availability
                 from neurenix.binding import is_rocm_available

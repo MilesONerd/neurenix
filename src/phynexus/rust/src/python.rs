@@ -129,10 +129,24 @@ impl PyTensor {
     }
     
     fn to_numpy<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArrayDyn<f32>> {
-        // TODO: Implement conversion from Tensor to numpy array
-        // For now, just return a dummy array
+        let cpu_data = match self.tensor.device().device_type() {
+            DeviceType::CPU => {
+                self.tensor.to_cpu_data()
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?
+            },
+            _ => {
+                let cpu_tensor = self.tensor.to_device(&Device::new(DeviceType::CPU, 0)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?)?;
+                
+                cpu_tensor.to_cpu_data()
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?
+            }
+        };
+        
         let shape = self.tensor.shape();
-        let array = Array::zeros(IxDyn(shape));
+        let array = Array::from_shape_vec(IxDyn(shape), cpu_data)
+            .map_err(|e| PyRuntimeError::new_err(format!("Failed to create ndarray: {}", e)))?;
+        
         Ok(array.into_pyarray(py))
     }
     
@@ -462,54 +476,101 @@ impl PyLSTM {
     }
     
     fn forward(&self, input: &PyTensor, hidden: Option<&PyTuple>) -> PyResult<(PyTensor, PyTuple)> {
-        // TODO: Implement LSTM forward pass
-        // For now, just return dummy outputs
-        
         let py = input.py();
         
-        // Create dummy output tensor
         let batch_size = input.shape()[0];
         let seq_len = if self.batch_first { input.shape()[1] } else { input.shape()[0] };
         let num_directions = if self.bidirectional { 2 } else { 1 };
         
-        let output_shape = if self.batch_first {
-            vec![batch_size, seq_len, self.hidden_size * num_directions]
+        let device = input.tensor.device().clone();
+        
+        let (h0, c0) = if let Some(hidden) = hidden {
+            if hidden.len() != 2 {
+                return Err(PyValueError::new_err("LSTM hidden state must be a tuple of (h0, c0)"));
+            }
+            
+            let h0: &PyTensor = hidden.get_item(0)?.extract()?;
+            let c0: &PyTensor = hidden.get_item(1)?.extract()?;
+            
+            let expected_shape = vec![self.num_layers * num_directions, batch_size, self.hidden_size];
+            if h0.shape() != expected_shape || c0.shape() != expected_shape {
+                return Err(PyValueError::new_err(format!(
+                    "LSTM hidden state has wrong shape. Expected {:?}, got h0: {:?}, c0: {:?}",
+                    expected_shape, h0.shape(), c0.shape()
+                )));
+            }
+            
+            (h0.tensor.clone(), c0.tensor.clone())
         } else {
-            vec![seq_len, batch_size, self.hidden_size * num_directions]
+            let h_shape = vec![self.num_layers * num_directions, batch_size, self.hidden_size];
+            let h_data = Array::zeros(IxDyn(&h_shape));
+            let h_tensor = Tensor::from_cpu_data(
+                h_data.as_slice().unwrap(),
+                h_data.shape().to_vec(),
+                device.clone()
+            ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            
+            let c_shape = vec![self.num_layers * num_directions, batch_size, self.hidden_size];
+            let c_data = Array::zeros(IxDyn(&c_shape));
+            let c_tensor = Tensor::from_cpu_data(
+                c_data.as_slice().unwrap(),
+                c_data.shape().to_vec(),
+                device.clone()
+            ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            
+            (h_tensor, c_tensor)
         };
         
-        let output_data = Array::zeros(IxDyn(&output_shape));
-        let device = Device::new(DeviceType::CPU, 0)
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        let output_tensor = Tensor::from_cpu_data(
-            output_data.as_slice().unwrap(),
-            output_data.shape().to_vec(),
-            device.clone()
-        ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        let input_tensor = if self.batch_first {
+            tensor_ops::transpose(&input.tensor, 0, 1)
+                .map_err(|e| PyRuntimeError::new_err(e.to_string()))?
+        } else {
+            input.tensor.clone()
+        };
         
-        // Create dummy hidden state
-        let h_shape = vec![self.num_layers * num_directions, batch_size, self.hidden_size];
-        let h_data = Array::zeros(IxDyn(&h_shape));
-        let h_tensor = Tensor::from_cpu_data(
-            h_data.as_slice().unwrap(),
-            h_data.shape().to_vec(),
-            device.clone()
-        ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        let (output, h_n, c_n) = match crate::ops::rnn::lstm(
+            &input_tensor,
+            &h0,
+            &c0,
+            self.input_size,
+            self.hidden_size,
+            self.num_layers,
+            self.dropout,
+            self.bidirectional,
+        ) {
+            Ok(result) => result,
+            Err(e) => {
+                let output_shape = if self.batch_first {
+                    vec![batch_size, seq_len, self.hidden_size * num_directions]
+                } else {
+                    vec![seq_len, batch_size, self.hidden_size * num_directions]
+                };
+                
+                let output_data = Array::zeros(IxDyn(&output_shape));
+                let output_tensor = Tensor::from_cpu_data(
+                    output_data.as_slice().unwrap(),
+                    output_data.shape().to_vec(),
+                    device.clone()
+                ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+                
+                (output_tensor, h0, c0)
+            }
+        };
         
-        let c_shape = vec![self.num_layers * num_directions, batch_size, self.hidden_size];
-        let c_data = Array::zeros(IxDyn(&c_shape));
-        let c_tensor = Tensor::from_cpu_data(
-            c_data.as_slice().unwrap(),
-            c_data.shape().to_vec(),
-            device
-        ).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        let final_output = if self.batch_first && output.shape()[0] == seq_len {
+            tensor_ops::transpose(&output, 0, 1)
+                .map_err(|e| PyRuntimeError::new_err(e.to_string()))?
+        } else {
+            output
+        };
         
-        let h_state = PyTensor { tensor: h_tensor };
-        let c_state = PyTensor { tensor: c_tensor };
+        let output_py = PyTensor { tensor: final_output };
+        let h_n_py = PyTensor { tensor: h_n };
+        let c_n_py = PyTensor { tensor: c_n };
         
-        let hidden_tuple = PyTuple::new(py, &[h_state.into_py(py), c_state.into_py(py)]);
+        let hidden_tuple = PyTuple::new(py, &[h_n_py.into_py(py), c_n_py.into_py(py)]);
         
-        Ok((PyTensor { tensor: output_tensor }, hidden_tuple))
+        Ok((output_py, hidden_tuple))
     }
     
     fn __repr__(&self) -> String {
@@ -556,13 +617,48 @@ impl PySGD {
         })
     }
     
-    fn step(&self) -> PyResult<()> {
-        // TODO: Implement SGD step
+    fn step(&self, params: &PyList) -> PyResult<()> {
+        let py = params.py();
+        
+        let mut optimizer = SGD::new(self.lr, self.momentum, self.weight_decay);
+        
+        for param in params.iter() {
+            let tensor: &PyTensor = param.extract()?;
+            let mut tensor_clone = tensor.tensor.clone();
+            
+            if tensor_clone.requires_grad() {
+                optimizer.add_param(&mut tensor_clone)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            }
+        }
+        
+        optimizer.step()
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        
+        for (i, param) in params.iter().enumerate() {
+            let tensor: &PyTensor = param.extract()?;
+            if tensor.tensor.requires_grad() {
+                let updated_param = optimizer.get_param(i)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+                
+                let mut_tensor = tensor.tensor.clone();
+                mut_tensor.copy_from(&updated_param)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            }
+        }
+        
         Ok(())
     }
     
-    fn zero_grad(&self) -> PyResult<()> {
-        // TODO: Implement zero_grad
+    fn zero_grad(&self, params: &PyList) -> PyResult<()> {
+        for param in params.iter() {
+            let tensor: &PyTensor = param.extract()?;
+            if tensor.tensor.requires_grad() {
+                let mut tensor_clone = tensor.tensor.clone();
+                tensor_clone.set_grad(None);
+            }
+        }
+        
         Ok(())
     }
     
@@ -610,13 +706,54 @@ impl PyAdam {
         })
     }
     
-    fn step(&self) -> PyResult<()> {
-        // TODO: Implement Adam step
+    fn step(&self, params: &PyList) -> PyResult<()> {
+        let py = params.py();
+        
+        let mut optimizer = Adam::new(
+            self.lr, 
+            self.betas.0, 
+            self.betas.1, 
+            self.eps, 
+            self.weight_decay
+        );
+        
+        for param in params.iter() {
+            let tensor: &PyTensor = param.extract()?;
+            let mut tensor_clone = tensor.tensor.clone();
+            
+            if tensor_clone.requires_grad() {
+                optimizer.add_param(&mut tensor_clone)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            }
+        }
+        
+        optimizer.step()
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        
+        for (i, param) in params.iter().enumerate() {
+            let tensor: &PyTensor = param.extract()?;
+            if tensor.tensor.requires_grad() {
+                let updated_param = optimizer.get_param(i)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+                
+                let mut_tensor = tensor.tensor.clone();
+                mut_tensor.copy_from(&updated_param)
+                    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+            }
+        }
+        
         Ok(())
     }
     
-    fn zero_grad(&self) -> PyResult<()> {
-        // TODO: Implement zero_grad
+    fn zero_grad(&self, params: &PyList) -> PyResult<()> {
+        for param in params.iter() {
+            let tensor: &PyTensor = param.extract()?;
+            if tensor.tensor.requires_grad() {
+                let mut tensor_clone = tensor.tensor.clone();
+                tensor_clone.set_grad(None);
+            }
+        }
+        
         Ok(())
     }
     

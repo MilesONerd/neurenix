@@ -107,11 +107,13 @@ class Adam(Optimizer):
                 
                 # Apply weight decay
                 if weight_decay != 0:
-                    # TODO: Implement proper weight decay when Phynexus bindings are available
-                    # For now, use NumPy as a fallback
-                    grad_np = grad._numpy_data
-                    param_np = param._numpy_data
-                    grad_np = grad_np + weight_decay * param_np
+                    try:
+                        from neurenix.binding import apply_weight_decay
+                        grad = apply_weight_decay(grad, param, weight_decay)
+                    except (ImportError, AttributeError):
+                        grad_np = grad._numpy_data
+                        param_np = param._numpy_data
+                        grad_np = grad_np + weight_decay * param_np
                 
                 # Update biased first moment estimate
                 exp_avg._numpy_data = beta1 * exp_avg._numpy_data + (1 - beta1) * grad._numpy_data

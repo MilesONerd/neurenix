@@ -64,32 +64,78 @@ pub fn gemm(
     // Dispatch to the appropriate implementation based on the device
     match a.device().device_type() {
         DeviceType::CPU => {
-            // TODO: Implement CPU GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CPU GEMM not yet implemented".to_string()
-            ))
+            let a_data = a.data_ptr::<f32>()?;
+            let b_data = b.data_ptr::<f32>()?;
+            let c_data = c.data_ptr_mut::<f32>()?;
+            
+            let lda = if transpose_a { a_shape[0] } else { a_shape[1] };
+            let ldb = if transpose_b { b_shape[0] } else { b_shape[1] };
+            let ldc = c_shape[1];
+            
+            for i in 0..m {
+                for j in 0..n {
+                    let c_idx = i * ldc + j;
+                    if beta == 0.0 {
+                        c_data[c_idx] = 0.0;
+                    } else {
+                        c_data[c_idx] *= beta;
+                    }
+                    
+                    for k in 0..k_a {
+                        let a_idx = if transpose_a { k * lda + i } else { i * lda + k };
+                        let b_idx = if transpose_b { j * ldb + k } else { k * ldb + j };
+                        
+                        c_data[c_idx] += alpha * a_data[a_idx] * b_data[b_idx];
+                    }
+                }
+            }
+            
+            Ok(())
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU GEMM
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU GEMM not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU GEMM implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
@@ -124,32 +170,61 @@ pub fn dot(x: &Tensor, y: &Tensor) -> Result<f32> {
     // Dispatch to the appropriate implementation based on the device
     match x.device().device_type() {
         DeviceType::CPU => {
-            // TODO: Implement CPU dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CPU dot product not yet implemented".to_string()
-            ))
+            let x_data = x.data_ptr::<f32>()?;
+            let y_data = y.data_ptr::<f32>()?;
+            let n = x_shape[0];
+            
+            let mut result = 0.0;
+            for i in 0..n {
+                result += x_data[i] * y_data[i];
+            }
+            
+            Ok(result)
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU dot product
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU dot product not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU dot product implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }
@@ -199,32 +274,82 @@ pub fn gemv(a: &Tensor, x: &Tensor, y: &mut Tensor, alpha: f32, beta: f32, trans
     // Dispatch to the appropriate implementation based on the device
     match a.device().device_type() {
         DeviceType::CPU => {
-            // TODO: Implement CPU GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CPU GEMV not yet implemented".to_string()
-            ))
+            let a_data = a.data_ptr::<f32>()?;
+            let x_data = x.data_ptr::<f32>()?;
+            let y_data = y.data_ptr_mut::<f32>()?;
+            
+            let lda = a_shape[1];
+            
+            if beta == 0.0 {
+                for i in 0..m {
+                    y_data[i] = 0.0;
+                }
+            } else if beta != 1.0 {
+                for i in 0..m {
+                    y_data[i] *= beta;
+                }
+            }
+            
+            if !transpose_a {
+                for i in 0..m {
+                    for j in 0..n {
+                        y_data[i] += alpha * a_data[i * lda + j] * x_data[j];
+                    }
+                }
+            } else {
+                for i in 0..m {
+                    for j in 0..n {
+                        y_data[i] += alpha * a_data[j * lda + i] * x_data[j];
+                    }
+                }
+            }
+            
+            Ok(())
         },
         DeviceType::CUDA => {
-            // TODO: Implement CUDA GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "CUDA GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "cuda")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "CUDA support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::ROCm => {
-            // TODO: Implement ROCm GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "ROCm GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "rocm")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "rocm"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "ROCm support not enabled".to_string()
+                ))
+            }
         },
         DeviceType::WebGPU => {
-            // TODO: Implement WebGPU GEMV
-            // For now, just return an error
-            Err(PhynexusError::UnsupportedOperation(
-                "WebGPU GEMV not yet implemented".to_string()
-            ))
+            #[cfg(feature = "webgpu")]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU GEMV implementation in progress".to_string()
+                ))
+            }
+            
+            #[cfg(not(feature = "webgpu"))]
+            {
+                Err(PhynexusError::UnsupportedOperation(
+                    "WebGPU support not enabled".to_string()
+                ))
+            }
         },
     }
 }

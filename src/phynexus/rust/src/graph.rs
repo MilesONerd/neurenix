@@ -386,13 +386,570 @@ impl Graph {
     
     /// Forward pass through the graph
     pub fn forward(&self) -> Result<Vec<Tensor>> {
-        // TODO: Implement forward pass through the graph
-        unimplemented!("Forward pass not yet implemented")
+        let sorted_nodes = self.topological_sort()?;
+        
+        for node in &sorted_nodes {
+            let mut node = node.lock().unwrap();
+            
+            if node.output.is_some() {
+                continue;
+            }
+            
+            let input_tensors: Result<Vec<Tensor>> = node.inputs
+                .iter()
+                .map(|input| {
+                    let input_node = self.nodes.get(&input.id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", input.id())
+                        ))?;
+                    
+                    let input_node = input_node.lock().unwrap();
+                    input_node.output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", input.id())
+                        ))
+                        .map(|t| t.clone())
+                })
+                .collect();
+            
+            let input_tensors = input_tensors?;
+            
+            let output = match &node.op {
+                Op::Input | Op::Constant | Op::Variable => {
+                    continue;
+                },
+                Op::MatMul => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("MatMul operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    crate::ops::matmul(&input_tensors[0], &input_tensors[1])?
+                },
+                Op::Add => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Add operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    &input_tensors[0] + &input_tensors[1]
+                },
+                Op::Sub => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Sub operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    &input_tensors[0] - &input_tensors[1]
+                },
+                Op::Mul => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Mul operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    &input_tensors[0] * &input_tensors[1]
+                },
+                Op::Div => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Div operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    &input_tensors[0] / &input_tensors[1]
+                },
+                Op::ReLU => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("ReLU operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    crate::ops::relu(&input_tensors[0])?
+                },
+                Op::Sigmoid => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Sigmoid operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    crate::ops::sigmoid(&input_tensors[0])?
+                },
+                Op::Tanh => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Tanh operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    crate::ops::tanh(&input_tensors[0])?
+                },
+                Op::Softmax { dim } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Softmax operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    crate::ops::softmax(&input_tensors[0], *dim)?
+                },
+                Op::Conv2d { stride, padding, dilation, groups } => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Conv2d operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    let params = crate::ops::conv::Conv2dParams {
+                        stride: stride.clone(),
+                        padding: padding.clone(),
+                        dilation: dilation.clone(),
+                        groups: *groups,
+                    };
+                    
+                    crate::ops::conv::conv2d(&input_tensors[0], &input_tensors[1], &params)?
+                },
+                Op::ConvTranspose2d { stride, padding, output_padding, dilation, groups } => {
+                    if input_tensors.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("ConvTranspose2d operation requires 2 inputs, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    return Err(PhynexusError::UnsupportedOperation(
+                        "ConvTranspose2d operation not yet implemented".to_string()
+                    ));
+                },
+                Op::MaxPool2d { kernel_size, stride, padding, dilation } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("MaxPool2d operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    return Err(PhynexusError::UnsupportedOperation(
+                        "MaxPool2d operation not yet implemented".to_string()
+                    ));
+                },
+                Op::AvgPool2d { kernel_size, stride, padding } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("AvgPool2d operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    return Err(PhynexusError::UnsupportedOperation(
+                        "AvgPool2d operation not yet implemented".to_string()
+                    ));
+                },
+                Op::Reshape { shape } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Reshape operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].reshape(shape)?
+                },
+                Op::Transpose { dims } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Transpose operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].transpose(dims)?
+                },
+                Op::Concat { dim } => {
+                    if input_tensors.is_empty() {
+                        return Err(PhynexusError::InvalidArgument(
+                            "Concat operation requires at least 1 input".to_string()
+                        ));
+                    }
+                    
+                    crate::ops::concat(&input_tensors, *dim)?
+                },
+                Op::Split { dim, chunks } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Split operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    return Err(PhynexusError::UnsupportedOperation(
+                        "Split operation not yet implemented".to_string()
+                    ));
+                },
+                Op::Sum { dims, keep_dims } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Sum operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].sum(dims, *keep_dims)?
+                },
+                Op::Mean { dims, keep_dims } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Mean operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].mean(dims, *keep_dims)?
+                },
+                Op::Max { dims, keep_dims } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Max operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].max(dims, *keep_dims)?
+                },
+                Op::Min { dims, keep_dims } => {
+                    if input_tensors.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Min operation requires 1 input, got {}", input_tensors.len())
+                        ));
+                    }
+                    
+                    input_tensors[0].min(dims, *keep_dims)?
+                },
+                Op::Custom { forward, .. } => {
+                    let input_refs: Vec<&Tensor> = input_tensors.iter().collect();
+                    forward(&input_refs)?
+                },
+            };
+            
+            node.set_output(output);
+        }
+        
+        let mut outputs = Vec::new();
+        for output_node in &self.outputs {
+            let output_node = output_node.lock().unwrap();
+            let output = output_node.output()
+                .ok_or_else(|| PhynexusError::InvalidArgument(
+                    format!("Output node with ID {} has no output tensor", output_node.id)
+                ))?
+                .clone();
+            
+            outputs.push(output);
+        }
+        
+        Ok(outputs)
     }
     
     /// Backward pass through the graph
     pub fn backward(&self) -> Result<()> {
-        // TODO: Implement backward pass through the graph
-        unimplemented!("Backward pass not yet implemented")
+        let mut sorted_nodes = self.topological_sort()?;
+        sorted_nodes.reverse();
+        
+        for output_node in &self.outputs {
+            let mut output_node = output_node.lock().unwrap();
+            
+            if !output_node.requires_grad() {
+                continue;
+            }
+            
+            if output_node.grad().is_none() {
+                let output = output_node.output()
+                    .ok_or_else(|| PhynexusError::InvalidArgument(
+                        format!("Output node with ID {} has no output tensor", output_node.id)
+                    ))?;
+                
+                let grad = output.ones_like()?;
+                output_node.set_grad(grad);
+            }
+        }
+        
+        for node in &sorted_nodes {
+            let node_lock = node.lock().unwrap();
+            
+            if !node_lock.requires_grad() {
+                continue;
+            }
+            
+            let grad = match node_lock.grad() {
+                Some(g) => g.clone(),
+                None => continue, // Skip nodes with no gradient
+            };
+            
+            let op = node_lock.op().clone();
+            let inputs = node_lock.inputs().to_vec();
+            
+            drop(node_lock);
+            
+            match op {
+                Op::Input | Op::Constant => {
+                    continue;
+                },
+                Op::Variable => {
+                    continue;
+                },
+                Op::MatMul => {
+                    if inputs.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("MatMul operation requires 2 inputs, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input_a = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let input_b = self.nodes.get(&inputs[1].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[1].id())
+                        ))?;
+                    
+                    let a = input_a.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[0].id())
+                        ))?
+                        .clone();
+                    
+                    let b = input_b.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[1].id())
+                        ))?
+                        .clone();
+                    
+                    let grad_a = crate::ops::matmul(&grad, &b.transpose(&[1, 0])?)?;
+                    let grad_b = crate::ops::matmul(&a.transpose(&[1, 0])?, &grad)?;
+                    
+                    if input_a.lock().unwrap().requires_grad() {
+                        let mut input_a = input_a.lock().unwrap();
+                        if let Some(existing_grad) = input_a.grad() {
+                            input_a.set_grad(&existing_grad + &grad_a);
+                        } else {
+                            input_a.set_grad(grad_a);
+                        }
+                    }
+                    
+                    if input_b.lock().unwrap().requires_grad() {
+                        let mut input_b = input_b.lock().unwrap();
+                        if let Some(existing_grad) = input_b.grad() {
+                            input_b.set_grad(&existing_grad + &grad_b);
+                        } else {
+                            input_b.set_grad(grad_b);
+                        }
+                    }
+                },
+                Op::Add => {
+                    if inputs.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Add operation requires 2 inputs, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input_a = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let input_b = self.nodes.get(&inputs[1].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[1].id())
+                        ))?;
+                    
+                    if input_a.lock().unwrap().requires_grad() {
+                        let mut input_a = input_a.lock().unwrap();
+                        if let Some(existing_grad) = input_a.grad() {
+                            input_a.set_grad(&existing_grad + &grad);
+                        } else {
+                            input_a.set_grad(grad.clone());
+                        }
+                    }
+                    
+                    if input_b.lock().unwrap().requires_grad() {
+                        let mut input_b = input_b.lock().unwrap();
+                        if let Some(existing_grad) = input_b.grad() {
+                            input_b.set_grad(&existing_grad + &grad);
+                        } else {
+                            input_b.set_grad(grad);
+                        }
+                    }
+                },
+                Op::Sub => {
+                    if inputs.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Sub operation requires 2 inputs, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input_a = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let input_b = self.nodes.get(&inputs[1].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[1].id())
+                        ))?;
+                    
+                    if input_a.lock().unwrap().requires_grad() {
+                        let mut input_a = input_a.lock().unwrap();
+                        if let Some(existing_grad) = input_a.grad() {
+                            input_a.set_grad(&existing_grad + &grad);
+                        } else {
+                            input_a.set_grad(grad.clone());
+                        }
+                    }
+                    
+                    if input_b.lock().unwrap().requires_grad() {
+                        let mut input_b = input_b.lock().unwrap();
+                        let neg_grad = -&grad;
+                        if let Some(existing_grad) = input_b.grad() {
+                            input_b.set_grad(&existing_grad + &neg_grad);
+                        } else {
+                            input_b.set_grad(neg_grad);
+                        }
+                    }
+                },
+                Op::Mul => {
+                    if inputs.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Mul operation requires 2 inputs, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input_a = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let input_b = self.nodes.get(&inputs[1].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[1].id())
+                        ))?;
+                    
+                    let a = input_a.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[0].id())
+                        ))?
+                        .clone();
+                    
+                    let b = input_b.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[1].id())
+                        ))?
+                        .clone();
+                    
+                    if input_a.lock().unwrap().requires_grad() {
+                        let mut input_a = input_a.lock().unwrap();
+                        let grad_a = &grad * &b;
+                        if let Some(existing_grad) = input_a.grad() {
+                            input_a.set_grad(&existing_grad + &grad_a);
+                        } else {
+                            input_a.set_grad(grad_a);
+                        }
+                    }
+                    
+                    if input_b.lock().unwrap().requires_grad() {
+                        let mut input_b = input_b.lock().unwrap();
+                        let grad_b = &grad * &a;
+                        if let Some(existing_grad) = input_b.grad() {
+                            input_b.set_grad(&existing_grad + &grad_b);
+                        } else {
+                            input_b.set_grad(grad_b);
+                        }
+                    }
+                },
+                Op::Div => {
+                    if inputs.len() != 2 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Div operation requires 2 inputs, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input_a = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let input_b = self.nodes.get(&inputs[1].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[1].id())
+                        ))?;
+                    
+                    let a = input_a.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[0].id())
+                        ))?
+                        .clone();
+                    
+                    let b = input_b.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[1].id())
+                        ))?
+                        .clone();
+                    
+                    if input_a.lock().unwrap().requires_grad() {
+                        let mut input_a = input_a.lock().unwrap();
+                        let grad_a = &grad / &b;
+                        if let Some(existing_grad) = input_a.grad() {
+                            input_a.set_grad(&existing_grad + &grad_a);
+                        } else {
+                            input_a.set_grad(grad_a);
+                        }
+                    }
+                    
+                    if input_b.lock().unwrap().requires_grad() {
+                        let mut input_b = input_b.lock().unwrap();
+                        let b_squared = &b * &b;
+                        let grad_b = -(&grad * &a) / &b_squared;
+                        if let Some(existing_grad) = input_b.grad() {
+                            input_b.set_grad(&existing_grad + &grad_b);
+                        } else {
+                            input_b.set_grad(grad_b);
+                        }
+                    }
+                },
+                Op::ReLU => {
+                    if inputs.len() != 1 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("ReLU operation requires 1 input, got {}", inputs.len())
+                        ));
+                    }
+                    
+                    let input = self.nodes.get(&inputs[0].id())
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} not found in the graph", inputs[0].id())
+                        ))?;
+                    
+                    let x = input.lock().unwrap().output()
+                        .ok_or_else(|| PhynexusError::InvalidArgument(
+                            format!("Input node with ID {} has no output tensor", inputs[0].id())
+                        ))?
+                        .clone();
+                    
+                    if input.lock().unwrap().requires_grad() {
+                        let mut input = input.lock().unwrap();
+                        let mask = x.gt(&x.zeros_like()?)?;
+                        let grad_input = &grad * &mask;
+                        if let Some(existing_grad) = input.grad() {
+                            input.set_grad(&existing_grad + &grad_input);
+                        } else {
+                            input.set_grad(grad_input);
+                        }
+                    }
+                },
+                _ => {
+                    return Err(PhynexusError::UnsupportedOperation(
+                        format!("Backward pass not yet implemented for operation {:?}", op)
+                    ));
+                }
+            }
+        }
+        
+        Ok(())
     }
 }
