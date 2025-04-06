@@ -33,7 +33,23 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 - **API support**:  
   1- Added RESTful, WebSocket, and gRPC server implementations  
   2- Created APIManager for centralized server management  
-  3- Provided convenience functions for serving models  
+  3- Provided convenience functions for serving models
+
+- **Dynamic imports from neurenix.binding with NumPy fallbacks for activation functions**:  
+  - relu, sigmoid, tanh, softmax, log_softmax, leaky_relu, elu, selu, gelu  
+
+- **CPU implementations for BLAS operations**:  
+  - GEMM, dot product, GEMV  
+
+- **CPU implementations for convolution operations**:  
+  - conv2d, conv_transpose2d  
+
+- **Conditional compilation for hardware-specific operations**:  
+  - CUDA, ROCm, and WebGPU support for BLAS and convolution operations  
+  - Proper error handling for unsupported hardware configurations  
+
+- **Binding functions for tensor operations**:  
+  - backward, no_grad, zero_grad, weight_decay  
 
 ## Documentation
 
