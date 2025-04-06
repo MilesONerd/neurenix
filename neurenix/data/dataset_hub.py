@@ -19,7 +19,7 @@ try:
 except ImportError:
     PANDAS_AVAILABLE = False
 
-from ..binding import get_phynexus_binding
+from ..binding import get_binding
 
 try:
     import torch
@@ -250,7 +250,7 @@ class DatasetHub:
         self._registered_datasets = {}
         
         try:
-            self._phynexus = get_phynexus_binding()
+            self._phynexus = get_binding()
             self._has_native = hasattr(self._phynexus, 'data') and hasattr(self._phynexus.data, 'load_dataset')
         except ImportError:
             self._phynexus = None
