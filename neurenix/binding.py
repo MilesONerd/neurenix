@@ -619,4 +619,7 @@ else:
 
 # Register shutdown function
 import atexit
-atexit.register(shutdown)
+if _HAS_PHYNEXUS:
+    atexit.register(shutdown)
+else:
+    pass
