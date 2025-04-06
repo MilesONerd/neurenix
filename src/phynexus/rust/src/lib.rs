@@ -16,6 +16,8 @@ pub mod nn;
 pub mod optimizer;
 pub mod quantization;
 pub mod python;
+pub mod distributed;
+pub mod memory;
 
 // Re-export core types
 pub use device::Device;
@@ -35,11 +37,14 @@ pub fn init() -> error::Result<()> {
 }
 
 #[pymodule]
-fn _phynexus(_py: Python, m: &PyModule) -> PyResult<()> {
+fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     m.add("__version__", "1.0.2")?;
     
     m.add_function(wrap_pyfunction!(py_init, m)?)?;
     
+    python::register_modules(py, m)?;
+    distributed::register_distributed(py, m)?;
+    memory::register_memory(py, m)?;
     
     Ok(())
 }
