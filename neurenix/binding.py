@@ -611,9 +611,21 @@ def gelu(x, approximate=False):
         
         return Tensor(result, device=x.device)
 
+def global_shutdown():
+    """
+    Global shutdown function that works with both Phynexus and fallback implementation.
+    """
+    if _HAS_PHYNEXUS:
+        shutdown()
+    else:
+        pass
+
 # Initialize the Phynexus engine
-init()
+if _HAS_PHYNEXUS:
+    py_init()
+else:
+    init()
 
 # Register shutdown function
 import atexit
-atexit.register(shutdown)
+atexit.register(global_shutdown)
