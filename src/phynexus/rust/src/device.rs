@@ -22,6 +22,20 @@ pub enum DeviceType {
     
     /// TPU device
     TPU,
+    
+    Vulkan,
+    
+    OpenCL,
+    
+    OneAPI,
+    
+    DirectML,
+    
+    OneDNN,
+    
+    MKLDNN,
+    
+    TensorRT,
 }
 
 impl fmt::Display for DeviceType {
@@ -32,6 +46,13 @@ impl fmt::Display for DeviceType {
             DeviceType::ROCm => write!(f, "ROCm"),
             DeviceType::WebGPU => write!(f, "WebGPU"),
             DeviceType::TPU => write!(f, "TPU"),
+            DeviceType::Vulkan => write!(f, "Vulkan"),
+            DeviceType::OpenCL => write!(f, "OpenCL"),
+            DeviceType::OneAPI => write!(f, "oneAPI"),
+            DeviceType::DirectML => write!(f, "DirectML"),
+            DeviceType::OneDNN => write!(f, "oneDNN"),
+            DeviceType::MKLDNN => write!(f, "MKL-DNN"),
+            DeviceType::TensorRT => write!(f, "TensorRT"),
         }
     }
 }
