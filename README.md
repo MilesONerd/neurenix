@@ -158,6 +158,28 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Counterfactual explanations
   - Activation visualization
 
+- **Multi-Scale Model Architectures**:
+  - MultiScaleModel: Base class for multi-scale architectures
+  - PyramidNetwork: Feature pyramid network implementation
+  - UNet: U-Net architecture with skip connections
+
+- **Multi-Scale Pooling Operations**:
+  - MultiScalePooling: Base class for multi-scale pooling
+  - PyramidPooling: Pyramid pooling module (PPM)
+  - SpatialPyramidPooling: Spatial pyramid pooling (SPP)
+
+- **Feature Fusion Mechanisms**:
+  - FeatureFusion: Base class for feature fusion
+  - ScaleFusion: Fusion of features from different scales
+  - AttentionFusion: Attention-based fusion of multi-scale features
+
+- **Multi-Scale Transformations**:
+  - MultiScaleTransform: Base class for multi-scale transforms
+  - Rescale: Rescaling to multiple scales
+  - PyramidDownsample: Pyramid downsampling for multi-scale representations
+  - GaussianPyramid: Gaussian pyramid implementation
+  - LaplacianPyramid: Laplacian pyramid implementation
+
 ## Documentation
 
 [Neurenix Documentation](https://neurenix.readthedocs.io/en/latest/)
