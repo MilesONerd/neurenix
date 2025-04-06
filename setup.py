@@ -12,4 +12,9 @@ setup(
         )
     ],
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'neurenix=neurenix.cli.cli:main',
+        ],
+    },
 )
