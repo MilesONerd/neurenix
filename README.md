@@ -132,6 +132,17 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Job scheduling
   - Cluster management
 
+- **Apache Arrow Support**:
+  - Efficient in-memory columnar data format
+  - Seamless conversion between Arrow tables and Neurenix tensors
+  - Support for various data types and operations
+
+- **Parquet Support**:
+  - High-performance columnar storage format
+  - Reading and writing Parquet files
+  - Dataset management with partitioning support
+  - Integration with Arrow for efficient data processing
+
 ## Documentation
 
 [Neurenix Documentation](https://neurenix.readthedocs.io/en/latest/)
