@@ -18,6 +18,7 @@ pub mod quantization;
 pub mod python;
 pub mod distributed;
 pub mod memory;
+pub mod data;
 
 // Re-export core types
 pub use device::Device;
@@ -45,6 +46,7 @@ fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     python::register_modules(py, m)?;
     distributed::register_distributed(py, m)?;
     memory::register_memory(py, m)?;
+    data::register_data(py, m)?;
     
     Ok(())
 }
