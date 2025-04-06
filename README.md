@@ -49,7 +49,22 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Proper error handling for unsupported hardware configurations  
 
 - **Binding functions for tensor operations**:  
-  - backward, no_grad, zero_grad, weight_decay  
+  - backward, no_grad, zero_grad, weight_decay
+ 
+- **WebAssembly SIMD and WASI-NN support for browser-based tensor operations**  
+- **Hardware acceleration backends**:  
+  - Vulkan for cross-platform GPU acceleration  
+  - OpenCL for heterogeneous computing  
+  - oneAPI for Intel hardware acceleration  
+  - DirectML for Windows DirectX 12 acceleration  
+  - oneDNN for optimized deep learning primitives  
+  - MKL-DNN for Intel CPU optimization  
+  - TensorRT for NVIDIA GPU optimization  
+- **Automatic quantization support**:  
+  - INT8, FP16, and FP8 precision  
+  - Model pruning capabilities  
+  - Quantization-aware training  
+  - Post-training quantization with calibration  
 
 ## Documentation
 
