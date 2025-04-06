@@ -13,6 +13,8 @@ mod directml;
 mod onednn;
 mod mkldnn;
 mod tensorrt;
+mod graphcore;
+mod fpga;
 
 pub use cpu::CpuBackend;
 pub use cuda::CudaBackend;
@@ -26,6 +28,8 @@ pub use directml::DirectMLBackend;
 pub use onednn::OneDNNBackend;
 pub use mkldnn::MKLDNNBackend;
 pub use tensorrt::TensorRTBackend;
+pub use graphcore::GraphCoreBackend;
+pub use fpga::FPGABackend;
 pub use multi_device::{MultiDeviceManager, DeviceInfo};
 
 use crate::error::Result;
@@ -69,5 +73,7 @@ pub fn get_backend(device_type: crate::device::DeviceType) -> Result<Box<dyn Bac
         crate::device::DeviceType::OneDNN => Ok(Box::new(OneDNNBackend::new()?)),
         crate::device::DeviceType::MKLDNN => Ok(Box::new(MKLDNNBackend::new()?)),
         crate::device::DeviceType::TensorRT => Ok(Box::new(TensorRTBackend::new()?)),
+        crate::device::DeviceType::GraphCore => Ok(Box::new(graphcore::GraphCoreBackend::new()?)),
+        crate::device::DeviceType::FPGA => Ok(Box::new(fpga::FPGABackend::new()?)),
     }
 }
