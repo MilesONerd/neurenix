@@ -40,6 +40,7 @@ class DatasetFormat(Enum):
     IMAGE = auto()
     AUDIO = auto()
     VIDEO = auto()
+    SQL = auto()
     CUSTOM = auto()
     
     @classmethod
@@ -62,6 +63,8 @@ class DatasetFormat(Enum):
             return cls.AUDIO
         elif extension in ('mp4', 'avi', 'mov', 'mkv'):
             return cls.VIDEO
+        elif extension in ('db', 'sqlite', 'sqlite3'):
+            return cls.SQL
         else:
             return cls.CUSTOM
 
@@ -419,6 +422,47 @@ class DatasetHub:
                 return cv2.VideoCapture(path)
             except ImportError:
                 raise ImportError("OpenCV is required for loading videos. Install it with 'pip install opencv-python'")
+                
+        elif format == DatasetFormat.SQL:
+            try:
+                import sqlite3
+                import sqlalchemy
+                
+                if path.startswith(('sqlite:///', 'mysql://', 'postgresql://', 'oracle://', 'mssql://')):
+                    engine = sqlalchemy.create_engine(path)
+                    
+                    table_name = kwargs.get('table')
+                    query = kwargs.get('query')
+                    
+                    if query:
+                        return pd.read_sql_query(query, engine)
+                    elif table_name:
+                        return pd.read_sql_table(table_name, engine)
+                    else:
+                        inspector = sqlalchemy.inspect(engine)
+                        tables = inspector.get_table_names()
+                        if not tables:
+                            raise ValueError("No tables found in the database")
+                        return pd.read_sql_table(tables[0], engine)
+                else:
+                    conn = sqlite3.connect(path)
+                    
+                    table_name = kwargs.get('table')
+                    query = kwargs.get('query')
+                    
+                    if query:
+                        return pd.read_sql_query(query, conn)
+                    elif table_name:
+                        return pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                    else:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                        tables = cursor.fetchall()
+                        if not tables:
+                            raise ValueError("No tables found in the database")
+                        return pd.read_sql_query(f"SELECT * FROM {tables[0][0]}", conn)
+            except ImportError:
+                raise ImportError("SQLAlchemy is required for SQL database support. Install it with 'pip install sqlalchemy'")
                 
         else:
             raise ValueError(f"Unsupported format: {format}")

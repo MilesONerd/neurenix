@@ -29,6 +29,7 @@ enum class DatasetFormat {
     IMAGE,
     AUDIO,
     VIDEO,
+    SQL,
     CUSTOM
 };
 

@@ -27,6 +27,7 @@ pub enum DatasetFormat {
     IMAGE,
     AUDIO,
     VIDEO,
+    SQL,
     CUSTOM,
 }
 
@@ -41,6 +42,7 @@ impl DatasetFormat {
             "image" | "img" => Ok(DatasetFormat::IMAGE),
             "audio" => Ok(DatasetFormat::AUDIO),
             "video" => Ok(DatasetFormat::VIDEO),
+            "sql" | "sqlite" | "database" => Ok(DatasetFormat::SQL),
             "custom" => Ok(DatasetFormat::CUSTOM),
             _ => Err(PhynexusError::InvalidArgument(format!("Unsupported format: {}", s))),
         }
@@ -61,6 +63,7 @@ impl DatasetFormat {
             "jpg" | "jpeg" | "png" | "bmp" | "gif" => Ok(DatasetFormat::IMAGE),
             "wav" | "mp3" | "ogg" | "flac" => Ok(DatasetFormat::AUDIO),
             "mp4" | "avi" | "mov" | "mkv" => Ok(DatasetFormat::VIDEO),
+            "db" | "sqlite" | "sqlite3" => Ok(DatasetFormat::SQL),
             _ => Ok(DatasetFormat::CUSTOM),
         }
     }
@@ -287,8 +290,128 @@ impl DatasetHub {
             DatasetFormat::IMAGE => self.load_image(path, options),
             DatasetFormat::AUDIO => self.load_audio(path, options),
             DatasetFormat::VIDEO => self.load_video(path, options),
+            DatasetFormat::SQL => self.load_sql(path, options),
             _ => Err(PhynexusError::InvalidArgument(format!("Unsupported format: {:?}", format))),
         }
+    }
+    
+    fn load_sql(&self, path: &Path, options: &HashMap<String, Value>) -> Result<DatasetData> {
+        #[cfg(feature = "sql")]
+        {
+            use rusqlite::{Connection, Result as SqlResult};
+            
+            let path_str = path.to_str().ok_or_else(|| 
+                PhynexusError::IoError("Invalid path for SQL database".to_string())
+            )?;
+            
+            if path_str.starts_with("sqlite://") {
+                let db_path = path_str.trim_start_matches("sqlite://");
+                let conn = Connection::open(db_path)
+                    .map_err(|e| PhynexusError::IoError(format!("Failed to open SQLite database: {}", e)))?;
+                
+                let table_name = options.get("table").and_then(|v| v.as_str());
+                let query = options.get("query").and_then(|v| v.as_str());
+                
+                if let Some(query_str) = query {
+                    self.execute_sql_query(&conn, query_str)
+                } else if let Some(table) = table_name {
+                    self.execute_sql_query(&conn, &format!("SELECT * FROM {}", table))
+                } else {
+                    let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to prepare SQL statement: {}", e)))?;
+                    
+                    let tables: SqlResult<Vec<String>> = stmt.query_map([], |row| row.get(0))
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to query tables: {}", e)))?
+                        .collect();
+                    
+                    let tables = tables
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to collect tables: {}", e)))?;
+                    
+                    if tables.is_empty() {
+                        return Err(PhynexusError::IoError("No tables found in the database".to_string()));
+                    }
+                    
+                    self.execute_sql_query(&conn, &format!("SELECT * FROM {}", tables[0]))
+                }
+            } else {
+                let conn = Connection::open(path)
+                    .map_err(|e| PhynexusError::IoError(format!("Failed to open SQLite database: {}", e)))?;
+                
+                let table_name = options.get("table").and_then(|v| v.as_str());
+                let query = options.get("query").and_then(|v| v.as_str());
+                
+                if let Some(query_str) = query {
+                    self.execute_sql_query(&conn, query_str)
+                } else if let Some(table) = table_name {
+                    self.execute_sql_query(&conn, &format!("SELECT * FROM {}", table))
+                } else {
+                    let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to prepare SQL statement: {}", e)))?;
+                    
+                    let tables: SqlResult<Vec<String>> = stmt.query_map([], |row| row.get(0))
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to query tables: {}", e)))?
+                        .collect();
+                    
+                    let tables = tables
+                        .map_err(|e| PhynexusError::IoError(format!("Failed to collect tables: {}", e)))?;
+                    
+                    if tables.is_empty() {
+                        return Err(PhynexusError::IoError("No tables found in the database".to_string()));
+                    }
+                    
+                    self.execute_sql_query(&conn, &format!("SELECT * FROM {}", tables[0]))
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "sql"))]
+        {
+            Err(PhynexusError::InvalidOperation(
+                "SQL support is not enabled. Recompile with the 'sql' feature".to_string()
+            ))
+        }
+    }
+    
+    #[cfg(feature = "sql")]
+    fn execute_sql_query(&self, conn: &rusqlite::Connection, query: &str) -> Result<DatasetData> {
+        use rusqlite::{Result as SqlResult, Row};
+        
+        let mut stmt = conn.prepare(query)
+            .map_err(|e| PhynexusError::IoError(format!("Failed to prepare SQL statement: {}", e)))?;
+        
+        let column_names: Vec<String> = stmt.column_names().into_iter().map(String::from).collect();
+        
+        let row_to_strings = |row: &Row| -> SqlResult<Vec<String>> {
+            let mut result = Vec::with_capacity(column_names.len());
+            for i in 0..column_names.len() {
+                let value: String = match row.get_ref(i)? {
+                    rusqlite::types::ValueRef::Null => "NULL".to_string(),
+                    rusqlite::types::ValueRef::Integer(i) => i.to_string(),
+                    rusqlite::types::ValueRef::Real(f) => f.to_string(),
+                    rusqlite::types::ValueRef::Text(t) => String::from_utf8_lossy(t).to_string(),
+                    rusqlite::types::ValueRef::Blob(b) => format!("<BLOB: {} bytes>", b.len()),
+                };
+                result.push(value);
+            }
+            Ok(result)
+        };
+        
+        let mut rows = Vec::new();
+        rows.push(column_names.clone());
+        
+        let mut query_rows = stmt.query([])
+            .map_err(|e| PhynexusError::IoError(format!("Failed to execute SQL query: {}", e)))?;
+        
+        while let Some(row) = query_rows.next()
+            .map_err(|e| PhynexusError::IoError(format!("Failed to fetch SQL row: {}", e)))? {
+            
+            let row_data = row_to_strings(row)
+                .map_err(|e| PhynexusError::IoError(format!("Failed to convert SQL row: {}", e)))?;
+            
+            rows.push(row_data);
+        }
+        
+        Ok(DatasetData::Table(rows))
     }
     
     fn load_csv(&self, path: &Path, options: &HashMap<String, Value>) -> Result<DatasetData> {
@@ -520,6 +643,7 @@ fn py_load_dataset(
         DatasetFormat::IMAGE => format_enum.getattr("IMAGE")?,
         DatasetFormat::AUDIO => format_enum.getattr("AUDIO")?,
         DatasetFormat::VIDEO => format_enum.getattr("VIDEO")?,
+        DatasetFormat::SQL => format_enum.getattr("SQL")?,
         DatasetFormat::CUSTOM => format_enum.getattr("CUSTOM")?,
     };
     
