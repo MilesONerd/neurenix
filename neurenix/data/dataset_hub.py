@@ -11,8 +11,13 @@ import logging
 from enum import Enum, auto
 from typing import Dict, List, Optional, Union, Callable, Any, Tuple
 import numpy as np
-import pandas as pd
 from pathlib import Path
+
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 from ..binding import get_phynexus_binding
 
@@ -387,15 +392,21 @@ class DatasetHub:
             Loaded dataset
         """
         if format == DatasetFormat.CSV:
+            if not PANDAS_AVAILABLE:
+                raise ImportError("pandas is required for CSV format. Install it with 'pip install pandas'")
             return pd.read_csv(path, **kwargs)
             
         elif format == DatasetFormat.JSON:
+            if not PANDAS_AVAILABLE:
+                raise ImportError("pandas is required for JSON format. Install it with 'pip install pandas'")
             return pd.read_json(path, **kwargs)
             
         elif format == DatasetFormat.NUMPY:
             return np.load(path, **kwargs)
             
         elif format == DatasetFormat.PICKLE:
+            if not PANDAS_AVAILABLE:
+                raise ImportError("pandas is required for pickle format. Install it with 'pip install pandas'")
             return pd.read_pickle(path, **kwargs)
             
         elif format == DatasetFormat.TEXT:
@@ -426,9 +437,18 @@ class DatasetHub:
         elif format == DatasetFormat.SQL:
             try:
                 import sqlite3
-                import sqlalchemy
                 
-                if path.startswith(('sqlite:///', 'mysql://', 'postgresql://', 'oracle://', 'mssql://')):
+                if not PANDAS_AVAILABLE:
+                    raise ImportError("pandas is required for SQL format. Install it with 'pip install pandas'")
+                
+                try:
+                    import sqlalchemy
+                    has_sqlalchemy = True
+                except ImportError:
+                    has_sqlalchemy = False
+                    logger.warning("SQLAlchemy not found. Using basic sqlite3 functionality.")
+                
+                if has_sqlalchemy and path.startswith(('sqlite:///', 'mysql://', 'postgresql://', 'oracle://', 'mssql://')):
                     engine = sqlalchemy.create_engine(path)
                     
                     table_name = kwargs.get('table')
@@ -461,8 +481,8 @@ class DatasetHub:
                         if not tables:
                             raise ValueError("No tables found in the database")
                         return pd.read_sql_query(f"SELECT * FROM {tables[0][0]}", conn)
-            except ImportError:
-                raise ImportError("SQLAlchemy is required for SQL database support. Install it with 'pip install sqlalchemy'")
+            except ImportError as e:
+                raise ImportError(f"Required dependency missing for SQL support: {str(e)}. Install with 'pip install pandas sqlalchemy'")
                 
         else:
             raise ValueError(f"Unsupported format: {format}")
