@@ -42,13 +42,18 @@ class Linear(Module):
         
         # Initialize weights using Kaiming initialization
         weight_data = np.random.randn(out_features, in_features) * np.sqrt(2.0 / in_features)
-        self.weight = Tensor(weight_data, dtype=dtype, device=device, requires_grad=True)
+        weight_tensor = Tensor(weight_data, dtype=dtype, device=device, requires_grad=True)
+        self.register_parameter('weight', weight_tensor)
+        self.weight = weight_tensor  # Also set as attribute for direct access
         
         if bias:
             bias_data = np.zeros(out_features)
-            self.bias = Tensor(bias_data, dtype=dtype, device=device, requires_grad=True)
+            bias_tensor = Tensor(bias_data, dtype=dtype, device=device, requires_grad=True)
+            self.register_parameter('bias', bias_tensor)
+            self.bias = bias_tensor  # Also set as attribute for direct access
         else:
-            self.bias = None
+            self.register_parameter('bias', None)
+            self.bias = None  # Also set as attribute for direct access
     
     def forward(self, x: Tensor) -> Tensor:
         """
@@ -60,12 +65,15 @@ class Linear(Module):
         Returns:
             Output tensor of shape (..., out_features).
         """
+        weight = self._parameters['weight']
+        bias = self._parameters.get('bias')
+        
         try:
             from neurenix.binding import linear
-            return linear(x, self.weight, self.bias)
+            return linear(x, weight, bias)
         except (ImportError, AttributeError):
             x_np = x.numpy()
-            weight_np = self.weight.numpy()
+            weight_np = weight.numpy()
             
             # Reshape input for matrix multiplication
             orig_shape = x_np.shape
@@ -75,8 +83,8 @@ class Linear(Module):
             output = np.matmul(x_reshaped, weight_np.T)
             
             # Add bias if present
-            if self.bias is not None:
-                output += self.bias.numpy()
+            if bias is not None:
+                output += bias.numpy()
             
             # Reshape output to match input shape
             output = output.reshape(*orig_shape[:-1], self.out_features)
@@ -86,4 +94,14 @@ class Linear(Module):
     
     def __repr__(self) -> str:
         """Get a string representation of the linear layer."""
-        return f"Linear(in_features={self.in_features}, out_features={self.out_features}, bias={self.bias is not None})"
+        bias = self._parameters.get('bias')
+        return f"Linear(in_features={self.in_features}, out_features={self.out_features}, bias={bias is not None})"
+        
+    def parameters(self):
+        """Get the parameters of the linear layer."""
+        weight = self._parameters['weight']
+        bias = self._parameters.get('bias')
+        if bias is not None:
+            return [weight, bias]
+        else:
+            return [weight]

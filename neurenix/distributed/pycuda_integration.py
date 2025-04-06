@@ -129,7 +129,7 @@ class CudaContext:
         
         return kernel
     
-    def allocate(self, shape: Tuple[int, ...], dtype: np.dtype) -> gpuarray.GPUArray:
+    def allocate(self, shape: Tuple[int, ...], dtype: np.dtype) -> "gpuarray.GPUArray":
         """
         Allocate memory on the GPU.
         
@@ -145,7 +145,7 @@ class CudaContext:
         
         return gpuarray.zeros(shape, dtype)
     
-    def to_gpu(self, array: np.ndarray) -> gpuarray.GPUArray:
+    def to_gpu(self, array: np.ndarray) -> "gpuarray.GPUArray":
         """
         Copy array to GPU.
         
@@ -160,7 +160,7 @@ class CudaContext:
         
         return gpuarray.to_gpu(array)
     
-    def from_gpu(self, array: gpuarray.GPUArray) -> np.ndarray:
+    def from_gpu(self, array: Any) -> np.ndarray:
         """
         Copy array from GPU.
         

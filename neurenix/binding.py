@@ -611,12 +611,22 @@ def gelu(x, approximate=False):
         
         return Tensor(result, device=x.device)
 
+def get_binding():
+    """
+    Get the binding module, either the Phynexus extension or the fallback implementation.
+    
+    Returns:
+        The binding module
+    """
+    return sys.modules[__name__]
+
 def global_shutdown():
     """
     Global shutdown function that works with both Phynexus and fallback implementation.
     """
     if _HAS_PHYNEXUS:
-        shutdown()
+        if 'shutdown' in globals():
+            shutdown()
     else:
         pass
 
