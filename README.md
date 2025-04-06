@@ -13,19 +13,19 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 ## Main Features
 
 - **Hot-swappable backend functionality**:  
-  1- Added DeviceManager class for runtime device switching  
-  2- Created Genesis system for automatic hardware detection and selection  
-  3- Modified Tensor class to support hot-swapping between devices  
+  - Added DeviceManager class for runtime device switching  
+  - Created Genesis system for automatic hardware detection and selection  
+  - Modified Tensor class to support hot-swapping between devices  
 
 - **ONNX support**:  
-  1- Implemented ONNXConverter for model import/export  
-  2- Added convenience functions for easy ONNX integration  
-  3- Support for converting between Neurenix and other ML frameworks  
+  - Implemented ONNXConverter for model import/export  
+  - Added convenience functions for easy ONNX integration  
+  - Support for converting between Neurenix and other ML frameworks  
 
 - **API support**:  
-  1- Added RESTful, WebSocket, and gRPC server implementations  
-  2- Created APIManager for centralized server management  
-  3- Provided convenience functions for serving models
+  - Added RESTful, WebSocket, and gRPC server implementations  
+  - Created APIManager for centralized server management  
+  - Provided convenience functions for serving models
 
 - **Dynamic imports from neurenix.binding with NumPy fallbacks for activation functions**:  
   - relu, sigmoid, tanh, softmax, log_softmax, leaky_relu, elu, selu, gelu  
@@ -109,12 +109,28 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - L2 Regularization
   - Knowledge Distillation
   - Synaptic Intelligence
+
 - **Asynchronous and Interruptible Training Module**: Provides functionality for asynchronous training with continuous checkpointing and automatic resume, even in unstable environments. Features include:
   - Continuous checkpointing with atomic writes
   - Automatic resume after interruptions
   - Resource monitoring and proactive checkpointing
   - Signal handling for graceful interruptions
   - Distributed checkpointing for multi-node training
+ 
+- **Docker Support**:
+  - Container management
+  - Image building and management
+  - Volume management
+  - Network configuration
+  - Registry integration
+- **Kubernetes Support**:
+  - Deployment management
+  - Service configuration
+  - Pod management
+  - ConfigMap handling
+  - Secret management
+  - Job scheduling
+  - Cluster management
 
 ## Documentation
 
