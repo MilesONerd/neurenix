@@ -12,14 +12,6 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 
 ## Main Features
 
-- **Phynexus Engine**: High-performance engine for tensor operations
-- **Optimized for Edge AI**: Efficient execution on embedded devices
-- **Multi-GPU and Distributed Support**: Scalability to clusters and multiple GPUs
-- **TPU Support**: Tensor Processing Unit acceleration for machine learning workloads
-- **Agent-Specialized**: Native support for multi-agent and autonomous AI
-- **Declarative API**: Simpler and more intuitive interface than traditional frameworks
-- **LLM Fine-tuning**: Simplified tools for tuning language models
-- **Hugging Face Integration**: Compatibility with pre-existing models
 - **Hot-swappable backend functionality**:  
   1- Added DeviceManager class for runtime device switching  
   2- Created Genesis system for automatic hardware detection and selection  
@@ -111,6 +103,18 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 
 - **DatasetHub**: mechanism that allows users to easily load datasets by providing a URL or file path
 - **CLI**
+- **Continual Learning Module**: Allows models to be retrained and updated with new data without forgetting previously learned information. Implements several techniques:
+  - Elastic Weight Consolidation (EWC)
+  - Experience Replay
+  - L2 Regularization
+  - Knowledge Distillation
+  - Synaptic Intelligence
+- **Asynchronous and Interruptible Training Module**: Provides functionality for asynchronous training with continuous checkpointing and automatic resume, even in unstable environments. Features include:
+  - Continuous checkpointing with atomic writes
+  - Automatic resume after interruptions
+  - Resource monitoring and proactive checkpointing
+  - Signal handling for graceful interruptions
+  - Distributed checkpointing for multi-node training
 
 ## Documentation
 
