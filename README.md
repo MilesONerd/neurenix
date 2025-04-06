@@ -92,6 +92,22 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Implemented model selection and evaluation utilities  
   - Created pipeline optimization tools  
   - Added meta-learning algorithms for few-shot learning  
+ 
+- **Distributed training technologies**:  
+  - MPI for high-performance computing clusters  
+  - Horovod for distributed deep learning  
+  - DeepSpeed for large-scale model training  
+
+- **Memory management technologies**:  
+  - Unified Memory (UM) for seamless CPU-GPU memory sharing  
+  - Heterogeneous Memory Management (HMM) for advanced memory optimization  
+
+- **Specialized hardware acceleration**:  
+  - GraphCore IPU support for intelligence processing  
+  - FPGA support via multiple frameworks:  
+    - OpenCL for cross-vendor FPGA programming  
+    - Xilinx Vitis for Xilinx FPGAs  
+    - Intel OpenVINO for Intel FPGAs  
 
 ## Documentation
 
