@@ -9,3 +9,5 @@ from neurenix.nn.rnn import RNN, LSTM, GRU
 from neurenix.nn.activation import ReLU, Sigmoid, Tanh, Softmax
 from neurenix.nn.loss import Loss, MSELoss, CrossEntropyLoss
 from neurenix.nn.sequential import Sequential
+from neurenix.nn.parameter import Parameter
+from neurenix.nn.pooling import MaxPool2d
