@@ -6,12 +6,26 @@ mod rocm;
 mod webgpu;
 mod tpu;
 mod multi_device;
+mod vulkan;
+mod opencl;
+mod oneapi;
+mod directml;
+mod onednn;
+mod mkldnn;
+mod tensorrt;
 
 pub use cpu::CpuBackend;
 pub use cuda::CudaBackend;
 pub use rocm::RocmBackend;
 pub use webgpu::WebGpuBackend;
 pub use tpu::TpuBackend;
+pub use vulkan::VulkanBackend;
+pub use opencl::OpenCLBackend;
+pub use oneapi::OneAPIBackend;
+pub use directml::DirectMLBackend;
+pub use onednn::OneDNNBackend;
+pub use mkldnn::MKLDNNBackend;
+pub use tensorrt::TensorRTBackend;
 pub use multi_device::{MultiDeviceManager, DeviceInfo};
 
 use crate::error::Result;
@@ -48,5 +62,12 @@ pub fn get_backend(device_type: crate::device::DeviceType) -> Result<Box<dyn Bac
         crate::device::DeviceType::ROCm => Ok(Box::new(RocmBackend::new()?)),
         crate::device::DeviceType::WebGPU => Ok(Box::new(WebGpuBackend::new()?)),
         crate::device::DeviceType::TPU => Ok(Box::new(TpuBackend::new()?)),
+        crate::device::DeviceType::Vulkan => Ok(Box::new(VulkanBackend::new()?)),
+        crate::device::DeviceType::OpenCL => Ok(Box::new(OpenCLBackend::new()?)),
+        crate::device::DeviceType::OneAPI => Ok(Box::new(OneAPIBackend::new()?)),
+        crate::device::DeviceType::DirectML => Ok(Box::new(DirectMLBackend::new()?)),
+        crate::device::DeviceType::OneDNN => Ok(Box::new(OneDNNBackend::new()?)),
+        crate::device::DeviceType::MKLDNN => Ok(Box::new(MKLDNNBackend::new()?)),
+        crate::device::DeviceType::TensorRT => Ok(Box::new(TensorRTBackend::new()?)),
     }
 }
