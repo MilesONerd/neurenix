@@ -59,12 +59,39 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - DirectML for Windows DirectX 12 acceleration  
   - oneDNN for optimized deep learning primitives  
   - MKL-DNN for Intel CPU optimization  
-  - TensorRT for NVIDIA GPU optimization  
+  - TensorRT for NVIDIA GPU optimization
+
 - **Automatic quantization support**:  
   - INT8, FP16, and FP8 precision  
   - Model pruning capabilities  
   - Quantization-aware training  
   - Post-training quantization with calibration  
+ 
+- **Graph Neural Networks (GNNs)**:  
+  - Implemented various GNN layers (GCN, GAT, GraphSAGE, etc.)  
+  - Added pooling operations for graph data  
+  - Provided graph data structures and utilities  
+  - Implemented common GNN models  
+
+- **Fuzzy Logic**:  
+  - Added fuzzy sets with various membership functions  
+  - Implemented fuzzy variables and linguistic variables  
+  - Created fuzzy rule systems with different operators  
+  - Implemented Mamdani, Sugeno, and Tsukamoto inference systems  
+  - Added multiple defuzzification methods  
+
+- **Federated Learning**:  
+  - Implemented client-server architecture for federated learning  
+  - Added various aggregation strategies (FedAvg, FedProx, FedNova, etc.)  
+  - Implemented security mechanisms (secure aggregation, differential privacy)  
+  - Added utilities for client selection and model compression  
+
+- **AutoML & Meta-learning**:  
+  - Implemented hyperparameter search strategies (Grid, Random, Bayesian, Evolutionary)  
+  - Added neural architecture search capabilities  
+  - Implemented model selection and evaluation utilities  
+  - Created pipeline optimization tools  
+  - Added meta-learning algorithms for few-shot learning  
 
 ## Documentation
 
