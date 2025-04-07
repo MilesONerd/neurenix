@@ -60,7 +60,7 @@ huggingface = [
 "Bug Tracker" = "https://github.com/MilesONerd/neurenix/issues"
 
 [tool.setuptools]
-packages = "find:"
+packages = {find = {}}
 
 [tool.setuptools-rust]
 rust-extensions = [
