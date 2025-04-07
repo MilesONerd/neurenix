@@ -182,6 +182,7 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
  
 - **Zero-shot Learning**
 - **NVIDIA Tensor Cores support**
+- **WebAssembly multithreaded support**
 
 ## Documentation
 
