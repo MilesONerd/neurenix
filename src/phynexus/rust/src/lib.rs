@@ -23,6 +23,7 @@ pub mod continual;
 pub mod async_train;
 pub mod explainable;
 pub mod multiscale;
+pub mod zeroshot;
 
 // Re-export core types
 pub use device::Device;
@@ -55,6 +56,7 @@ fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     async_train::register_async_train(py, m)?;
     explainable::register_explainable(py, m)?;
     multiscale::register_multiscale(py, m)?;
+    zeroshot::register_zeroshot(py, m)?;
     
     Ok(())
 }
