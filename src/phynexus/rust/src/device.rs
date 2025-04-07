@@ -36,6 +36,12 @@ pub enum DeviceType {
     MKLDNN,
     
     TensorRT,
+    
+    GraphCore,
+    
+    FPGA,
+    
+    TensorCores,
 }
 
 impl fmt::Display for DeviceType {
@@ -53,6 +59,9 @@ impl fmt::Display for DeviceType {
             DeviceType::OneDNN => write!(f, "oneDNN"),
             DeviceType::MKLDNN => write!(f, "MKL-DNN"),
             DeviceType::TensorRT => write!(f, "TensorRT"),
+            DeviceType::GraphCore => write!(f, "GraphCore"),
+            DeviceType::FPGA => write!(f, "FPGA"),
+            DeviceType::TensorCores => write!(f, "TensorCores"),
         }
     }
 }
