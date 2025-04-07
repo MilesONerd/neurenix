@@ -181,6 +181,7 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - LaplacianPyramid: Laplacian pyramid implementation
  
 - **Zero-shot Learning**
+- **NVIDIA Tensor Cores support**
 
 ## Documentation
 
