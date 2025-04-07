@@ -184,6 +184,12 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 - **NVIDIA Tensor Cores support**
 - **WebAssembly multithreaded support**
 - **gRPC-Streaming support**
+- **Neuroevolution + Evolutionary Algorithms Support**:
+  - Genetic Algorithms: Implementation of population-based optimization with selection, crossover, and mutation operators
+  - NEAT (NeuroEvolution of Augmenting Topologies): Algorithm for evolving both neural network topologies and weights
+  - HyperNEAT: Extension of NEAT that uses CPPNs to generate large-scale neural networks with geometric regularities
+  - CMA-ES (Covariance Matrix Adaptation Evolution Strategy): State-of-the-art evolutionary algorithm for continuous optimization
+  - Evolution Strategies: Implementation of various ES variants with adaptive learning rates and population-based optimization
 
 ## Documentation
 
