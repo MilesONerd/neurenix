@@ -25,6 +25,8 @@ pub mod explainable;
 pub mod multiscale;
 pub mod zeroshot;
 pub mod mas;
+pub mod zkp;
+pub mod quantum;
 
 // Re-export core types
 pub use device::Device;
@@ -59,11 +61,8 @@ fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     multiscale::register_multiscale(py, m)?;
     zeroshot::register_zeroshot(py, m)?;
     mas::register_mas(py, m)?;
+    zkp::register_zkp(py, m)?;
+    quantum::register_quantum(py, m)?;
     
     Ok(())
-}
-
-#[pyfunction]
-fn py_init() -> PyResult<()> {
-    init().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))
 }
