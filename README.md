@@ -179,6 +179,8 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - PyramidDownsample: Pyramid downsampling for multi-scale representations
   - GaussianPyramid: Gaussian pyramid implementation
   - LaplacianPyramid: Laplacian pyramid implementation
+ 
+- **Zero-shot Learning**
 
 ## Documentation
 
