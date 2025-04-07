@@ -5,7 +5,8 @@ Core functionality for the Neurenix framework.
 import os
 import sys
 import logging
-from typing import Optional, Dict, Any
+import numpy as np
+from typing import Optional, Dict, Any, List, Tuple, Union
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +22,133 @@ _config: Dict[str, Any] = {
     "log_level": "info",
     "tpu_visible_devices": None,  # Control which TPU devices are visible
 }
+
+class PhynexusExtension:
+    """
+    Placeholder for the Phynexus native extension.
+    This class provides fallback implementations when the native extension is not available.
+    """
+    
+    @staticmethod
+    def is_available() -> bool:
+        """
+        Check if the Phynexus native extension is available.
+        
+        Returns:
+            bool: True if the extension is available, False otherwise.
+        """
+        return False
+    
+    @staticmethod
+    def matmul(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        """
+        Matrix multiplication fallback implementation.
+        
+        Args:
+            a: First matrix
+            b: Second matrix
+            
+        Returns:
+            Result of matrix multiplication
+        """
+        return np.matmul(a, b)
+    
+    @staticmethod
+    def conv2d(input: np.ndarray, weight: np.ndarray, bias: Optional[np.ndarray] = None,
+               stride: Tuple[int, int] = (1, 1), padding: Tuple[int, int] = (0, 0),
+               dilation: Tuple[int, int] = (1, 1), groups: int = 1) -> np.ndarray:
+        """
+        2D convolution fallback implementation.
+        
+        Args:
+            input: Input tensor
+            weight: Convolution kernel
+            bias: Optional bias tensor
+            stride: Stride of the convolution
+            padding: Padding added to all sides of the input
+            dilation: Spacing between kernel elements
+            groups: Number of blocked connections from input to output channels
+            
+        Returns:
+            Result of convolution
+        """
+        return np.zeros_like(input)  # Placeholder
+    
+    @staticmethod
+    def max_pool2d(input: np.ndarray, kernel_size: Tuple[int, int],
+                  stride: Optional[Tuple[int, int]] = None,
+                  padding: Tuple[int, int] = (0, 0),
+                  dilation: Tuple[int, int] = (1, 1),
+                  ceil_mode: bool = False,
+                  return_indices: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """
+        2D max pooling fallback implementation.
+        
+        Args:
+            input: Input tensor
+            kernel_size: Size of the pooling window
+            stride: Stride of the pooling window
+            padding: Padding added to all sides of the input
+            dilation: Spacing between kernel elements
+            ceil_mode: When True, will use ceil instead of floor to compute the output shape
+            return_indices: Whether to return the indices of the max values
+            
+        Returns:
+            Result of max pooling, and optionally indices
+        """
+        if return_indices:
+            return np.zeros_like(input), np.zeros_like(input, dtype=np.int64)
+        return np.zeros_like(input)  # Placeholder
+    
+    @staticmethod
+    def avg_pool2d(input: np.ndarray, kernel_size: Tuple[int, int],
+                  stride: Optional[Tuple[int, int]] = None,
+                  padding: Tuple[int, int] = (0, 0),
+                  ceil_mode: bool = False,
+                  count_include_pad: bool = True,
+                  divisor_override: Optional[int] = None) -> np.ndarray:
+        """
+        2D average pooling fallback implementation.
+        
+        Args:
+            input: Input tensor
+            kernel_size: Size of the pooling window
+            stride: Stride of the pooling window
+            padding: Padding added to all sides of the input
+            ceil_mode: When True, will use ceil instead of floor to compute the output shape
+            count_include_pad: When True, will include padding in averaging calculations
+            divisor_override: Value to use as divisor for averaging
+            
+        Returns:
+            Result of average pooling
+        """
+        return np.zeros_like(input)  # Placeholder
+    
+    @staticmethod
+    def batch_norm(input: np.ndarray, running_mean: Optional[np.ndarray] = None,
+                  running_var: Optional[np.ndarray] = None,
+                  weight: Optional[np.ndarray] = None,
+                  bias: Optional[np.ndarray] = None,
+                  training: bool = False,
+                  momentum: float = 0.1,
+                  eps: float = 1e-5) -> np.ndarray:
+        """
+        Batch normalization fallback implementation.
+        
+        Args:
+            input: Input tensor
+            running_mean: Running mean tensor
+            running_var: Running variance tensor
+            weight: Scale tensor
+            bias: Bias tensor
+            training: Whether in training mode
+            momentum: Momentum value for running stats
+            eps: Small constant for numerical stability
+            
+        Returns:
+            Normalized tensor
+        """
+        return np.zeros_like(input)  # Placeholder
 
 def init(config: Optional[Dict[str, Any]] = None) -> None:
     """
