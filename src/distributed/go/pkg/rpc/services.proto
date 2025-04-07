@@ -13,6 +13,12 @@ service WorkerService {
   
   // Send heartbeat from worker to coordinator
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  
+  // Stream logs from worker to coordinator
+  rpc StreamLogs(stream LogMessage) returns (LogResponse);
+  
+  // Stream metrics from worker to coordinator
+  rpc StreamMetrics(stream MetricMessage) returns (MetricResponse);
 }
 
 service CoordinatorService {
@@ -21,6 +27,23 @@ service CoordinatorService {
   
   // Get worker status
   rpc GetWorkerStatus(GetWorkerStatusRequest) returns (GetWorkerStatusResponse);
+  
+  // Stream task updates to worker
+  rpc StreamTaskUpdates(TaskUpdateRequest) returns (stream TaskUpdateResponse);
+  
+  // Bidirectional streaming for real-time communication
+  rpc BidirectionalStream(stream StreamRequest) returns (stream StreamResponse);
+}
+
+service DataStreamingService {
+  // Server streaming for data distribution
+  rpc DistributeData(DataRequest) returns (stream DataChunk);
+  
+  // Client streaming for data collection
+  rpc CollectData(stream DataChunk) returns (DataResponse);
+  
+  // Bidirectional streaming for data processing
+  rpc ProcessDataStream(stream ProcessRequest) returns (stream ProcessResponse);
 }
 
 // Worker registration
@@ -83,4 +106,95 @@ message GetWorkerStatusResponse {
   int32 status = 2;
   repeated string running_task_ids = 3;
   int64 available_ram = 4;
+}
+
+// Streaming messages
+message LogMessage {
+  string worker_id = 1;
+  string log_level = 2;
+  string message = 3;
+  int64 timestamp = 4;
+  string component = 5;
+}
+
+message LogResponse {
+  bool success = 1;
+  int32 received_count = 2;
+}
+
+message MetricMessage {
+  string worker_id = 1;
+  string metric_name = 2;
+  double value = 3;
+  int64 timestamp = 4;
+  map<string, string> labels = 5;
+}
+
+message MetricResponse {
+  bool success = 1;
+  int32 received_count = 2;
+}
+
+message TaskUpdateRequest {
+  string worker_id = 1;
+  string task_id = 2;
+}
+
+message TaskUpdateResponse {
+  string task_id = 1;
+  string update_type = 2;
+  map<string, string> update_data = 3;
+  int64 timestamp = 4;
+}
+
+message StreamRequest {
+  string sender_id = 1;
+  string message_type = 2;
+  bytes payload = 3;
+  int64 sequence_number = 4;
+}
+
+message StreamResponse {
+  string sender_id = 1;
+  string message_type = 2;
+  bytes payload = 3;
+  int64 sequence_number = 4;
+  bool requires_ack = 5;
+}
+
+// Data streaming messages
+message DataRequest {
+  string dataset_id = 1;
+  int32 batch_size = 2;
+  bool shuffle = 3;
+  map<string, string> options = 4;
+}
+
+message DataChunk {
+  string dataset_id = 1;
+  int32 chunk_index = 2;
+  bytes data = 3;
+  string format = 4;
+  map<string, string> metadata = 5;
+}
+
+message DataResponse {
+  bool success = 1;
+  int32 chunks_received = 2;
+  string dataset_id = 3;
+}
+
+message ProcessRequest {
+  string process_id = 1;
+  string operation = 2;
+  bytes input_data = 3;
+  map<string, string> parameters = 4;
+}
+
+message ProcessResponse {
+  string process_id = 1;
+  bool success = 2;
+  bytes output_data = 3;
+  string message = 4;
+  map<string, string> metadata = 5;
 }
