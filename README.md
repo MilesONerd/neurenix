@@ -190,6 +190,13 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - HyperNEAT: Extension of NEAT that uses CPPNs to generate large-scale neural networks with geometric regularities
   - CMA-ES (Covariance Matrix Adaptation Evolution Strategy): State-of-the-art evolutionary algorithm for continuous optimization
   - Evolution Strategies: Implementation of various ES variants with adaptive learning rates and population-based optimization
+ 
+- **Hybrid Neuro-Symbolic Models Support**:
+  - Symbolic reasoning components with rule-based inference
+  - Neural-symbolic integration with multiple interaction modes
+  - Differentiable logic with support for fuzzy and probabilistic logic
+  - Knowledge distillation between symbolic and neural systems
+  - Advanced reasoning paradigms (constraint satisfaction, logical inference, abductive/deductive/inductive reasoning)
 
 ## Documentation
 
