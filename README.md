@@ -197,6 +197,13 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Differentiable logic with support for fuzzy and probabilistic logic
   - Knowledge distillation between symbolic and neural systems
   - Advanced reasoning paradigms (constraint satisfaction, logical inference, abductive/deductive/inductive reasoning)
+ 
+- **Multi-Agent Systems (MAS) Support**:
+  - Agent framework with reactive, deliberative, and hybrid agent types
+  - Communication protocols and message passing infrastructure
+  - Coordination mechanisms (task allocation, auctions, contract nets, voting)
+  - Multi-agent learning algorithms (independent learners, joint action learners, team learning)
+  - Environment abstractions for agent interaction
 
 ## Documentation
 
