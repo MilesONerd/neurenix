@@ -755,6 +755,19 @@ class Tensor:
         Returns:
             A new tensor with the result of the matrix multiplication.
         """
+        from neurenix.core import get_config
+        
+        tensor_cores_enabled = get_config().get("tensor_cores_enabled", False)
+        
+        if (tensor_cores_enabled and 
+            self._device.type == DeviceType.TENSOR_CORES and 
+            other._device.type == DeviceType.TENSOR_CORES):
+            try:
+                from neurenix.binding import tensor_cores_matmul
+                return tensor_cores_matmul(self, other)
+            except (ImportError, AttributeError):
+                pass
+        
         try:
             from neurenix.binding import matmul
             return matmul(self, other)

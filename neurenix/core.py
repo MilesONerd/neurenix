@@ -21,6 +21,7 @@ _config: Dict[str, Any] = {
     "debug": False,
     "log_level": "info",
     "tpu_visible_devices": None,  # Control which TPU devices are visible
+    "tensor_cores_enabled": False,  # Control whether Tensor Cores are enabled
 }
 
 class PhynexusExtension:

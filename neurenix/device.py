@@ -19,6 +19,7 @@ class DeviceType(Enum):
     ONEDNN = "onednn"  # oneDNN for optimized deep learning primitives
     MKLDNN = "mkldnn"  # MKL-DNN for optimized deep learning primitives
     TENSORRT = "tensorrt"  # TensorRT for NVIDIA-specific optimizations
+    TENSOR_CORES = "tensor_cores"  # NVIDIA Tensor Cores for accelerated matrix operations
 
 class Device:
     """
@@ -119,6 +120,12 @@ class Device:
             try:
                 from neurenix.binding import is_tensorrt_available
                 self._available = is_tensorrt_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.TENSOR_CORES:
+            try:
+                from neurenix.binding import is_tensor_cores_available
+                self._available = is_tensor_cores_available()
             except (ImportError, AttributeError):
                 self._available = False
     
@@ -341,6 +348,12 @@ def get_device_count(device_type: DeviceType) -> int:
             return get_tensorrt_device_count()
         except (ImportError, AttributeError):
             return 0
+    elif device_type == DeviceType.TENSOR_CORES:
+        try:
+            from neurenix.binding import is_tensor_cores_available
+            return 1 if is_tensor_cores_available() else 0
+        except (ImportError, AttributeError):
+            return 0
     else:
         return 0
 
@@ -388,6 +401,8 @@ def get_device(device_str: str) -> Device:
         device_type = DeviceType.MKLDNN
     elif device_type_str == "tensorrt":
         device_type = DeviceType.TENSORRT
+    elif device_type_str == "tensor_cores":
+        device_type = DeviceType.TENSOR_CORES
     else:
         raise ValueError(f"Unknown device type: {device_type_str}")
     
@@ -449,5 +464,9 @@ def get_available_devices() -> List[Device]:
     tensorrt_count = get_device_count(DeviceType.TENSORRT)
     for i in range(tensorrt_count):
         devices.append(Device(DeviceType.TENSORRT, i))
+    
+    tensor_cores_count = get_device_count(DeviceType.TENSOR_CORES)
+    for i in range(tensor_cores_count):
+        devices.append(Device(DeviceType.TENSOR_CORES, i))
     
     return devices

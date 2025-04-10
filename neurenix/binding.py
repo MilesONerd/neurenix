@@ -94,6 +94,7 @@ except ImportError:
     ROCM = "rocm"
     WEBGPU = "webgpu"
     TPU = "tpu"
+    TENSOR_CORES = "tensor_cores"
     
     def get_device_count(device_type):
         """
@@ -190,6 +191,29 @@ except ImportError:
             True if TPU is available, False otherwise
         """
         return get_device_count(TPU) > 0
+        
+    def is_tensor_cores_available():
+        """
+        Check if NVIDIA Tensor Cores are available.
+        
+        Returns:
+            True if Tensor Cores are available, False otherwise
+        """
+        if not is_cuda_available():
+            return False
+        
+        try:
+            import subprocess
+            result = subprocess.run(['nvidia-smi', '--query-gpu=name', '--format=csv,noheader'], 
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if result.returncode == 0:
+                gpu_names = result.stdout.decode('utf-8').strip().split('\n')
+                for name in gpu_names:
+                    if any(arch in name.lower() for arch in ['volta', 'turing', 'ampere', 'hopper', 'ada', 'rtx', 'a100', 'h100']):
+                        return True
+            return False
+        except:
+            return False
     
     def init():
         """
@@ -338,6 +362,20 @@ def matmul(a, b):
         import numpy as np
         result = np.matmul(a._numpy_data, b._numpy_data)
         return Tensor(result, device=a.device)
+        
+def tensor_cores_matmul(a, b):
+    """
+    Perform matrix multiplication using NVIDIA Tensor Cores.
+    
+    Args:
+        a: First tensor
+        b: Second tensor
+        
+    Returns:
+        Result tensor
+    """
+    if not _HAS_PHYNEXUS:
+        return matmul(a, b)
 
 def add(a, b):
     """

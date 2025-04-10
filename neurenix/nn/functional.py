@@ -6,6 +6,7 @@ import numpy as np
 from typing import Optional, Union, Tuple, List
 
 from neurenix.tensor import Tensor
+from neurenix.device import DeviceType
 
 def relu(x: Tensor, inplace: bool = False) -> Tensor:
     """
@@ -216,22 +217,39 @@ def conv2d(input: Tensor, weight: Tensor, bias: Optional[Tensor] = None,
     Returns:
         Output tensor
     """
-    batch_size, in_channels, height, width = input.shape
-    out_channels, _, kernel_height, kernel_width = weight.shape
+    from neurenix.core import get_config
     
-    if isinstance(stride, int):
-        stride = (stride, stride)
-    if isinstance(padding, int):
-        padding = (padding, padding)
-    if isinstance(dilation, int):
-        dilation = (dilation, dilation)
+    tensor_cores_enabled = get_config().get("tensor_cores_enabled", False)
     
-    output_height = ((height + 2 * padding[0] - dilation[0] * (kernel_height - 1) - 1) // stride[0]) + 1
-    output_width = ((width + 2 * padding[1] - dilation[1] * (kernel_width - 1) - 1) // stride[1]) + 1
+    if (tensor_cores_enabled and 
+        input.device.type == DeviceType.TENSOR_CORES and 
+        weight.device.type == DeviceType.TENSOR_CORES):
+        try:
+            from neurenix.binding import tensor_cores_conv2d
+            return tensor_cores_conv2d(input, weight, bias, stride, padding, dilation, groups)
+        except (ImportError, AttributeError):
+            pass
     
-    output = Tensor.zeros((batch_size, out_channels, output_height, output_width), device=input.device)
-    
-    return output
+    try:
+        from neurenix.binding import conv2d as binding_conv2d
+        return binding_conv2d(input, weight, bias, stride, padding, dilation, groups)
+    except (ImportError, AttributeError):
+        batch_size, in_channels, height, width = input.shape
+        out_channels, _, kernel_height, kernel_width = weight.shape
+        
+        if isinstance(stride, int):
+            stride = (stride, stride)
+        if isinstance(padding, int):
+            padding = (padding, padding)
+        if isinstance(dilation, int):
+            dilation = (dilation, dilation)
+        
+        output_height = ((height + 2 * padding[0] - dilation[0] * (kernel_height - 1) - 1) // stride[0]) + 1
+        output_width = ((width + 2 * padding[1] - dilation[1] * (kernel_width - 1) - 1) // stride[1]) + 1
+        
+        output = Tensor.zeros((batch_size, out_channels, output_height, output_width), device=input.device)
+        
+        return output
 
 def max_pool2d(input: Tensor, kernel_size: Union[int, Tuple[int, int]],
                stride: Optional[Union[int, Tuple[int, int]]] = None,
@@ -254,30 +272,140 @@ def max_pool2d(input: Tensor, kernel_size: Union[int, Tuple[int, int]],
     Returns:
         Output tensor, or tuple of output tensor and indices tensor if return_indices is True
     """
-    batch_size, channels, height, width = input.shape
+    from neurenix.core import get_config
     
-    if isinstance(kernel_size, int):
-        kernel_size = (kernel_size, kernel_size)
-    if stride is None:
-        stride = kernel_size
-    elif isinstance(stride, int):
-        stride = (stride, stride)
-    if isinstance(padding, int):
-        padding = (padding, padding)
-    if isinstance(dilation, int):
-        dilation = (dilation, dilation)
+    tensor_cores_enabled = get_config().get("tensor_cores_enabled", False)
     
-    if ceil_mode:
-        output_height = int(np.ceil((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
-        output_width = int(np.ceil((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+    if (tensor_cores_enabled and 
+        input.device.type == DeviceType.TENSOR_CORES):
+        try:
+            from neurenix.binding import tensor_cores_max_pool2d
+            if return_indices:
+                return tensor_cores_max_pool2d(input, kernel_size, stride, padding, dilation, return_indices, ceil_mode)
+            else:
+                return tensor_cores_max_pool2d(input, kernel_size, stride, padding, dilation, return_indices, ceil_mode)
+        except (ImportError, AttributeError):
+            pass
+    
+    try:
+        from neurenix.binding import max_pool2d as binding_max_pool2d
+        return binding_max_pool2d(input, kernel_size, stride, padding, dilation, return_indices, ceil_mode)
+    except (ImportError, AttributeError):
+        batch_size, channels, height, width = input.shape
+        
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
+        if stride is None:
+            stride = kernel_size
+        elif isinstance(stride, int):
+            stride = (stride, stride)
+        if isinstance(padding, int):
+            padding = (padding, padding)
+        if isinstance(dilation, int):
+            dilation = (dilation, dilation)
+        
+        if ceil_mode:
+            output_height = int(np.ceil((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
+            output_width = int(np.ceil((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+        else:
+            output_height = int(np.floor((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
+            output_width = int(np.floor((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+        
+        output = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
+        
+        if return_indices:
+            indices = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
+            return output, indices
+        else:
+            return output
+
+def cosine_similarity(x1: Tensor, x2: Tensor, dim: int = 1, eps: float = 1e-8) -> Tensor:
+    """
+    Returns cosine similarity between x1 and x2, computed along dim.
+    
+    Args:
+        x1: First input tensor
+        x2: Second input tensor
+        dim: Dimension along which to compute cosine similarity
+        eps: Small value to avoid division by zero
+        
+    Returns:
+        Cosine similarity tensor
+    """
+    try:
+        from neurenix.core import PhynexusExtension
+        if PhynexusExtension.is_available():
+            return PhynexusExtension.cosine_similarity(x1, x2, dim, eps)
+    except (ImportError, AttributeError):
+        pass
+    
+    x1_data = x1.data
+    x2_data = x2.data
+    
+    x1_norm = np.sqrt(np.sum(x1_data ** 2, axis=dim, keepdims=True))
+    x2_norm = np.sqrt(np.sum(x2_data ** 2, axis=dim, keepdims=True))
+    
+    x1_normalized = x1_data / np.maximum(x1_norm, eps)
+    x2_normalized = x2_data / np.maximum(x2_norm, eps)
+    
+    cos_sim = np.sum(x1_normalized * x2_normalized, axis=dim)
+    
+    return Tensor(cos_sim, device=x1.device)
+
+def pairwise_distance(x1: Tensor, x2: Tensor, p: float = 2.0, eps: float = 1e-6) -> Tensor:
+    """
+    Computes the pairwise distance between vectors v1,v2 using the p-norm.
+    
+    Args:
+        x1: First input tensor
+        x2: Second input tensor
+        p: The norm degree. Default: 2
+        eps: Small value to avoid division by zero
+        
+    Returns:
+        Pairwise distance tensor
+    """
+    try:
+        from neurenix.core import PhynexusExtension
+        if PhynexusExtension.is_available():
+            return PhynexusExtension.pairwise_distance(x1, x2, p, eps)
+    except (ImportError, AttributeError):
+        pass
+    
+    diff = x1.data - x2.data
+    
+    if p == float('inf'):
+        dist = np.max(np.abs(diff), axis=1)
     else:
-        output_height = int(np.floor((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
-        output_width = int(np.floor((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+        dist = np.sum(np.abs(diff) ** p, axis=1) ** (1 / p)
     
-    output = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
+    return Tensor(dist, device=x1.device)
+
+def normalize(input: Tensor, p: float = 2.0, dim: int = 1, eps: float = 1e-12) -> Tensor:
+    """
+    Performs L_p normalization of inputs over specified dimension.
     
-    if return_indices:
-        indices = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
-        return output, indices
+    Args:
+        input: Input tensor
+        p: The exponent value in the norm formulation. Default: 2
+        dim: The dimension to reduce. Default: 1
+        eps: Small value to avoid division by zero. Default: 1e-12
+        
+    Returns:
+        Normalized tensor
+    """
+    try:
+        from neurenix.core import PhynexusExtension
+        if PhynexusExtension.is_available():
+            return PhynexusExtension.normalize(input, p, dim, eps)
+    except (ImportError, AttributeError):
+        pass
+    
+    x = input.data
+    
+    if p == float('inf'):
+        norm = np.max(np.abs(x), axis=dim, keepdims=True)
     else:
-        return output
+        norm = np.sum(np.abs(x) ** p, axis=dim, keepdims=True) ** (1 / p)
+    
+    return Tensor(x / np.maximum(norm, eps), device=input.device)
