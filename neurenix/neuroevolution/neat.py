@@ -470,6 +470,83 @@ class NEATSpecies:
         return child
 
 
+class NEATPopulation:
+    """Represents a population of NEAT genomes."""
+    
+    def __init__(self, size: int, num_inputs: int, num_outputs: int, config: NEATConfig = None):
+        """
+        Initialize a NEAT population.
+        
+        Args:
+            size: Population size
+            num_inputs: Number of input nodes
+            num_outputs: Number of output nodes
+            config: NEAT configuration
+        """
+        self.size = size
+        self.num_inputs = num_inputs
+        self.num_outputs = num_outputs
+        self.config = config or NEATConfig()
+        self.neat = NEAT(self.config)
+        self.neat.initialize(size, num_inputs, num_outputs)
+        
+    def evolve(self, fitness_function: Callable[[NEATGenome], float], generations: int = 1) -> NEATGenome:
+        """
+        Evolve the population for a number of generations.
+        
+        Args:
+            fitness_function: Function to evaluate the fitness of each genome
+            generations: Number of generations to evolve
+            
+        Returns:
+            The best genome after evolution
+        """
+        for _ in range(generations):
+            for genome in self.neat.genomes:
+                genome.fitness = fitness_function(genome)
+                
+            self.neat.evolve()
+            
+        return self.neat.get_best_genome()
+    
+    def get_best_network(self) -> NEATNetwork:
+        """
+        Get the best neural network from the population.
+        
+        Returns:
+            Neural network created from the best genome
+        """
+        best_genome = self.neat.get_best_genome()
+        return self.neat.get_network(best_genome)
+    
+    def get_networks(self) -> List[NEATNetwork]:
+        """
+        Get all neural networks from the population.
+        
+        Returns:
+            List of neural networks created from all genomes
+        """
+        return [self.neat.get_network(genome) for genome in self.neat.genomes]
+    
+    def get_species_count(self) -> int:
+        """
+        Get the number of species in the population.
+        
+        Returns:
+            Number of species
+        """
+        return len(self.neat.species)
+    
+    def get_generation(self) -> int:
+        """
+        Get the current generation number.
+        
+        Returns:
+            Current generation number
+        """
+        return self.neat.generation
+
+
 class NEAT:
     """Implementation of the NEAT algorithm."""
     

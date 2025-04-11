@@ -12,6 +12,150 @@ import subprocess
 import tempfile
 from typing import Dict, List, Optional, Any, Union
 
+class Deployment:
+    """Kubernetes deployment resource."""
+    
+    def __init__(
+        self,
+        name: str,
+        namespace: str = "default",
+        config: Optional["DeploymentConfig"] = None,
+    ):
+        """
+        Initialize a Kubernetes deployment.
+        
+        Args:
+            name: Name of the deployment
+            namespace: Kubernetes namespace
+            config: Deployment configuration
+        """
+        self.name = name
+        self.namespace = namespace
+        self.config = config or DeploymentConfig(name=name, image="placeholder:latest")
+        self._status = {}
+    
+    def apply(self) -> bool:
+        """
+        Apply the deployment to the Kubernetes cluster.
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as f:
+            f.write(self.config.to_yaml())
+            f.flush()
+            
+            try:
+                subprocess.run(
+                    ["kubectl", "apply", "-f", f.name],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"Error applying deployment: {e.stderr}")
+                return False
+    
+    def delete(self) -> bool:
+        """
+        Delete the deployment from the Kubernetes cluster.
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            subprocess.run(
+                ["kubectl", "delete", "deployment", self.name, "-n", self.namespace],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error deleting deployment: {e.stderr}")
+            return False
+    
+    def get_status(self) -> Dict[str, Any]:
+        """
+        Get the status of the deployment.
+        
+        Returns:
+            Deployment status
+        """
+        try:
+            result = subprocess.run(
+                ["kubectl", "get", "deployment", self.name, "-n", self.namespace, "-o", "json"],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            self._status = json.loads(result.stdout)
+            return self._status
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting deployment status: {e.stderr}")
+            return {}
+    
+    def is_ready(self) -> bool:
+        """
+        Check if the deployment is ready.
+        
+        Returns:
+            True if ready, False otherwise
+        """
+        status = self.get_status()
+        if not status:
+            return False
+        
+        if "status" not in status:
+            return False
+        
+        if "readyReplicas" not in status["status"]:
+            return False
+        
+        return status["status"]["readyReplicas"] == status["status"]["replicas"]
+    
+    def scale(self, replicas: int) -> bool:
+        """
+        Scale the deployment.
+        
+        Args:
+            replicas: Number of replicas
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            subprocess.run(
+                ["kubectl", "scale", "deployment", self.name, "-n", self.namespace, f"--replicas={replicas}"],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error scaling deployment: {e.stderr}")
+            return False
+    
+    def restart(self) -> bool:
+        """
+        Restart the deployment.
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            subprocess.run(
+                ["kubectl", "rollout", "restart", "deployment", self.name, "-n", self.namespace],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error restarting deployment: {e.stderr}")
+            return False
+
 class DeploymentConfig:
     """Configuration for a Kubernetes deployment."""
     
