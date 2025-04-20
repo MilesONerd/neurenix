@@ -204,6 +204,13 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Coordination mechanisms (task allocation, auctions, contract nets, voting)
   - Multi-agent learning algorithms (independent learners, joint action learners, team learning)
   - Environment abstractions for agent interaction
+ 
+- **Quantum Computing (Qiskit and Cirq) Support**:
+  - Quantum circuit interfaces for both Qiskit and Cirq
+  - Hybrid quantum-classical computing support
+  - Parameterized quantum circuits for variational algorithms
+  - Quantum utility functions for state manipulation and measurement
+  - Integration with the Neurenix tensor and device management systems
 
 ## Documentation
 
