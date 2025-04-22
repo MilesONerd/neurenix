@@ -6,6 +6,7 @@ import numpy as np
 from typing import Optional, Union, Tuple, List
 
 from neurenix.tensor import Tensor
+import neurenix.binding as binding
 
 def relu(x: Tensor, inplace: bool = False) -> Tensor:
     """
@@ -196,6 +197,32 @@ def dropout(x: Tensor, p: float = 0.5, training: bool = True) -> Tensor:
     mask = np.random.binomial(1, 1 - p, x.shape).astype(np.float32) / (1 - p)
     return Tensor(x.data * mask, device=x.device)
 
+def cosine_similarity(x1: Tensor, x2: Tensor, dim: int = 1, eps: float = 1e-8) -> Tensor:
+    """
+    Returns cosine similarity between x1 and x2, computed along dim.
+    
+    Args:
+        x1: First input tensor
+        x2: Second input tensor
+        dim: Dimension along which to compute cosine similarity
+        eps: Small value to avoid division by zero
+        
+    Returns:
+        Cosine similarity tensor
+    """
+    try:
+        return binding.cosine_similarity(x1, x2, dim, eps)
+    except (ImportError, AttributeError):
+        x1_norm = np.sqrt(np.sum(x1.data ** 2, axis=dim, keepdims=True))
+        x2_norm = np.sqrt(np.sum(x2.data ** 2, axis=dim, keepdims=True))
+        
+        x1_normalized = x1.data / np.maximum(x1_norm, eps)
+        x2_normalized = x2.data / np.maximum(x2_norm, eps)
+        
+        similarity = np.sum(x1_normalized * x2_normalized, axis=dim)
+        
+        return Tensor(similarity, device=x1.device)
+
 def conv2d(input: Tensor, weight: Tensor, bias: Optional[Tensor] = None, 
            stride: Union[int, Tuple[int, int]] = 1, 
            padding: Union[int, Tuple[int, int]] = 0,
@@ -216,22 +243,26 @@ def conv2d(input: Tensor, weight: Tensor, bias: Optional[Tensor] = None,
     Returns:
         Output tensor
     """
-    batch_size, in_channels, height, width = input.shape
-    out_channels, _, kernel_height, kernel_width = weight.shape
-    
-    if isinstance(stride, int):
-        stride = (stride, stride)
-    if isinstance(padding, int):
-        padding = (padding, padding)
-    if isinstance(dilation, int):
-        dilation = (dilation, dilation)
-    
-    output_height = ((height + 2 * padding[0] - dilation[0] * (kernel_height - 1) - 1) // stride[0]) + 1
-    output_width = ((width + 2 * padding[1] - dilation[1] * (kernel_width - 1) - 1) // stride[1]) + 1
-    
-    output = Tensor.zeros((batch_size, out_channels, output_height, output_width), device=input.device)
-    
-    return output
+    try:
+        return binding.conv2d(input, weight, bias, stride, padding, dilation, groups)
+    except (ImportError, AttributeError):
+        batch_size, in_channels, height, width = input.shape
+        out_channels, _, kernel_height, kernel_width = weight.shape
+        
+        if isinstance(stride, int):
+            stride = (stride, stride)
+        if isinstance(padding, int):
+            padding = (padding, padding)
+        if isinstance(dilation, int):
+            dilation = (dilation, dilation)
+        
+        output_height = ((height + 2 * padding[0] - dilation[0] * (kernel_height - 1) - 1) // stride[0]) + 1
+        output_width = ((width + 2 * padding[1] - dilation[1] * (kernel_width - 1) - 1) // stride[1]) + 1
+        
+        output = Tensor.zeros((batch_size, out_channels, output_height, output_width), device=input.device)
+        
+        
+        return output
 
 def max_pool2d(input: Tensor, kernel_size: Union[int, Tuple[int, int]],
                stride: Optional[Union[int, Tuple[int, int]]] = None,
@@ -254,30 +285,36 @@ def max_pool2d(input: Tensor, kernel_size: Union[int, Tuple[int, int]],
     Returns:
         Output tensor, or tuple of output tensor and indices tensor if return_indices is True
     """
-    batch_size, channels, height, width = input.shape
-    
-    if isinstance(kernel_size, int):
-        kernel_size = (kernel_size, kernel_size)
-    if stride is None:
-        stride = kernel_size
-    elif isinstance(stride, int):
-        stride = (stride, stride)
-    if isinstance(padding, int):
-        padding = (padding, padding)
-    if isinstance(dilation, int):
-        dilation = (dilation, dilation)
-    
-    if ceil_mode:
-        output_height = int(np.ceil((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
-        output_width = int(np.ceil((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
-    else:
-        output_height = int(np.floor((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
-        output_width = int(np.floor((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
-    
-    output = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
-    
-    if return_indices:
-        indices = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
-        return output, indices
-    else:
-        return output
+    try:
+        if return_indices:
+            return binding.max_pool2d_with_indices(input, kernel_size, stride, padding, dilation, ceil_mode)
+        else:
+            return binding.max_pool2d(input, kernel_size, stride, padding, dilation, ceil_mode)
+    except (ImportError, AttributeError):
+        batch_size, channels, height, width = input.shape
+        
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
+        if stride is None:
+            stride = kernel_size
+        elif isinstance(stride, int):
+            stride = (stride, stride)
+        if isinstance(padding, int):
+            padding = (padding, padding)
+        if isinstance(dilation, int):
+            dilation = (dilation, dilation)
+        
+        if ceil_mode:
+            output_height = int(np.ceil((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
+            output_width = int(np.ceil((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+        else:
+            output_height = int(np.floor((height + 2 * padding[0] - dilation[0] * (kernel_size[0] - 1) - 1) / stride[0] + 1))
+            output_width = int(np.floor((width + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) / stride[1] + 1))
+        
+        output = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
+        
+        if return_indices:
+            indices = Tensor.zeros((batch_size, channels, output_height, output_width), device=input.device)
+            return output, indices
+        else:
+            return output

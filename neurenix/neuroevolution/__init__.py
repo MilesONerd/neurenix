@@ -15,7 +15,6 @@ from .genetic import (
 )
 
 from .neat import (
-    NEAT,
     NEATConfig,
     NEATGenome,
     NEATSpecies,
@@ -47,7 +46,7 @@ __all__ = [
     'Crossover',
     'Selection',
     
-    'NEAT',
+
     'NEATConfig',
     'NEATGenome',
     'NEATSpecies',

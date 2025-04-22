@@ -470,7 +470,7 @@ class NEATSpecies:
         return child
 
 
-class NEAT:
+class NEATPopulation:
     """Implementation of the NEAT algorithm."""
     
     def __init__(self, config: NEATConfig = None):

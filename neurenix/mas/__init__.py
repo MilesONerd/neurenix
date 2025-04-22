@@ -5,6 +5,8 @@ This module provides implementations of multi-agent systems for distributed
 artificial intelligence, agent-based modeling, and collaborative learning.
 """
 
+from .environment_network import NetworkEnvironment
+
 from .agent import (
     Agent,
     ReactiveAgent,
@@ -17,7 +19,6 @@ from .environment import (
     Environment,
     GridEnvironment,
     ContinuousEnvironment,
-    NetworkEnvironment,
     StateSpace,
     ActionSpace
 )
