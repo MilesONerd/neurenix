@@ -60,7 +60,7 @@ huggingface = [
 "Bug Tracker" = "https://github.com/MilesONerd/neurenix/issues"
 
 [tool.setuptools]
-packages = ["neurenix", "neurenix.nn", "neurenix.optim", "neurenix.agent", "neurenix.rl", "neurenix.meta", "neurenix.distributed", "neurenix.transfer", "neurenix.unsupervised", "neurenix.wasm", "neurenix.huggingface", "neurenix.tensor", "neurenix.data", "neurenix.hardware", "neurenix.gnn", "neurenix.fuzzy", "neurenix.federated", "neurenix.automl", "neurenix.memory", "neurenix.continual", "neurenix.async_train", "neurenix.cli"]
+packages = {find = {}}
 
 [tool.setuptools-rust]
 rust-extensions = [
