@@ -26,6 +26,7 @@ pub mod multiscale;
 pub mod zeroshot;
 pub mod neuro_symbolic;
 pub mod mas;
+pub mod quantum;
 
 // Re-export core types
 pub use device::Device;
@@ -61,6 +62,7 @@ fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
     zeroshot::register_zeroshot(py, m)?;
     neuro_symbolic::register_neuro_symbolic(py, m)?;
     mas::register_mas(py, m)?;
+    quantum::register_quantum(py, m)?;
     
     Ok(())
 }

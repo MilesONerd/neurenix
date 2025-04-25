@@ -211,6 +211,23 @@ except ImportError:
             Version string
         """
         return "0.1.0 (Python fallback)"
+    
+    def is_quantum_available():
+        """
+        Check if quantum computing is available.
+        
+        Returns:
+            True if quantum computing is available, False otherwise
+        """
+        try:
+            import qiskit
+            return True
+        except ImportError:
+            try:
+                import cirq
+                return True
+            except ImportError:
+                return False
 
 # Define a function to get the appropriate device
 def get_device(device_str=None):
