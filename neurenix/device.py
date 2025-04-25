@@ -19,6 +19,7 @@ class DeviceType(Enum):
     ONEDNN = "onednn"  # oneDNN for optimized deep learning primitives
     MKLDNN = "mkldnn"  # MKL-DNN for optimized deep learning primitives
     TENSORRT = "tensorrt"  # TensorRT for NVIDIA-specific optimizations
+    QUANTUM = "quantum"  # Quantum computing device for quantum operations
 
 class Device:
     """
@@ -119,6 +120,12 @@ class Device:
             try:
                 from neurenix.binding import is_tensorrt_available
                 self._available = is_tensorrt_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.QUANTUM:
+            try:
+                from neurenix.binding import is_quantum_available
+                self._available = is_quantum_available()
             except (ImportError, AttributeError):
                 self._available = False
     
