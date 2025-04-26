@@ -8,6 +8,7 @@ using Shapley values from game theory.
 import numpy as np
 from typing import Dict, List, Optional, Union, Callable, Tuple, Any
 import logging
+from scipy.special import comb
 
 from neurenix.tensor import Tensor
 from neurenix.nn.module import Module
@@ -192,7 +193,18 @@ class KernelShap(ShapExplainer):
         
         predictions = np.array(predictions)
         
-        weights = np.ones(n_samples)  # In a real implementation, these would be kernel weights
+        M = n_features  # Number of features
+        weights = np.zeros(n_samples)
+        for i in range(n_samples):
+            coalition = coalitions[i]
+            s = coalition.sum()  # Number of features in coalition
+            if s == 0 or s == M:
+                weights[i] = 0  # Skip all-zero or all-one coalitions
+            else:
+                weights[i] = (M - 1) / (s * (M - s) * comb(M, s))
+        
+        weights = weights / np.sum(weights)
+        
         X = np.hstack([np.ones((n_samples, 1)), coalitions])
         y = predictions
         

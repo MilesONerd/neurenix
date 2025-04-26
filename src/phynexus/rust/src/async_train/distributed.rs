@@ -158,22 +158,78 @@ pub fn distributed_checkpoint_barrier(
     
     py.run(r#"
 import time
+import socket
+import struct
+import threading
+import queue
 
-# In a real implementation, this would use a distributed
-# synchronization mechanism to ensure all nodes reach this point
-
-# For now, just simulate a barrier
+# Implement a real distributed barrier using TCP sockets
 success = True
 barrier_time = time.time()
 
-# Log barrier entry
-print(f"Node {node_rank} reached barrier at {barrier_time}")
-
-# Wait for a short time to simulate barrier
-time.sleep(0.1)
-
-# Log barrier exit
-print(f"Node {node_rank} exited barrier at {time.time()}")
+try:
+    # Log barrier entry
+    print(f"Node {node_rank} reached barrier at {barrier_time}")
+    
+    if is_coordinator:
+        # Coordinator logic: wait for all workers to connect
+        barrier_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        barrier_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        barrier_socket.bind(('0.0.0.0', 12345))  # Use a configurable port in production
+        barrier_socket.listen(world_size)
+        barrier_socket.settimeout(timeout)
+        
+        # Track connected workers
+        connected_workers = 0
+        worker_connections = []
+        
+        # Accept connections from workers
+        while connected_workers < world_size - 1:  # -1 because coordinator doesn't connect to itself
+            try:
+                conn, addr = barrier_socket.accept()
+                worker_connections.append(conn)
+                connected_workers += 1
+                print(f"Worker connected from {addr}, {connected_workers}/{world_size-1}")
+            except socket.timeout:
+                print(f"Timeout waiting for workers, only {connected_workers}/{world_size-1} connected")
+                success = False
+                break
+        
+        # If all workers connected, send release signal
+        if success:
+            for conn in worker_connections:
+                conn.send(struct.pack('!B', 1))  # Send release signal (1 byte)
+                conn.close()
+        
+        barrier_socket.close()
+    else:
+        # Worker logic: connect to coordinator and wait for release signal
+        try:
+            # In production, get coordinator address from config
+            coordinator_host = '127.0.0.1'  # Use actual coordinator IP in production
+            coordinator_port = 12345        # Use configurable port in production
+            
+            # Connect to coordinator
+            barrier_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            barrier_socket.settimeout(timeout)
+            barrier_socket.connect((coordinator_host, coordinator_port))
+            
+            # Wait for release signal
+            data = barrier_socket.recv(1)
+            if not data or data != struct.pack('!B', 1):
+                print(f"Worker {node_rank} received invalid release signal")
+                success = False
+            
+            barrier_socket.close()
+        except (socket.timeout, ConnectionRefusedError) as e:
+            print(f"Worker {node_rank} failed to connect to coordinator: {e}")
+            success = False
+    
+    # Log barrier exit
+    print(f"Node {node_rank} exited barrier at {time.time()}, success={success}")
+except Exception as e:
+    print(f"Error in barrier: {e}")
+    success = False
 "#, None, Some(locals))?;
     
     let success = locals.get_item("success")?.extract::<bool>()?;
