@@ -57,6 +57,9 @@ except ImportError:
         def to_numpy(self):
             return self.data
         
+        def numpy(self):
+            return self.data
+        
         @classmethod
         def zeros(cls, shape, device=None):
             return cls(np.zeros(shape, dtype=np.float32), device)
