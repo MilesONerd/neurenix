@@ -22,6 +22,7 @@ const Device Device::ROCM0 = Device(DeviceType::ROCM, 0);
 const Device Device::ROCM1 = Device(DeviceType::ROCM, 1);
 const Device Device::WEBGPU = Device(DeviceType::WEBGPU, 0);
 const Device Device::TPU0 = Device(DeviceType::TPU, 0);
+const Device Device::NPU0 = Device(DeviceType::NPU, 0);
 
 // Constructor
 Device::Device(DeviceType type, int index) : type_(type), index_(index) {}
@@ -55,6 +56,9 @@ std::string Device::to_string() const {
         case DeviceType::TPU:
             oss << "tpu:" << index_;
             break;
+        case DeviceType::NPU:
+            oss << "npu:" << index_;
+            break;
         default:
             oss << "unknown";
             break;
@@ -78,6 +82,10 @@ Device Device::webgpu(int index) {
 
 Device Device::tpu(int index) {
     return Device(DeviceType::TPU, index);
+}
+
+Device Device::npu(int index) {
+    return Device(DeviceType::NPU, index);
 }
 
 // Comparison operators
@@ -110,6 +118,10 @@ bool Device::is_available() const {
             // Check TPU availability
             // return tpu_is_available() && tpu_get_device_count() > index_;
             return false;  // Placeholder
+        case DeviceType::NPU:
+            // Check NPU availability
+            // return npu_is_available() && npu_get_device_count() > index_;
+            return false;  // Placeholder
         default:
             return false;
     }
@@ -135,6 +147,9 @@ void Device::set_current() const {
         case DeviceType::TPU:
             // Set TPU device
             // tpu_set_device(index_);
+            break;
+        case DeviceType::NPU:
+            // npu_set_device(index_);
             break;
         default:
             throw std::runtime_error("Unsupported device type");
@@ -176,6 +191,10 @@ int Device::get_device_count(DeviceType type) {
             // Get TPU device count
             // return tpu_get_device_count();
             return 0;  // Placeholder
+        case DeviceType::NPU:
+            // Get NPU device count
+            // return npu_get_device_count();
+            return 0;  // Placeholder
         default:
             return 0;
     }
@@ -209,6 +228,12 @@ std::vector<Device> Device::get_all_devices() {
     int tpu_count = get_device_count(DeviceType::TPU);
     for (int i = 0; i < tpu_count; ++i) {
         devices.push_back(Device(DeviceType::TPU, i));
+    }
+    
+    // Add NPU devices
+    int npu_count = get_device_count(DeviceType::NPU);
+    for (int i = 0; i < npu_count; ++i) {
+        devices.push_back(Device(DeviceType::NPU, i));
     }
     
     return devices;
@@ -314,6 +339,28 @@ DeviceProperties Device::get_properties() const {
             
             // Placeholder values
             props.name = "TPU Device";
+            props.total_memory = 0;
+            props.compute_capability_major = 0;
+            props.compute_capability_minor = 0;
+            props.multi_processor_count = 0;
+            props.max_threads_per_block = 0;
+            props.max_threads_per_multiprocessor = 0;
+            props.warp_size = 0;
+            break;
+        case DeviceType::NPU:
+            // NPU properties
+            // npu_get_device_properties(index_, &npu_props);
+            // props.name = npu_props.name;
+            // props.total_memory = npu_props.total_memory;
+            // props.compute_capability_major = 0;
+            // props.compute_capability_minor = 0;
+            // props.multi_processor_count = 0;
+            // props.max_threads_per_block = npu_props.max_threads_per_block;
+            // props.max_threads_per_multiprocessor = 0;
+            // props.warp_size = 0;
+            
+            // Placeholder values
+            props.name = "NPU Device";
             props.total_memory = 0;
             props.compute_capability_major = 0;
             props.compute_capability_minor = 0;

@@ -98,6 +98,7 @@ except ImportError:
     ROCM = "rocm"
     WEBGPU = "webgpu"
     TPU = "tpu"
+    NPU = "npu"
     
     def get_device_count(device_type):
         """
@@ -193,6 +194,16 @@ except ImportError:
         Returns:
             True if TPU is available, False otherwise
         """
+        return is_device_available(TPU)
+        
+    def is_npu_available():
+        """
+        Check if NPU is available.
+        
+        Returns:
+            True if NPU is available, False otherwise
+        """
+        return is_device_available(NPU)
 def is_vulkan_available():
     """
     Check if Vulkan is available.
@@ -315,6 +326,12 @@ def get_webgpu_device_count():
 def get_tpu_device_count():
     """
     Get the number of TPU devices available.
+    """
+    return 0
+
+def get_npu_device_count():
+    """
+    Get the number of NPU devices available.
     """
     return 0
 
@@ -446,8 +463,10 @@ def get_available_devices():
     for i in range(tpu_count):
         devices.append(get_device(f"tpu:{i}"))
     
-    return devices
-
+    npu_count = get_device_count(NPU)
+    for i in range(npu_count):
+        devices.append(get_device(f"npu:{i}"))
+    
     vulkan_count = get_device_count(VULKAN)
     for i in range(vulkan_count):
         devices.append(get_device(f"vulkan:{i}"))
@@ -459,6 +478,8 @@ def get_available_devices():
     webgpu_count = get_device_count(WEBGPU)
     for i in range(webgpu_count):
         devices.append(get_device(f"webgpu:{i}"))
+    
+    return devices
 
 def get_optimal_device():
     """
@@ -479,6 +500,10 @@ def get_optimal_device():
     
     for device in devices:
         if device.device_type == TPU:
+            return device
+    
+    for device in devices:
+        if device.device_type == NPU:
             return device
     
     return get_device("cpu")
