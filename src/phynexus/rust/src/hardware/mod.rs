@@ -6,6 +6,7 @@ mod rocm;
 mod webgpu;
 mod tpu;
 mod npu;
+mod arm;
 mod multi_device;
 mod vulkan;
 mod opencl;
@@ -24,6 +25,7 @@ pub use rocm::RocmBackend;
 pub use webgpu::WebGpuBackend;
 pub use tpu::TpuBackend;
 pub use npu::NpuBackend;
+pub use arm::ArmBackend;
 pub use vulkan::VulkanBackend;
 pub use opencl::OpenCLBackend;
 pub use oneapi::OneAPIBackend;
@@ -71,6 +73,7 @@ pub fn get_backend(device_type: crate::device::DeviceType) -> Result<Box<dyn Bac
         crate::device::DeviceType::WebGPU => Ok(Box::new(WebGpuBackend::new()?)),
         crate::device::DeviceType::TPU => Ok(Box::new(TpuBackend::new()?)),
         crate::device::DeviceType::NPU => Ok(Box::new(NpuBackend::new()?)),
+        crate::device::DeviceType::ARM => Ok(Box::new(ArmBackend::new()?)),
         crate::device::DeviceType::Vulkan => Ok(Box::new(VulkanBackend::new()?)),
         crate::device::DeviceType::OpenCL => Ok(Box::new(OpenCLBackend::new()?)),
         crate::device::DeviceType::OneAPI => Ok(Box::new(OneAPIBackend::new()?)),

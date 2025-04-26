@@ -21,6 +21,7 @@ class DeviceType(Enum):
     MKLDNN = "mkldnn"  # MKL-DNN for optimized deep learning primitives
     TENSORRT = "tensorrt"  # TensorRT for NVIDIA-specific optimizations
     QUANTUM = "quantum"  # Quantum computing device for quantum operations
+    ARM = "arm"  # ARM architecture with NEON SIMD and SVE support
 
 class Device:
     """
@@ -136,6 +137,12 @@ class Device:
                 self._available = is_quantum_available()
             except (ImportError, AttributeError):
                 self._available = False
+        elif device_type == DeviceType.ARM:
+            try:
+                from neurenix.binding import is_arm_available
+                self._available = is_arm_available()
+            except (ImportError, AttributeError):
+                self._available = False
     
     @property
     def type(self) -> DeviceType:
@@ -176,6 +183,8 @@ class Device:
             return f"MKL-DNN:{self._index}"
         elif self._type == DeviceType.TENSORRT:
             return f"TensorRT:{self._index}"
+        elif self._type == DeviceType.ARM:
+            return f"ARM:{self._index}"
         else:
             return f"{self._type}:{self._index}"
     
@@ -231,6 +240,8 @@ class Device:
         count += get_device_count(DeviceType.MKLDNN)
         
         count += get_device_count(DeviceType.TENSORRT)
+        
+        count += get_device_count(DeviceType.ARM)
         
         return count
 
@@ -369,6 +380,12 @@ def get_device_count(device_type: DeviceType) -> int:
             return get_tensorrt_device_count()
         except (ImportError, AttributeError):
             return 0
+    elif device_type == DeviceType.ARM:
+        try:
+            from neurenix.binding import get_arm_device_count
+            return get_arm_device_count()
+        except (ImportError, AttributeError):
+            return 0
     else:
         return 0
 
@@ -418,6 +435,8 @@ def get_device(device_str: str) -> Device:
         device_type = DeviceType.MKLDNN
     elif device_type_str == "tensorrt":
         device_type = DeviceType.TENSORRT
+    elif device_type_str == "arm":
+        device_type = DeviceType.ARM
     else:
         raise ValueError(f"Unknown device type: {device_type_str}")
     
@@ -484,5 +503,9 @@ def get_available_devices() -> List[Device]:
     tensorrt_count = get_device_count(DeviceType.TENSORRT)
     for i in range(tensorrt_count):
         devices.append(Device(DeviceType.TENSORRT, i))
+    
+    arm_count = get_device_count(DeviceType.ARM)
+    for i in range(arm_count):
+        devices.append(Device(DeviceType.ARM, i))
     
     return devices

@@ -42,6 +42,8 @@ pub enum DeviceType {
     FPGA,
     
     TensorCores,
+    
+    ARM,
 }
 
 impl fmt::Display for DeviceType {
@@ -62,6 +64,7 @@ impl fmt::Display for DeviceType {
             DeviceType::GraphCore => write!(f, "GraphCore"),
             DeviceType::FPGA => write!(f, "FPGA"),
             DeviceType::TensorCores => write!(f, "TensorCores"),
+            DeviceType::ARM => write!(f, "ARM"),
         }
     }
 }
@@ -134,6 +137,11 @@ impl Device {
     /// Create a TPU device
     pub fn tpu(device_index: usize) -> Self {
         Self::new(DeviceType::TPU, device_index).unwrap_or_else(|_| Self::cpu())
+    }
+    
+    /// Create an ARM device
+    pub fn arm(device_index: usize) -> Self {
+        Self::new(DeviceType::ARM, device_index).unwrap_or_else(|_| Self::cpu())
     }
     
     /// Get the device type
