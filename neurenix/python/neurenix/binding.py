@@ -56,6 +56,9 @@ except ImportError:
         
         def to_numpy(self):
             return self.data
+            
+        def numpy(self):
+            return self.to_numpy()
         
         @classmethod
         def zeros(cls, shape, device=None):
@@ -766,7 +769,7 @@ def gelu(x, approximate=False):
         else:
             from scipy import special
             result = 0.5 * x._numpy_data * (1 + special.erf(x._numpy_data / np.sqrt(2)))
-        
+        return Tensor(result, device=x.device)
 def allocate_tensor(shape, dtype, device):
     """
     Allocate memory for a tensor on the specified device.

@@ -211,8 +211,6 @@ pub fn prune_tensor(tensor: &Arc<Tensor>, sparsity: f32, method: &str) -> Result
 }
 
 fn float_to_half(value: f32) -> u16 {
-    //
-    
     let bits = value.to_bits();
     let sign = (bits >> 31) & 0x1;
     let exponent = ((bits >> 23) & 0xFF) as i32;
@@ -242,8 +240,6 @@ fn float_to_half(value: f32) -> u16 {
 }
 
 fn half_to_float(half: u16) -> f32 {
-    //
-    
     let sign = ((half >> 15) & 0x1) as u32;
     let exponent = ((half >> 10) & 0x1F) as i32;
     let mantissa = (half & 0x3FF) as u32;
