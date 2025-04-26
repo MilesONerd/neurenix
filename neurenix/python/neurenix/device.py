@@ -12,6 +12,7 @@ class DeviceType(Enum):
     ROCM = "rocm"
     WEBGPU = "webgpu"  # WebGPU for WebAssembly context (client-side execution)
     TPU = "tpu"  # Tensor Processing Unit for machine learning acceleration
+    NPU = "npu"  # Neural Processing Unit for machine learning acceleration
     VULKAN = "vulkan"  # Vulkan for cross-platform GPU acceleration
     OPENCL = "opencl"  # OpenCL for cross-platform GPU acceleration
     ONEAPI = "oneapi"  # oneAPI for cross-platform acceleration
@@ -78,6 +79,13 @@ class Device:
             try:
                 from neurenix.binding import is_tpu_available
                 self._available = is_tpu_available()
+            except (ImportError, AttributeError):
+                self._available = False
+        elif device_type == DeviceType.NPU:
+            # Check if NPU is available through bindings
+            try:
+                from neurenix.binding import is_npu_available
+                self._available = is_npu_available()
             except (ImportError, AttributeError):
                 self._available = False
         elif device_type == DeviceType.VULKAN:
@@ -152,6 +160,8 @@ class Device:
             return f"WebGPU:{self._index}"
         elif self._type == DeviceType.TPU:
             return f"TPU:{self._index}"
+        elif self._type == DeviceType.NPU:
+            return f"NPU:{self._index}"
         elif self._type == DeviceType.VULKAN:
             return f"Vulkan:{self._index}"
         elif self._type == DeviceType.OPENCL:
@@ -204,6 +214,9 @@ class Device:
         
         # Add TPU devices
         count += get_device_count(DeviceType.TPU)
+        
+        # Add NPU devices
+        count += get_device_count(DeviceType.NPU)
         
         count += get_device_count(DeviceType.VULKAN)
         
@@ -306,6 +319,14 @@ def get_device_count(device_type: DeviceType) -> int:
         except (ImportError, AttributeError):
             # For now, assume no TPU devices if bindings are not available
             return 0
+    elif device_type == DeviceType.NPU:
+        try:
+            # Import binding module to get NPU device count
+            from neurenix.binding import get_npu_device_count
+            return get_npu_device_count()
+        except (ImportError, AttributeError):
+            # For now, assume no NPU devices if bindings are not available
+            return 0
     elif device_type == DeviceType.VULKAN:
         try:
             from neurenix.binding import get_vulkan_device_count
@@ -381,6 +402,8 @@ def get_device(device_str: str) -> Device:
         device_type = DeviceType.WEBGPU
     elif device_type_str == "tpu":
         device_type = DeviceType.TPU
+    elif device_type_str == "npu":
+        device_type = DeviceType.NPU
     elif device_type_str == "vulkan":
         device_type = DeviceType.VULKAN
     elif device_type_str == "opencl":
@@ -428,6 +451,11 @@ def get_available_devices() -> List[Device]:
     tpu_count = get_device_count(DeviceType.TPU)
     for i in range(tpu_count):
         devices.append(Device(DeviceType.TPU, i))
+    
+    # Add NPU devices
+    npu_count = get_device_count(DeviceType.NPU)
+    for i in range(npu_count):
+        devices.append(Device(DeviceType.NPU, i))
     
     vulkan_count = get_device_count(DeviceType.VULKAN)
     for i in range(vulkan_count):

@@ -43,7 +43,8 @@ enum class DeviceType {
     CUDA,
     ROCM,
     WEBGPU,
-    TPU
+    TPU,
+    NPU
 };
 
 /**
@@ -108,6 +109,13 @@ public:
      * @return True if device is TPU, false otherwise
      */
     bool is_tpu() const { return type_ == DeviceType::TPU; }
+    
+    /**
+     * @brief Check if device is NPU
+     * 
+     * @return True if device is NPU, false otherwise
+     */
+    bool is_npu() const { return type_ == DeviceType::NPU; }
 
     /**
      * @brief Get string representation of device
@@ -131,6 +139,9 @@ public:
                 break;
             case DeviceType::TPU:
                 device_type = "TPU";
+                break;
+            case DeviceType::NPU:
+                device_type = "NPU";
                 break;
         }
         return device_type + ":" + std::to_string(index_);
