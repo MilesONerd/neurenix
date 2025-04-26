@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neurenix.Distributed.Api", "Neurenix.Distributed.Api\Neurenix.Distributed.Api.csproj", "{3010E798-2CAA-46AC-935D-D7CAA9BAD498}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neurenix.Distributed.Orleans", "Neurenix.Distributed.Orleans\Neurenix.Distributed.Orleans.csproj", "{27A54D97-1070-40C4-9CC7-0AF8890D7CB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neurenix.Distributed.Tests", "Neurenix.Distributed.Tests\Neurenix.Distributed.Tests.csproj", "{EF8BF0F2-C91B-4185-B766-46D01E69DD31}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3010E798-2CAA-46AC-935D-D7CAA9BAD498}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3010E798-2CAA-46AC-935D-D7CAA9BAD498}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3010E798-2CAA-46AC-935D-D7CAA9BAD498}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3010E798-2CAA-46AC-935D-D7CAA9BAD498}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27A54D97-1070-40C4-9CC7-0AF8890D7CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27A54D97-1070-40C4-9CC7-0AF8890D7CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27A54D97-1070-40C4-9CC7-0AF8890D7CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27A54D97-1070-40C4-9CC7-0AF8890D7CB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF8BF0F2-C91B-4185-B766-46D01E69DD31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF8BF0F2-C91B-4185-B766-46D01E69DD31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF8BF0F2-C91B-4185-B766-46D01E69DD31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF8BF0F2-C91B-4185-B766-46D01E69DD31}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

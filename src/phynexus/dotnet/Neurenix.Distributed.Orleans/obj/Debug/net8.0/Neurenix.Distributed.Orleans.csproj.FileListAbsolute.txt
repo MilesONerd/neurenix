@@ -1,0 +1,13 @@
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.csproj.AssemblyReference.cache
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.GeneratedMSBuildEditorConfig.editorconfig
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.AssemblyInfoInputs.cache
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.AssemblyInfo.cs
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.csproj.CoreCompileInputs.cache
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.sourcelink.json
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/bin/Debug/net8.0/Neurenix.Distributed.Orleans.deps.json
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/bin/Debug/net8.0/Neurenix.Distributed.Orleans.dll
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/bin/Debug/net8.0/Neurenix.Distributed.Orleans.pdb
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.dll
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/refint/Neurenix.Distributed.Orleans.dll
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/Neurenix.Distributed.Orleans.pdb
+/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/Debug/net8.0/ref/Neurenix.Distributed.Orleans.dll
