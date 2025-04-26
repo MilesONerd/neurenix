@@ -62,7 +62,7 @@ def version() -> str:
     Returns:
         The version string.
     """
-    return "1.0.2"
+    return "2.0.0"
 
 def get_config() -> Dict[str, Any]:
     """
