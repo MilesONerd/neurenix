@@ -214,6 +214,11 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
  
 - **.NET distributed computing with ASP.NET and Orleans**
 - **NPU hardware support**
+- **ARM architecture support**:
+  - ARM Compute Library for optimized neural network operations
+  - Ethos-U/NPU for dedicated neural processing
+  - Neon SIMD for vectorized operations
+  - SVE (Scalable Vector Extensions) for variable-length vector processing
 
 ## Documentation
 
