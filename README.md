@@ -211,6 +211,8 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Parameterized quantum circuits for variational algorithms
   - Quantum utility functions for state manipulation and measurement
   - Integration with the Neurenix tensor and device management systems
+ 
+- **.NET distributed computing with ASP.NET and Orleans**
 
 ## Documentation
 
