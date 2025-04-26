@@ -88,6 +88,28 @@ impl Tensor {
         self.data
     }
     
+    /// Get the raw pointer to the tensor data on NPU
+    pub fn data_npu(&self) -> Result<*const u8> {
+        if self.device.is_npu() {
+            Ok(self.data)
+        } else {
+            Err(crate::error::PhynexusError::InvalidDevice(
+                format!("Tensor is not on NPU device, but on {:?}", self.device)
+            ))
+        }
+    }
+    
+    /// Get the mutable raw pointer to the tensor data on NPU
+    pub fn data_npu_mut(&mut self) -> Result<*mut u8> {
+        if self.device.is_npu() {
+            Ok(self.data)
+        } else {
+            Err(crate::error::PhynexusError::InvalidDevice(
+                format!("Tensor is not on NPU device, but on {:?}", self.device)
+            ))
+        }
+    }
+    
     /// Get the size of the tensor data in bytes
     pub fn size(&self) -> usize {
         self.size
@@ -162,6 +184,11 @@ impl Tensor {
     /// Move the tensor to the TPU device
     pub fn to_tpu(&self) -> Result<Self> {
         self.to_device(Device::tpu(0))
+    }
+    
+    /// Move the tensor to the NPU device
+    pub fn to_npu(&self) -> Result<Self> {
+        self.to_device(Device::npu(0))
     }
     
     pub fn zeros(shape: &[usize]) -> Result<Self> {
