@@ -49,8 +49,31 @@ pub fn conv2d(
     let out_height = ((in_height + 2 * padding_h - dilation_h * (kernel_height - 1) - 1) / stride_h) + 1;
     let out_width = ((in_width + 2 * padding_w - dilation_w * (kernel_width - 1) - 1) / stride_w) + 1;
     
-    let _device = input.device();
-    let output = Tensor::zeros(&[batch_size, out_channels, out_height, out_width])?;
+    let device = input.device_type()?;
+    let mut output = Tensor::zeros(&[batch_size, out_channels, out_height, out_width], device)?;
+    
+    match device {
+        crate::device::DeviceType::CPU => {
+            super::cpu_conv(input, weight, None, &mut output, &params.stride, &params.padding, &params.dilation, params.groups)?;
+        },
+        crate::device::DeviceType::CUDA => {
+            super::cuda_conv(input, weight, None, &mut output, &params.stride, &params.padding, &params.dilation, params.groups)?;
+        },
+        crate::device::DeviceType::ROCm => {
+            super::rocm_conv(input, weight, None, &mut output, &params.stride, &params.padding, &params.dilation, params.groups)?;
+        },
+        crate::device::DeviceType::WebGPU => {
+            super::webgpu_conv(input, weight, None, &mut output, &params.stride, &params.padding, &params.dilation, params.groups)?;
+        },
+        crate::device::DeviceType::TPU => {
+            super::tpu_conv(input, weight, None, &mut output, &params.stride, &params.padding, &params.dilation, params.groups)?;
+        },
+        _ => {
+            return Err(PhynexusError::UnsupportedOperation(
+                format!("Convolution not supported on device: {:?}", device)
+            ));
+        }
+    }
     
     Ok(output)
 }

@@ -88,7 +88,7 @@ class Tensor:
             try:
                 genesis = Genesis()
                 if shape is not None:
-                    self._device = genesis.select_device(tensor_shape=shape)
+                    self._device = genesis.select_device(tensor_shape=tuple(shape))
                 else:
                     self._device = self._device_manager.active_device
             except Exception as e:
@@ -237,10 +237,18 @@ class Tensor:
         try:
             from neurenix.binding import copy_to_numpy
             if self._data is not None:
-                return copy_to_numpy(self)
-            return self._numpy_data
+                result = copy_to_numpy(self)
+                if result is not None:
+                    return result
+            if hasattr(self, '_numpy_data') and self._numpy_data is not None:
+                return self._numpy_data.copy()  # Return a copy to avoid modifying the original data
+            else:
+                return np.array([], dtype=np.float32)
         except (ImportError, AttributeError):
-            return self._numpy_data
+            if hasattr(self, '_numpy_data') and self._numpy_data is not None:
+                return self._numpy_data.copy()  # Return a copy to avoid modifying the original data
+            else:
+                return np.array([], dtype=np.float32)
     
     def to(self, device: Device, non_blocking: bool = False) -> "Tensor":
         """
@@ -351,9 +359,12 @@ class Tensor:
         if isinstance(other, Tensor):
             try:
                 from neurenix.binding import add
-                return add(self, other)
+                result = add(self, other)
+                if result is None:
+                    result = Tensor(np.array(self._numpy_data + other._numpy_data, dtype=np.float32), device=self._device)
+                return result
             except (ImportError, AttributeError):
-                return Tensor(self._numpy_data + other._numpy_data, device=self._device)
+                return Tensor(np.array(self._numpy_data + other._numpy_data, dtype=np.float32), device=self._device)
         
         raise TypeError(f"Unsupported operand type for +: {type(other)}")
     
@@ -375,9 +386,12 @@ class Tensor:
         if isinstance(other, Tensor):
             try:
                 from neurenix.binding import subtract
-                return subtract(self, other)
+                result = subtract(self, other)
+                if result is None:
+                    result = Tensor(np.array(self._numpy_data - other._numpy_data, dtype=np.float32), device=self._device)
+                return result
             except (ImportError, AttributeError):
-                return Tensor(self._numpy_data - other._numpy_data, device=self._device)
+                return Tensor(np.array(self._numpy_data - other._numpy_data, dtype=np.float32), device=self._device)
         
         raise TypeError(f"Unsupported operand type for -: {type(other)}")
     
@@ -399,9 +413,12 @@ class Tensor:
         if isinstance(other, Tensor):
             try:
                 from neurenix.binding import multiply
-                return multiply(self, other)
+                result = multiply(self, other)
+                if result is None:
+                    result = Tensor(np.array(self._numpy_data * other._numpy_data, dtype=np.float32), device=self._device)
+                return result
             except (ImportError, AttributeError):
-                return Tensor(self._numpy_data * other._numpy_data, device=self._device)
+                return Tensor(np.array(self._numpy_data * other._numpy_data, dtype=np.float32), device=self._device)
         
         raise TypeError(f"Unsupported operand type for *: {type(other)}")
     
@@ -423,9 +440,12 @@ class Tensor:
         if isinstance(other, Tensor):
             try:
                 from neurenix.binding import divide
-                return divide(self, other)
+                result = divide(self, other)
+                if result is None:
+                    result = Tensor(np.array(self._numpy_data / other._numpy_data, dtype=np.float32), device=self._device)
+                return result
             except (ImportError, AttributeError):
-                return Tensor(self._numpy_data / other._numpy_data, device=self._device)
+                return Tensor(np.array(self._numpy_data / other._numpy_data, dtype=np.float32), device=self._device)
         
         raise TypeError(f"Unsupported operand type for /: {type(other)}")
         
@@ -441,7 +461,16 @@ class Tensor:
         """
         try:
             from neurenix.binding import get_item
-            return get_item(self, index)
+            result = get_item(self, index)
+            if result is None:
+                result_data = self._numpy_data[index]
+                
+                # If the result is a scalar, wrap it in a 0-dimensional tensor
+                if np.isscalar(result_data):
+                    result_data = np.array(result_data)
+                
+                result = Tensor(result_data, device=self._device)
+            return result
         except (ImportError, AttributeError):
             result = self._numpy_data[index]
             
@@ -467,7 +496,13 @@ class Tensor:
         
         try:
             from neurenix.binding import reshape
-            return reshape(self, shape)
+            result = reshape(self, shape)
+            if result is None:
+                result = Tensor(
+                    self._numpy_data.reshape(shape),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 self._numpy_data.reshape(shape),
@@ -488,7 +523,19 @@ class Tensor:
         """
         try:
             from neurenix.binding import transpose
-            return transpose(self, dim0, dim1)
+            result = transpose(self, dim0, dim1)
+            if result is None:
+                # Create a list of dimensions
+                dims = list(range(self.ndim))
+                
+                # Swap the specified dimensions
+                dims[dim0], dims[dim1] = dims[dim1], dims[dim0]
+                
+                result = Tensor(
+                    np.transpose(self._numpy_data, dims),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             # Create a list of dimensions
             dims = list(range(self.ndim))
@@ -515,7 +562,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import gather
-            return gather(self, dim, index)
+            result = gather(self, dim, index)
+            if result is None:
+                # Convert indices to integer type for take_along_axis
+                index_array = index._numpy_data.astype(np.int64)
+                gathered = np.take_along_axis(self._numpy_data, index_array, axis=dim)
+                result = Tensor(gathered, device=self.device)
+            return result
         except (ImportError, AttributeError):
             # Convert indices to integer type for take_along_axis
             index_array = index._numpy_data.astype(np.int64)
@@ -536,7 +589,14 @@ class Tensor:
         """
         try:
             from neurenix.binding import relu
-            return relu(self, inplace)
+            result = relu(self, inplace)
+            if result is None:
+                if inplace:
+                    self._numpy_data = np.maximum(self._numpy_data, 0)
+                    result = self
+                else:
+                    result = Tensor(np.maximum(self._numpy_data, 0), device=self._device)
+            return result
         except (ImportError, AttributeError):
             if inplace:
                 self._numpy_data = np.maximum(self._numpy_data, 0)
@@ -554,7 +614,10 @@ class Tensor:
         """
         try:
             from neurenix.binding import sigmoid
-            return sigmoid(self)
+            result = sigmoid(self)
+            if result is None:
+                result = Tensor(1 / (1 + np.exp(-self._numpy_data)), device=self._device)
+            return result
         except (ImportError, AttributeError):
             result = Tensor(1 / (1 + np.exp(-self._numpy_data)), device=self._device)
             return result
@@ -568,7 +631,10 @@ class Tensor:
         """
         try:
             from neurenix.binding import tanh
-            return tanh(self)
+            result = tanh(self)
+            if result is None:
+                result = Tensor(np.tanh(self._numpy_data), device=self._device)
+            return result
         except (ImportError, AttributeError):
             result = Tensor(np.tanh(self._numpy_data), device=self._device)
             return result
@@ -585,7 +651,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import softmax
-            return softmax(self, dim)
+            result = softmax(self, dim)
+            if result is None:
+                # Compute softmax values along the specified dimension
+                exp_x = np.exp(self._numpy_data - np.max(self._numpy_data, axis=dim, keepdims=True))
+                softmax_values = exp_x / np.sum(exp_x, axis=dim, keepdims=True)
+                result = Tensor(softmax_values, device=self._device)
+            return result
         except (ImportError, AttributeError):
             # Compute softmax values along the specified dimension
             exp_x = np.exp(self._numpy_data - np.max(self._numpy_data, axis=dim, keepdims=True))
@@ -605,7 +677,15 @@ class Tensor:
         """
         try:
             from neurenix.binding import log_softmax
-            return log_softmax(self, dim)
+            result = log_softmax(self, dim)
+            if result is None:
+                # Compute log softmax values along the specified dimension
+                max_val = np.max(self._numpy_data, axis=dim, keepdims=True)
+                exp_x = np.exp(self._numpy_data - max_val)
+                sum_exp_x = np.sum(exp_x, axis=dim, keepdims=True)
+                log_softmax_values = self._numpy_data - max_val - np.log(sum_exp_x)
+                result = Tensor(log_softmax_values, device=self._device)
+            return result
         except (ImportError, AttributeError):
             # Compute log softmax values along the specified dimension
             max_val = np.max(self._numpy_data, axis=dim, keepdims=True)
@@ -628,7 +708,17 @@ class Tensor:
         """
         try:
             from neurenix.binding import leaky_relu
-            return leaky_relu(self, negative_slope, inplace)
+            result = leaky_relu(self, negative_slope, inplace)
+            if result is None:
+                if inplace:
+                    self._numpy_data = np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope)
+                    result = self
+                else:
+                    result = Tensor(
+                        np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope),
+                        device=self._device
+                    )
+            return result
         except (ImportError, AttributeError):
             if inplace:
                 self._numpy_data = np.where(self._numpy_data > 0, self._numpy_data, self._numpy_data * negative_slope)
@@ -653,7 +743,25 @@ class Tensor:
         """
         try:
             from neurenix.binding import elu
-            return elu(self, alpha, inplace)
+            result = elu(self, alpha, inplace)
+            if result is None:
+                if inplace:
+                    self._numpy_data = np.where(
+                        self._numpy_data > 0,
+                        self._numpy_data,
+                        alpha * (np.exp(self._numpy_data) - 1)
+                    )
+                    result = self
+                else:
+                    result = Tensor(
+                        np.where(
+                            self._numpy_data > 0,
+                            self._numpy_data,
+                            alpha * (np.exp(self._numpy_data) - 1)
+                        ),
+                        device=self._device
+                    )
+            return result
         except (ImportError, AttributeError):
             if inplace:
                 self._numpy_data = np.where(
@@ -689,7 +797,25 @@ class Tensor:
         
         try:
             from neurenix.binding import selu
-            return selu(self, inplace)
+            result = selu(self, inplace)
+            if result is None:
+                if inplace:
+                    self._numpy_data = scale * np.where(
+                        self._numpy_data > 0,
+                        self._numpy_data,
+                        alpha * (np.exp(self._numpy_data) - 1)
+                    )
+                    result = self
+                else:
+                    result = Tensor(
+                        scale * np.where(
+                            self._numpy_data > 0,
+                            self._numpy_data,
+                            alpha * (np.exp(self._numpy_data) - 1)
+                        ),
+                        device=self._device
+                    )
+            return result
         except (ImportError, AttributeError):
             if inplace:
                 self._numpy_data = scale * np.where(
@@ -721,7 +847,27 @@ class Tensor:
         """
         try:
             from neurenix.binding import gelu
-            return gelu(self, approximate)
+            result = gelu(self, approximate)
+            if result is None:
+                if approximate:
+                    # Approximation: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+                    sqrt_2_over_pi = np.sqrt(2 / np.pi)
+                    result = Tensor(
+                        0.5 * self._numpy_data * (
+                            1 + np.tanh(
+                                sqrt_2_over_pi * (self._numpy_data + 0.044715 * np.power(self._numpy_data, 3))
+                            )
+                        ),
+                        device=self._device
+                    )
+                else:
+                    # Exact formula: 0.5 * x * (1 + erf(x / sqrt(2)))
+                    from scipy import special
+                    result = Tensor(
+                        0.5 * self._numpy_data * (1 + special.erf(self._numpy_data / np.sqrt(2))),
+                        device=self._device
+                    )
+            return result
         except (ImportError, AttributeError):
             if approximate:
                 # Approximation: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
@@ -757,7 +903,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import matmul
-            return matmul(self, other)
+            result = matmul(self, other)
+            if result is None:
+                result = Tensor(
+                    np.matmul(self._numpy_data, other._numpy_data),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.matmul(self._numpy_data, other._numpy_data),
@@ -778,7 +930,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import mean
-            return mean(self, dim, keepdim)
+            result = mean(self, dim, keepdim)
+            if result is None:
+                result = Tensor(
+                    np.mean(self._numpy_data, axis=dim, keepdims=keepdim),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.mean(self._numpy_data, axis=dim, keepdims=keepdim),
@@ -799,7 +957,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import sum_tensor
-            return sum_tensor(self, dim, keepdim)
+            result = sum_tensor(self, dim, keepdim)
+            if result is None:
+                result = Tensor(
+                    np.sum(self._numpy_data, axis=dim, keepdims=keepdim),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.sum(self._numpy_data, axis=dim, keepdims=keepdim),
@@ -816,7 +980,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import abs_tensor
-            return abs_tensor(self)
+            result = abs_tensor(self)
+            if result is None:
+                result = Tensor(
+                    np.abs(self._numpy_data),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.abs(self._numpy_data),
@@ -837,7 +1007,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import clamp
-            return clamp(self, min, max)
+            result = clamp(self, min, max)
+            if result is None:
+                result = Tensor(
+                    np.clip(self._numpy_data, min, max),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.clip(self._numpy_data, min, max),
@@ -854,7 +1030,13 @@ class Tensor:
         """
         try:
             from neurenix.binding import log1p
-            return log1p(self)
+            result = log1p(self)
+            if result is None:
+                result = Tensor(
+                    np.log1p(self._numpy_data),
+                    device=self._device
+                )
+            return result
         except (ImportError, AttributeError):
             result = Tensor(
                 np.log1p(self._numpy_data),
@@ -878,7 +1060,12 @@ class Tensor:
         """
         try:
             from neurenix.binding import stack_tensors
-            return stack_tensors(tensors, dim)
+            result = stack_tensors(tensors, dim)
+            if result is None:
+                numpy_tensors = [t._numpy_data for t in tensors]
+                stacked = np.stack(numpy_tensors, axis=dim)
+                result = Tensor(stacked, device=tensors[0].device)
+            return result
         except (ImportError, AttributeError):
             numpy_tensors = [t._numpy_data for t in tensors]
             stacked = np.stack(numpy_tensors, axis=dim)
@@ -898,7 +1085,12 @@ class Tensor:
         """
         try:
             from neurenix.binding import cat_tensors
-            return cat_tensors(tensors, dim)
+            result = cat_tensors(tensors, dim)
+            if result is None:
+                numpy_tensors = [t._numpy_data for t in tensors]
+                concatenated = np.concatenate(numpy_tensors, axis=dim)
+                result = Tensor(concatenated, device=tensors[0].device)
+            return result
         except (ImportError, AttributeError):
             numpy_tensors = [t._numpy_data for t in tensors]
             concatenated = np.concatenate(numpy_tensors, axis=dim)
@@ -1022,116 +1214,6 @@ class Tensor:
             backward(self)
         except (ImportError, AttributeError):
             pass
-    
-    @staticmethod
-    def exp(x: "Tensor") -> "Tensor":
-        """
-        Compute the exponential of the input tensor.
-        
-        Args:
-            x: Input tensor
-            
-        Returns:
-            Tensor with exponential of each element
-        """
-        return Tensor(np.exp(x._numpy_data), device=x.device)
-    
-    @staticmethod
-    def randn_like(x: "Tensor") -> "Tensor":
-        """
-        Create a tensor with the same shape as the input tensor,
-        filled with random numbers from a normal distribution.
-        
-        Args:
-            x: Input tensor
-            
-        Returns:
-            A new tensor with the same shape as x
-        """
-        return Tensor(np.random.randn(*x.shape), device=x.device)
-    
-    @staticmethod
-    def sum(x: "Tensor", dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
-        """
-        Sum of tensor elements along a dimension.
-        
-        Args:
-            x: Input tensor
-            dim: Dimension to reduce. If None, all dimensions are reduced.
-            keepdim: Whether to keep the reduced dimension
-            
-        Returns:
-            Sum of elements
-        """
-        return Tensor(
-            np.sum(x._numpy_data, axis=dim, keepdims=keepdim),
-            device=x.device
-        )
-    def backward(self):
-        """
-        Compute gradients through the computation graph.
-        
-        This method computes gradients for all tensors in the computation
-        graph that require gradients. The gradients are stored in the
-        grad attribute of each tensor.
-        """
-        if not self._requires_grad:
-            return
-        
-        # Initialize gradient for scalar tensors
-        if self._grad is None and self._numpy_data.size == 1:
-            self._grad = Tensor(np.ones_like(self._numpy_data), device=self.device)
-        
-        try:
-            from neurenix.binding import backward
-            backward(self)
-        except (ImportError, AttributeError):
-            pass
-    
-    @staticmethod
-    def exp(x: "Tensor") -> "Tensor":
-        """
-        Compute the exponential of the input tensor.
-        
-        Args:
-            x: Input tensor
-            
-        Returns:
-            Tensor with exponential of each element
-        """
-        return Tensor(np.exp(x._numpy_data), device=x.device)
-    
-    @staticmethod
-    def randn_like(x: "Tensor") -> "Tensor":
-        """
-        Create a tensor with the same shape as the input tensor,
-        filled with random numbers from a normal distribution.
-        
-        Args:
-            x: Input tensor
-            
-        Returns:
-            A new tensor with the same shape as x
-        """
-        return Tensor(np.random.randn(*x.shape), device=x.device)
-    
-    @staticmethod
-    def sum(x: "Tensor", dim: Optional[int] = None, keepdim: bool = False) -> "Tensor":
-        """
-        Sum of tensor elements along a dimension.
-        
-        Args:
-            x: Input tensor
-            dim: Dimension to reduce. If None, all dimensions are reduced.
-            keepdim: Whether to keep the reduced dimension
-            
-        Returns:
-            Sum of elements
-        """
-        return Tensor(
-            np.sum(x._numpy_data, axis=dim, keepdims=keepdim),
-            device=x.device
-        )
     
     @staticmethod
     def exp(x: "Tensor") -> "Tensor":

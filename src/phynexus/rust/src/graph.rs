@@ -522,9 +522,15 @@ impl Graph {
                         ));
                     }
                     
-                    return Err(PhynexusError::UnsupportedOperation(
-                        "ConvTranspose2d operation not yet implemented".to_string()
-                    ));
+                    let params = crate::ops::conv::ConvTranspose2dParams {
+                        stride: stride.clone(),
+                        padding: padding.clone(),
+                        output_padding: output_padding.clone(),
+                        dilation: dilation.clone(),
+                        groups: *groups,
+                    };
+                    
+                    crate::ops::conv::conv_transpose2d(&input_tensors[0], &input_tensors[1], &params)?
                 },
                 Op::MaxPool2d { kernel_size, stride, padding, dilation } => {
                     if input_tensors.len() != 1 {
@@ -533,9 +539,14 @@ impl Graph {
                         ));
                     }
                     
-                    return Err(PhynexusError::UnsupportedOperation(
-                        "MaxPool2d operation not yet implemented".to_string()
-                    ));
+                    let params = crate::ops::conv::MaxPool2dParams {
+                        kernel_size: kernel_size.clone(),
+                        stride: stride.clone(),
+                        padding: padding.clone(),
+                        dilation: dilation.clone(),
+                    };
+                    
+                    crate::ops::conv::maxpool2d(&input_tensors[0], &params)?
                 },
                 Op::AvgPool2d { kernel_size, stride, padding } => {
                     if input_tensors.len() != 1 {
@@ -544,9 +555,13 @@ impl Graph {
                         ));
                     }
                     
-                    return Err(PhynexusError::UnsupportedOperation(
-                        "AvgPool2d operation not yet implemented".to_string()
-                    ));
+                    let params = crate::ops::conv::AvgPool2dParams {
+                        kernel_size: kernel_size.clone(),
+                        stride: stride.clone(),
+                        padding: padding.clone(),
+                    };
+                    
+                    crate::ops::conv::avgpool2d(&input_tensors[0], &params)?
                 },
                 Op::Reshape { shape } => {
                     if input_tensors.len() != 1 {

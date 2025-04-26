@@ -49,8 +49,8 @@ def init(config: Optional[Dict[str, Any]] = None) -> None:
     logger.debug(f"Configuration: {_config}")
     
     try:
-        from neurenix.binding import init_phynexus_engine
-        init_phynexus_engine()
+        from neurenix.binding import init
+        init()
         logger.info("Phynexus engine initialized successfully")
     except (ImportError, AttributeError):
         logger.warning("Phynexus engine not available, using fallback implementations")
