@@ -67,7 +67,8 @@ except ImportError:
         
         @classmethod
         def randn(cls, shape, device=None):
-            return cls(np.random.randn(*shape).astype(np.float32), device)
+            data = np.array(np.random.randn(*shape), dtype=np.float32)
+            return cls(data, device)
     
     class Device:
         """
@@ -189,30 +190,91 @@ except ImportError:
         Returns:
             True if TPU is available, False otherwise
         """
-        return get_device_count(TPU) > 0
+def is_vulkan_available():
+    """
+    Check if Vulkan is available.
     
-    def init():
-        """
-        Initialize the Phynexus engine.
-        """
-        pass
+    Returns:
+        True if Vulkan is available, False otherwise
+    """
+    return False
+
+def is_opencl_available():
+    """
+    Check if OpenCL is available.
     
-    def shutdown():
-        """
-        Shutdown the Phynexus engine.
-        """
-        pass
+    Returns:
+        True if OpenCL is available, False otherwise
+    """
+    return False
+
+def is_oneapi_available():
+    """
+    Check if oneAPI is available.
     
-    def version():
-        """
-        Get the version of the Phynexus engine.
-        
-        Returns:
-            Version string
-        """
-        return "0.1.0 (Python fallback)"
+    Returns:
+        True if oneAPI is available, False otherwise
+    """
+    return False
+
+def is_directml_available():
+    """
+    Check if DirectML is available.
     
-    def is_quantum_available():
+    Returns:
+        True if DirectML is available, False otherwise
+    """
+    return False
+
+def is_onednn_available():
+    """
+    Check if oneDNN is available.
+    
+    Returns:
+        True if oneDNN is available, False otherwise
+    """
+    return False
+
+def is_mkldnn_available():
+    """
+    Check if MKL-DNN is available.
+    
+    Returns:
+        True if MKL-DNN is available, False otherwise
+    """
+    return False
+
+def is_tensorrt_available():
+    """
+    Check if TensorRT is available.
+    
+    Returns:
+        True if TensorRT is available, False otherwise
+    """
+    return False
+
+def init():
+    """
+    Initialize the Phynexus engine.
+    """
+    pass
+
+def shutdown():
+    """
+    Shutdown the Phynexus engine.
+    """
+    pass
+
+def version():
+    """
+    Get the version of the Phynexus engine.
+    
+    Returns:
+        Version string
+    """
+    return "0.1.0 (Python fallback)"
+
+def is_quantum_available():
         """
         Check if quantum computing is available.
         
@@ -228,6 +290,72 @@ except ImportError:
                 return True
             except ImportError:
                 return False
+
+def get_cuda_device_count():
+    """
+    Get the number of CUDA devices available.
+    """
+    return 0
+
+def get_rocm_device_count():
+    """
+    Get the number of ROCm devices available.
+    """
+    return 0
+
+def get_webgpu_device_count():
+    """
+    Get the number of WebGPU devices available.
+    """
+    return 0
+
+def get_tpu_device_count():
+    """
+    Get the number of TPU devices available.
+    """
+    return 0
+
+def get_vulkan_device_count():
+    """
+    Get the number of Vulkan devices available.
+    """
+    return 0
+
+def get_opencl_device_count():
+    """
+    Get the number of OpenCL devices available.
+    """
+    return 0
+
+def get_oneapi_device_count():
+    """
+    Get the number of oneAPI devices available.
+    """
+    return 0
+
+def get_directml_device_count():
+    """
+    Get the number of DirectML devices available.
+    """
+    return 0
+
+def get_onednn_device_count():
+    """
+    Get the number of oneDNN devices available.
+    """
+    return 0
+
+def get_mkldnn_device_count():
+    """
+    Get the number of MKL-DNN devices available.
+    """
+    return 0
+
+def get_tensorrt_device_count():
+    """
+    Get the number of TensorRT devices available.
+    """
+    return 0
 
 # Define a function to get the appropriate device
 def get_device(device_str=None):
@@ -316,6 +444,18 @@ def get_available_devices():
         devices.append(get_device(f"tpu:{i}"))
     
     return devices
+
+    vulkan_count = get_device_count(VULKAN)
+    for i in range(vulkan_count):
+        devices.append(get_device(f"vulkan:{i}"))
+    
+    opencl_count = get_device_count(OPENCL)
+    for i in range(opencl_count):
+        devices.append(get_device(f"opencl:{i}"))
+    
+    webgpu_count = get_device_count(WEBGPU)
+    for i in range(webgpu_count):
+        devices.append(get_device(f"webgpu:{i}"))
 
 def get_optimal_device():
     """
@@ -624,9 +764,64 @@ def gelu(x, approximate=False):
             sqrt_2_over_pi = np.sqrt(2 / np.pi)
             result = 0.5 * x._numpy_data * (1 + np.tanh(sqrt_2_over_pi * (x._numpy_data + 0.044715 * np.power(x._numpy_data, 3))))
         else:
-            result = 0.5 * x._numpy_data * (1 + np.math.erf(x._numpy_data / np.sqrt(2)))
+            from scipy import special
+            result = 0.5 * x._numpy_data * (1 + special.erf(x._numpy_data / np.sqrt(2)))
         
-        return Tensor(result, device=x.device)
+def allocate_tensor(shape, dtype, device):
+    """
+    Allocate memory for a tensor on the specified device.
+    
+    Args:
+        shape: Shape of the tensor
+        dtype: Data type of the tensor
+        device: Device to allocate the tensor on
+        
+    Returns:
+        Allocated tensor data
+    """
+    # Fallback implementation for now
+    return None
+
+def copy_tensor(tensor, device):
+    """
+    Copy a tensor to a specified device.
+    
+    Args:
+        tensor: Tensor to copy
+        device: Target device
+        
+    Returns:
+        Copied tensor data
+    """
+    # Fallback implementation for now
+    return None
+
+def copy_to_numpy(tensor):
+    """
+    Copy a tensor to a NumPy array.
+    
+    Args:
+        tensor: Tensor to copy
+        
+    Returns:
+        NumPy array
+    """
+    # Fallback implementation for now
+    return tensor._numpy_data
+
+def get_item(tensor, index):
+    """
+    Get an item from a tensor.
+    
+    Args:
+        tensor: Source tensor
+        index: Index to get
+        
+    Returns:
+        Tensor item
+    """
+    # Fallback implementation for now
+    return None
 
 def get_binding():
     """
@@ -649,7 +844,7 @@ def global_shutdown():
 
 # Initialize the Phynexus engine
 if _HAS_PHYNEXUS:
-    py_init()
+    init()
 else:
     init()
 

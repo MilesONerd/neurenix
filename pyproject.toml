@@ -29,17 +29,18 @@ classifiers = [
 keywords = ["machine learning", "deep learning", "neural networks", "AI", "edge computing", "reinforcement learning", "agents"]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy>=1.20.0",
-    "typing-extensions>=4.0.0",
+    "numpy>=1.24.0",
+    "typing-extensions>=4.7.0",
+    "scipy>=1.10.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "black>=23.0.0",
-    "isort>=5.0.0",
-    "mypy>=1.0.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "mypy>=1.5.0",
 ]
 cuda = [
     "pycuda>=2022.1",
@@ -60,7 +61,8 @@ huggingface = [
 "Bug Tracker" = "https://github.com/MilesONerd/neurenix/issues"
 
 [tool.setuptools]
-packages = ["neurenix", "neurenix.nn", "neurenix.optim", "neurenix.agent", "neurenix.rl", "neurenix.meta", "neurenix.distributed", "neurenix.transfer", "neurenix.unsupervised", "neurenix.wasm", "neurenix.huggingface", "neurenix.tensor", "neurenix.data", "neurenix.hardware", "neurenix.gnn", "neurenix.fuzzy", "neurenix.federated", "neurenix.automl", "neurenix.memory", "neurenix.continual", "neurenix.async_train", "neurenix.cli"]
+package-dir = {"" = "neurenix/python"}
+packages = ["neurenix"]
 
 [tool.setuptools-rust]
 rust-extensions = [
