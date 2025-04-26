@@ -42,14 +42,57 @@ impl Module for Autoencoder {
 }
 
 /// Train an autoencoder model
-#[allow(unused_variables)]
 pub fn train_autoencoder(
-    _model: &mut Autoencoder,
-    _optimizer: &mut dyn crate::optimizer::Optimizer,
-    _inputs: &[Tensor],
-    _epochs: usize,
-    _batch_size: usize,
+    model: &mut Autoencoder,
+    optimizer: &mut dyn crate::optimizer::Optimizer,
+    inputs: &[Tensor],
+    epochs: usize,
+    batch_size: usize,
 ) -> Result<()> {
-    // Placeholder implementation
-    unimplemented!("Autoencoder training not yet implemented")
+    use crate::nn::loss::{mse_loss, Loss};
+    use crate::tensor::Tensor;
+    use crate::utils::data::DataLoader;
+    
+    if inputs.is_empty() {
+        return Err(crate::error::PhynexusError::InvalidArgument(
+            "Input data cannot be empty".to_string()
+        ));
+    }
+    
+    let device = model.encoder.parameters()[0].device().clone();
+    let num_samples = inputs.len();
+    
+    let data_loader = DataLoader::new(inputs, None, batch_size, true)?;
+    
+    for epoch in 0..epochs {
+        let mut epoch_loss = 0.0;
+        let mut batch_count = 0;
+        
+        for batch in data_loader.iter() {
+            let batch_inputs = batch.inputs();
+            
+            let mut batch_loss = Tensor::zeros(&[1], &device)?;
+            
+            for input in batch_inputs {
+                // Forward pass
+                let output = model.forward(input)?;
+                
+                let loss = mse_loss(&output, input)?;
+                batch_loss = batch_loss.add(&loss)?;
+            }
+            
+            batch_loss = batch_loss.div(&Tensor::from_scalar(batch_inputs.len() as f32, &device)?)?;
+            
+            optimizer.zero_grad();
+            batch_loss.backward()?;
+            optimizer.step()?;
+            
+            epoch_loss += batch_loss.item()?;
+            batch_count += 1;
+        }
+        
+        log::info!("Epoch {}/{}: Loss = {:.6}", epoch + 1, epochs, epoch_loss / batch_count as f32);
+    }
+    
+    Ok(())
 }
