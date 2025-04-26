@@ -99,6 +99,7 @@ except ImportError:
     WEBGPU = "webgpu"
     TPU = "tpu"
     NPU = "npu"
+    ARM = "arm"
     
     def get_device_count(device_type):
         """
@@ -304,6 +305,25 @@ def is_quantum_available():
                 return True
             except ImportError:
                 return False
+                
+def is_arm_available():
+    """
+    Check if ARM architecture with NEON SIMD or SVE is available.
+    
+    Returns:
+        True if ARM architecture with NEON SIMD or SVE is available, False otherwise
+    """
+    import platform
+    
+    # Check if running on ARM architecture
+    if platform.machine().startswith(('arm', 'aarch')):
+        try:
+            import subprocess
+            result = subprocess.run(['grep', '-q', 'neon\\|sve', '/proc/cpuinfo'], stdout=subprocess.PIPE)
+            return result.returncode == 0
+        except:
+            return True
+    return False
 
 def get_cuda_device_count():
     """
@@ -375,6 +395,14 @@ def get_tensorrt_device_count():
     """
     Get the number of TensorRT devices available.
     """
+    return 0
+    
+def get_arm_device_count():
+    """
+    Get the number of ARM devices with NEON SIMD or SVE available.
+    """
+    if is_arm_available():
+        return 1
     return 0
 
 # Define a function to get the appropriate device
@@ -504,6 +532,10 @@ def get_optimal_device():
     
     for device in devices:
         if device.device_type == NPU:
+            return device
+    
+    for device in devices:
+        if device.device_type == ARM:
             return device
     
     return get_device("cpu")
