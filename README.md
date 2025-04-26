@@ -213,6 +213,7 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Integration with the Neurenix tensor and device management systems
  
 - **.NET distributed computing with ASP.NET and Orleans**
+- **NPU hardware support**
 
 ## Documentation
 
