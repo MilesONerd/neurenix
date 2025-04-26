@@ -4,39 +4,39 @@ use crate::error::{PhynexusError, Result};
 use crate::tensor::Tensor;
 
 /// Perform element-wise addition
-#[allow(unused_variables)]
 pub fn add(a: &Tensor, b: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Element-wise addition not yet implemented".to_string()
-    ))
+    // Basic implementation
+    let a_data = a.data()?;
+    let b_data = b.data()?;
+    let result = &a_data + &b_data;
+    Ok(Tensor::from_array(result))
 }
 
 /// Perform element-wise subtraction
-#[allow(unused_variables)]
 pub fn subtract(a: &Tensor, b: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Element-wise subtraction not yet implemented".to_string()
-    ))
+    // Basic implementation
+    let a_data = a.data()?;
+    let b_data = b.data()?;
+    let result = &a_data - &b_data;
+    Ok(Tensor::from_array(result))
 }
 
 /// Perform element-wise multiplication
-#[allow(unused_variables)]
 pub fn multiply(a: &Tensor, b: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Element-wise multiplication not yet implemented".to_string()
-    ))
+    // Basic implementation
+    let a_data = a.data()?;
+    let b_data = b.data()?;
+    let result = &a_data * &b_data;
+    Ok(Tensor::from_array(result))
 }
 
 /// Perform element-wise division
-#[allow(unused_variables)]
 pub fn divide(a: &Tensor, b: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Element-wise division not yet implemented".to_string()
-    ))
+    // Basic implementation
+    let a_data = a.data()?;
+    let b_data = b.data()?;
+    let result = &a_data / &b_data;
+    Ok(Tensor::from_array(result))
 }
 
 /// Perform element-wise power

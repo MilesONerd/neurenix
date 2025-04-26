@@ -20,39 +20,78 @@ pub enum ActivationType {
 }
 
 /// Apply ReLU activation function
-#[allow(unused_variables)]
-pub fn relu(_x: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "ReLU not yet implemented".to_string()
-    ))
+pub fn relu(x: &Tensor) -> Result<Tensor> {
+    // Basic implementation
+    let data = x.data()?;
+    let result = data.mapv(|val| {
+        if val > 0.0 { val } else { 0.0 }
+    });
+    Ok(Tensor::from_array(result))
 }
 
 /// Apply sigmoid activation function
-#[allow(unused_variables)]
-pub fn sigmoid(_x: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Sigmoid not yet implemented".to_string()
-    ))
+pub fn sigmoid(x: &Tensor) -> Result<Tensor> {
+    // Basic implementation
+    let data = x.data()?;
+    let result = data.mapv(|val| {
+        1.0 / (1.0 + (-val).exp())
+    });
+    Ok(Tensor::from_array(result))
 }
 
 /// Apply tanh activation function
-#[allow(unused_variables)]
-pub fn tanh(_x: &Tensor) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Tanh not yet implemented".to_string()
-    ))
+pub fn tanh(x: &Tensor) -> Result<Tensor> {
+    // Basic implementation
+    let data = x.data()?;
+    let result = data.mapv(|val| {
+        val.tanh()
+    });
+    Ok(Tensor::from_array(result))
 }
 
 /// Apply softmax activation function
-#[allow(unused_variables)]
-pub fn softmax(_x: &Tensor, _dim: i64) -> Result<Tensor> {
-    // Placeholder implementation
-    Err(PhynexusError::UnsupportedOperation(
-        "Softmax not yet implemented".to_string()
-    ))
+pub fn softmax(x: &Tensor, dim: i64) -> Result<Tensor> {
+    // Basic implementation
+    use ndarray::{Axis, ArrayD};
+    
+    let data = x.data()?;
+    let dim = if dim < 0 { data.ndim() as i64 + dim } else { dim } as usize;
+    
+    let max_vals = data.map_axis(Axis(dim), |view| {
+        view.fold(std::f32::NEG_INFINITY, |a, &b| a.max(b))
+    });
+    
+    let mut exp_data = ArrayD::zeros(data.shape());
+    for (i, val) in data.iter().enumerate() {
+        let idx = data.index_to_dim_indices(i);
+        let mut max_idx = Vec::new();
+        for (j, &ix) in idx.iter().enumerate() {
+            if j != dim {
+                max_idx.push(ix);
+            }
+        }
+        let max_val = max_vals[&max_idx];
+        exp_data[idx.clone()] = (*val - max_val).exp();
+    }
+    
+    let sum_vals = exp_data.map_axis(Axis(dim), |view| {
+        view.sum()
+    });
+    
+    let mut result = ArrayD::zeros(data.shape());
+    for (i, val) in exp_data.iter().enumerate() {
+        let idx = exp_data.index_to_dim_indices(i);
+        let mut sum_idx = Vec::new();
+        for (j, &ix) in idx.iter().enumerate() {
+            if j != dim {
+                sum_idx.push(ix);
+            }
+        }
+        let sum_val = sum_vals[&sum_idx];
+        result[idx.clone()] = *val / sum_val;
+    }
+    
+    Ok(Tensor::from_array(result))
 }
 
 /// Apply activation function on CPU
