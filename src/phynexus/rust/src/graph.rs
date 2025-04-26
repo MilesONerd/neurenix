@@ -597,9 +597,44 @@ impl Graph {
                         ));
                     }
                     
-                    return Err(PhynexusError::UnsupportedOperation(
-                        "Split operation not yet implemented".to_string()
-                    ));
+                    let input = &input_tensors[0];
+                    let input_shape = input.shape()?;
+                    
+                    if *dim >= input_shape.len() {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Split dimension {} is out of bounds for tensor with {} dimensions", dim, input_shape.len())
+                        ));
+                    }
+                    
+                    let dim_size = input_shape[*dim];
+                    
+                    if dim_size % chunks != 0 {
+                        return Err(PhynexusError::InvalidArgument(
+                            format!("Cannot split dimension of size {} into {} equal chunks", dim_size, chunks)
+                        ));
+                    }
+                    
+                    let chunk_size = dim_size / chunks;
+                    let mut result_tensors = Vec::with_capacity(*chunks);
+                    
+                    for i in 0..*chunks {
+                        let start_idx = i * chunk_size;
+                        let end_idx = start_idx + chunk_size;
+                        
+                        let mut indices = Vec::with_capacity(input_shape.len());
+                        for (j, &size) in input_shape.iter().enumerate() {
+                            if j == *dim {
+                                indices.push((start_idx, end_idx));
+                            } else {
+                                indices.push((0, size));
+                            }
+                        }
+                        
+                        let chunk = input.slice(&indices)?;
+                        result_tensors.push(chunk);
+                    }
+                    
+                    result_tensors
                 },
                 Op::Sum { dims, keep_dims } => {
                     if input_tensors.len() != 1 {
