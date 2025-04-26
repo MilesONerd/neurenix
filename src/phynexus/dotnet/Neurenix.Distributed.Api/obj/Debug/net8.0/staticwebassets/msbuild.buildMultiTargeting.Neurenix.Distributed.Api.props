@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/Neurenix.Distributed.Api.props" />
+</Project>

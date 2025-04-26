@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/Neurenix.Distributed.Api.props" />
+</Project>

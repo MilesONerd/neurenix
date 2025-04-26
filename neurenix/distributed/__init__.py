@@ -9,6 +9,7 @@ from .distributed import DistributedContext, init_distributed, get_rank, get_wor
 from .data_parallel import DataParallel
 from .sync import SyncBatchNorm
 from .rpc import RpcContext, rpc_sync, rpc_async
+from .dotnet import DotNetDistributedClient, DotNetDistributedContext
 
 __all__ = [
     'DistributedContext',
@@ -20,4 +21,6 @@ __all__ = [
     'RpcContext',
     'rpc_sync',
     'rpc_async',
+    'DotNetDistributedClient',
+    'DotNetDistributedContext',
 ]

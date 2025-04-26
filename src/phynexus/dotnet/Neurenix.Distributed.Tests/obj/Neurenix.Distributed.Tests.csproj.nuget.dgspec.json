@@ -1,0 +1,154 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Tests/Neurenix.Distributed.Tests.csproj": {}
+  },
+  "projects": {
+    "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/Neurenix.Distributed.Orleans.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/Neurenix.Distributed.Orleans.csproj",
+        "projectName": "Neurenix.Distributed.Orleans",
+        "projectPath": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/Neurenix.Distributed.Orleans.csproj",
+        "packagesPath": "/home/ubuntu/.nuget/packages/",
+        "outputPath": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Orleans.Core": {
+              "target": "Package",
+              "version": "[9.1.2, )"
+            },
+            "Microsoft.Orleans.Server": {
+              "target": "Package",
+              "version": "[9.1.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.115/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Tests/Neurenix.Distributed.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Tests/Neurenix.Distributed.Tests.csproj",
+        "projectName": "Neurenix.Distributed.Tests",
+        "projectPath": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Tests/Neurenix.Distributed.Tests.csproj",
+        "packagesPath": "/home/ubuntu/.nuget/packages/",
+        "outputPath": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/Neurenix.Distributed.Orleans.csproj": {
+                "projectPath": "/home/ubuntu/repos/neurenix/src/phynexus/dotnet/Neurenix.Distributed.Orleans/Neurenix.Distributed.Orleans.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.6.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "coverlet.collector": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.4.2, )"
+            },
+            "xunit.runner.visualstudio": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.4.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.115/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
