@@ -157,7 +157,23 @@ class NeuralSymbolicLoss(Module):
         constraint_loss = Tensor([0.0])
         
         for constraint, expected_value in symbolic_constraints:
-            predicted_value = Tensor([0.5])  # Placeholder
+            if constraint.startswith("output["):
+                parts = constraint.split("]")
+                if len(parts) >= 2:
+                    idx_str = parts[0].replace("output[", "").strip()
+                    try:
+                        idx = int(idx_str)
+                        if idx < y_pred.shape[1]:
+                            predicted_value = y_pred[0, idx]
+                        else:
+                            predicted_value = Tensor([0.5])
+                    except ValueError:
+                        predicted_value = Tensor([0.5])
+                else:
+                    predicted_value = Tensor([0.5])
+            else:
+                predicted_value = Tensor([0.5])
+                
             constraint_loss = constraint_loss + (predicted_value - float(expected_value)) ** 2
             
         return constraint_loss / len(symbolic_constraints) if symbolic_constraints else Tensor([0.0])

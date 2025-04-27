@@ -133,7 +133,28 @@ class JointActionLearners(MultiAgentLearning):
             expected_q_values = np.zeros(self.action_dim)
             
             for action in range(self.action_dim):
-                expected_q_values[action] = action  # Placeholder
+                state_key = self._get_state_key(state)
+                
+                joint_action = {}
+                for other_id in self.agent_ids:
+                    if other_id != agent_id:
+                        if other_id in states:
+                            other_state_key = self._get_state_key(states[other_id])
+                            if other_state_key in self.agent_models[agent_id][other_id]:
+                                action_probs = self.agent_models[agent_id][other_id][other_state_key]
+                                other_action = np.argmax(action_probs) if np.sum(action_probs) > 0 else 0
+                            else:
+                                other_action = 0
+                            joint_action[other_id] = other_action
+                
+                joint_action[agent_id] = action
+                
+                joint_action_key = self._get_joint_action_key(joint_action)
+                
+                if state_key in self.joint_q_tables[agent_id] and joint_action_key in self.joint_q_tables[agent_id][state_key]:
+                    expected_q_values[action] = self.joint_q_tables[agent_id][state_key][joint_action_key]
+                else:
+                    expected_q_values[action] = np.random.uniform(0, 0.1)
                 
             action_probs[agent_id] = Tensor(expected_q_values).softmax()
             
@@ -242,6 +263,25 @@ class OpponentModeling(MultiAgentLearning):
             if agent_id not in states:
                 continue
                 
-            losses[agent_id] = 0.0  # Placeholder
+            prediction_errors = []
+            
+            for other_id in self.agent_ids:
+                if other_id != agent_id and other_id in actions and other_id in states:
+                    other_state_key = self._get_state_key(states[other_id])
+                    other_action = int(actions[other_id].item())
+                    
+                    if other_state_key in self.opponent_models[agent_id][other_id]:
+                        action_counts = self.opponent_models[agent_id][other_id][other_state_key]
+                        total_count = np.sum(action_counts)
+                        
+                        if total_count > 0:
+                            action_probs = action_counts / total_count
+                            prediction_error = -np.log(action_probs[other_action] + 1e-10)  # Add small epsilon to avoid log(0)
+                            prediction_errors.append(prediction_error)
+            
+            if prediction_errors:
+                losses[agent_id] = np.mean(prediction_errors)
+            else:
+                losses[agent_id] = 0.0
             
         return losses

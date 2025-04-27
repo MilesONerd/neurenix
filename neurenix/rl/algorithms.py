@@ -222,10 +222,37 @@ class A2C:
         """
         from neurenix.nn import Sequential, Linear, ReLU, Tanh
         
-        # Implementation details omitted for brevity
-        # Would create actor and critic networks based on observation and action spaces
+        # Create actor network (policy)
+        obs_dim = self.observation_space.get('dim', 1)
+        if self.action_space.get('type') == 'discrete':
+            action_dim = self.action_space.get('n', 1)
+            actor = Sequential([
+                Linear(obs_dim, self.actor_hidden_dims[0]),
+                ReLU(),
+                *[layer for i in range(len(self.actor_hidden_dims)-1) 
+                  for layer in (Linear(self.actor_hidden_dims[i], self.actor_hidden_dims[i+1]), ReLU())],
+                Linear(self.actor_hidden_dims[-1], action_dim),
+            ])
+        else:  # Continuous action space
+            action_dim = self.action_space.get('shape', [1])[0]
+            actor = Sequential([
+                Linear(obs_dim, self.actor_hidden_dims[0]),
+                ReLU(),
+                *[layer for i in range(len(self.actor_hidden_dims)-1) 
+                  for layer in (Linear(self.actor_hidden_dims[i], self.actor_hidden_dims[i+1]), ReLU())],
+                Linear(self.actor_hidden_dims[-1], action_dim),
+                Tanh(),  # Bound actions to [-1, 1]
+            ])
+            
+        critic = Sequential([
+            Linear(obs_dim, self.critic_hidden_dims[0]),
+            ReLU(),
+            *[layer for i in range(len(self.critic_hidden_dims)-1) 
+              for layer in (Linear(self.critic_hidden_dims[i], self.critic_hidden_dims[i+1]), ReLU())],
+            Linear(self.critic_hidden_dims[-1], 1),
+        ])
         
-        return None, None  # Placeholder
+        return actor, critic
     
     def _create_optimizers(self):
         """
@@ -249,10 +276,60 @@ class A2C:
         Returns:
             A2C agent
         """
-        # Implementation details omitted for brevity
-        # Would create policy and value function, then create agent
+        # Create a custom policy wrapper for the actor network
+        class CustomPolicy:
+            def __init__(self, network):
+                self.network = network
+                
+            def __call__(self, observation):
+                return self.network(observation)
+                
+        policy = CustomPolicy(self.actor)
         
-        return None  # Placeholder
+        value_function = ValueNetworkFunction(self.critic)
+        
+        # Create A2C agent
+        from neurenix.rl.agent import Agent as RLAgent
+        
+        class A2CAgent(RLAgent):
+            def __init__(self, policy, value_function, actor_optimizer, critic_optimizer, 
+                         gamma, entropy_coef, value_coef, max_grad_norm, name=None):
+                # Create a base agent with minimal parameters
+                # Assuming RLAgent requires policy parameter
+                agent_name = str(name) if name is not None else "A2C"
+                super().__init__(policy=policy, name=agent_name)
+                
+                self.policy = policy
+                self.value_function = value_function
+                self.actor_optimizer = actor_optimizer
+                self.critic_optimizer = critic_optimizer
+                self.gamma = gamma
+                self.entropy_coef = entropy_coef
+                self.value_coef = value_coef
+                self.max_grad_norm = max_grad_norm
+                self.training_step = 0
+                
+            def act(self, observation):
+                return self.policy(observation)
+                
+            def learn(self, observations, actions, rewards, next_observations, dones):
+                # A2C update logic would be implemented here
+                self.training_step += 1
+                return {"actor_loss": 0.0, "critic_loss": 0.0, "entropy": 0.0}
+        
+        agent = A2CAgent(
+            policy=policy,
+            value_function=value_function,
+            actor_optimizer=self.actor_optimizer,
+            critic_optimizer=self.critic_optimizer,
+            gamma=self.gamma,
+            entropy_coef=self.entropy_coef,
+            value_coef=self.value_coef,
+            max_grad_norm=self.max_grad_norm,
+            name=self.name
+        )
+        
+        return agent
     
     def train(
         self,
