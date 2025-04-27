@@ -80,20 +80,22 @@ huggingface = [
 [tool.setuptools]
 package-dir = {"" = "neurenix/neurenix"}
 packages = ["neurenix"]
-scripts = [
-    { init = "neurenix.cli.init:main" },
-    { run = "neurenix.cli.run:main" },
-    { save = "neurenix.cli.save:main" },
-    { predict = "neurenix.cli.predict:main" },
-    { eval = "neurenix.cli.eval:main" },
-    { export = "neurenix.cli.export:main" },
-    { hardware = "neurenix.cli.hardware:main" },
-    { preprocess = "neurenix.cli.preprocess:main" },
-    { monitor = "neurenix.cli.monitor:main" },
-    { optimize = "neurenix.cli.optimize:main" },
-    { dataset = "neurenix.cli.dataset:main" },
-    { serve = "neurenix.cli.serve:main" },
-    { help = "neurenix.cli.help:main" }
+
+[tool.setuptools.entry-points]
+console_scripts = [
+    "init = neurenix.cli.init:main",
+    "run = neurenix.cli.run:main",
+    "save = neurenix.cli.save:main",
+    "predict = neurenix.cli.predict:main",
+    "eval = neurenix.cli.eval:main",
+    "export = neurenix.cli.export:main",
+    "hardware = neurenix.cli.hardware:main",
+    "preprocess = neurenix.cli.preprocess:main",
+    "monitor = neurenix.cli.monitor:main",
+    "optimize = neurenix.cli.optimize:main",
+    "dataset = neurenix.cli.dataset:main",
+    "serve = neurenix.cli.serve:main",
+    "help = neurenix.cli.help:main"
 ]
 
 [tool.setuptools-rust]
