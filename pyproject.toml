@@ -78,7 +78,7 @@ huggingface = [
 "Community" = "https://discord.gg/Eqnhr8tK2G"
 
 [tool.setuptools]
-package-dir = {"" = "neurenix/python"}
+package-dir = {"" = "neurenix/"}
 packages = ["neurenix"]
 
 [project.scripts]
