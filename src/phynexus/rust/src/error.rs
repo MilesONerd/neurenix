@@ -38,6 +38,14 @@ pub enum PhynexusError {
     #[error("Device mismatch: {0}")]
     DeviceMismatch(String),
     
+    /// Invalid device
+    #[error("Invalid device: {0}")]
+    InvalidDevice(String),
+    
+    /// Device not available
+    #[error("Device not available: {0}")]
+    DeviceNotAvailable(String),
+    
     /// Memory error
     #[error("Memory error: {0}")]
     MemoryError(String),

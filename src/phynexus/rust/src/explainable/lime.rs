@@ -437,14 +437,14 @@ fn image_lime(
     Ok(result.into())
 }
 
-pub fn register_lime(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_lime(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let lime = PyModule::new(py, "lime")?;
     
     lime.add_function(wrap_pyfunction!(tabular_lime, lime)?)?;
     lime.add_function(wrap_pyfunction!(text_lime, lime)?)?;
     lime.add_function(wrap_pyfunction!(image_lime, lime)?)?;
     
-    m.add_submodule(lime)?;
+    m.add_submodule(&lime)?;
     
     Ok(())
 }

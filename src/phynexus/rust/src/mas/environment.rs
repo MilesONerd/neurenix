@@ -456,7 +456,7 @@ impl GridEnvironment {
     }
 }
 
-pub fn register_environment(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_environment(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let environment_module = PyModule::new(py, "environment")?;
     
     environment_module.add_class::<StateSpace>()?;
@@ -464,7 +464,7 @@ pub fn register_environment(py: Python, m: &PyModule) -> PyResult<()> {
     environment_module.add_class::<Environment>()?;
     environment_module.add_class::<GridEnvironment>()?;
     
-    m.add_submodule(environment_module)?;
+    m.add_submodule(&environment_module)?;
     
     Ok(())
 }

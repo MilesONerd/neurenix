@@ -12,7 +12,7 @@ pub use distributed::*;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
-pub fn register_async_train(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_async_train(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let async_train = PyModule::new(py, "async_train")?;
     
     async_train.add_function(wrap_pyfunction!(save_checkpoint, async_train)?)?;
@@ -33,7 +33,7 @@ pub fn register_async_train(py: Python, m: &PyModule) -> PyResult<()> {
     async_train.add_function(wrap_pyfunction!(distributed_checkpoint_barrier, async_train)?)?;
     async_train.add_function(wrap_pyfunction!(apply_differential_privacy, async_train)?)?;
     
-    m.add_submodule(async_train)?;
+    m.add_submodule(&async_train)?;
     
     Ok(())
 }

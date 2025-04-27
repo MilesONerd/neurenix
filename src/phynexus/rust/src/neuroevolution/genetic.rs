@@ -444,13 +444,13 @@ impl PyGeneticAlgorithm {
     }
 }
 
-pub fn register_genetic(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_genetic(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "genetic")?;
     
     submodule.add_class::<PyGeneticAlgorithm>()?;
     submodule.add_class::<PyIndividual>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

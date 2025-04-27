@@ -270,7 +270,7 @@ impl SymbolicReasoner {
     }
 }
 
-pub fn register_symbolic(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_symbolic(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "symbolic")?;
     
     submodule.add_class::<SymbolicKnowledgeBase>()?;
@@ -278,7 +278,7 @@ pub fn register_symbolic(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<LogicProgram>()?;
     submodule.add_class::<SymbolicReasoner>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

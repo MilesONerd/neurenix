@@ -23,7 +23,7 @@ pub struct Rescale {
     scales: Vec<f32>,
     mode: String,
     align_corners: bool,
-    upsamplers: Vec<Option<Module>>,
+    upsamplers: Vec<Option<Box<dyn Module>>>,
 }
 
 impl Rescale {
@@ -71,7 +71,7 @@ pub struct PyramidDownsample {
     num_levels: usize,
     downsample_factor: f32,
     mode: String,
-    downsamplers: Vec<Module>,
+    downsamplers: Vec<Box<dyn Module>>,
 }
 
 impl PyramidDownsample {
@@ -128,7 +128,7 @@ pub struct GaussianPyramid {
     num_levels: usize,
     sigma: f32,
     kernel_size: usize,
-    smooth_down: Vec<Module>,
+    smooth_down: Vec<Box<dyn Module>>,
 }
 
 impl GaussianPyramid {
@@ -175,7 +175,7 @@ pub struct LaplacianPyramid {
     transform: MultiScaleTransform,
     num_levels: usize,
     gaussian_pyramid: GaussianPyramid,
-    upsample: Vec<Module>,
+    upsample: Vec<Box<dyn Module>>,
 }
 
 impl LaplacianPyramid {
@@ -224,21 +224,21 @@ impl LaplacianPyramid {
     }
 }
 
-pub fn register_transforms(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_transforms(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let multi_scale_transform = PyModule::new(py, "multi_scale_transform")?;
-    m.add_submodule(multi_scale_transform)?;
+    m.add_submodule(&multi_scale_transform)?;
     
     let rescale = PyModule::new(py, "rescale")?;
-    m.add_submodule(rescale)?;
+    m.add_submodule(&rescale)?;
     
     let pyramid_downsample = PyModule::new(py, "pyramid_downsample")?;
-    m.add_submodule(pyramid_downsample)?;
+    m.add_submodule(&pyramid_downsample)?;
     
     let gaussian_pyramid = PyModule::new(py, "gaussian_pyramid")?;
-    m.add_submodule(gaussian_pyramid)?;
+    m.add_submodule(&gaussian_pyramid)?;
     
     let laplacian_pyramid = PyModule::new(py, "laplacian_pyramid")?;
-    m.add_submodule(laplacian_pyramid)?;
+    m.add_submodule(&laplacian_pyramid)?;
     
     Ok(())
 }

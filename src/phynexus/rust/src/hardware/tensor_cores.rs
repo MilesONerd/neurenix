@@ -166,6 +166,6 @@ pub struct DeviceInfo {
     pub memory: usize,
 }
 
-pub fn register_tensor_cores(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_tensor_cores(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }

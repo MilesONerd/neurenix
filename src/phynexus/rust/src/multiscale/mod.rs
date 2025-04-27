@@ -13,7 +13,7 @@ pub use pooling::*;
 pub use fusion::*;
 pub use transforms::*;
 
-pub fn register_multiscale(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_multiscale(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "multiscale")?;
     
     models::register_models(py, submodule)?;
@@ -24,7 +24,7 @@ pub fn register_multiscale(py: Python, m: &PyModule) -> PyResult<()> {
     
     transforms::register_transforms(py, submodule)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

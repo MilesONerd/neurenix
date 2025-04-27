@@ -8,13 +8,13 @@ use pyo3::wrap_pyfunction;
 use crate::error::PhynexusError;
 use crate::tensor::Tensor;
 
-pub fn register_memory(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_memory(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let memory = PyModule::new(py, "memory")?;
     
     unified::register_unified(py, memory)?;
     hmm::register_hmm(py, memory)?;
     
-    m.add_submodule(memory)?;
+    m.add_submodule(&memory)?;
     
     Ok(())
 }

@@ -509,7 +509,7 @@ impl ESModel {
     }
 }
 
-pub fn register_evolution_strategy(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_evolution_strategy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "evolution_strategy")?;
     
     submodule.add_class::<ESConfig>()?;
@@ -517,7 +517,7 @@ pub fn register_evolution_strategy(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<EvolutionStrategy>()?;
     submodule.add_class::<ESModel>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

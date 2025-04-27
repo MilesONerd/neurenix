@@ -116,7 +116,7 @@ fn hmm_get_info(py: Python, handle: &PyDict) -> PyResult<PyObject> {
     Ok(info.into())
 }
 
-pub fn register_hmm(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_hmm(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let hmm = PyModule::new(py, "hmm")?;
     
     hmm.add_function(wrap_pyfunction!(hmm_initialize, hmm)?)?;
@@ -126,7 +126,7 @@ pub fn register_hmm(py: Python, m: &PyModule) -> PyResult<()> {
     hmm.add_function(wrap_pyfunction!(hmm_migrate, hmm)?)?;
     hmm.add_function(wrap_pyfunction!(hmm_get_info, hmm)?)?;
     
-    m.add_submodule(hmm)?;
+    m.add_submodule(&hmm)?;
     
     Ok(())
 }

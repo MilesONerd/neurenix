@@ -9,8 +9,8 @@ pub struct MultiScaleModel {
     input_channels: usize,
     num_scales: usize,
     scale_factor: f32,
-    scale_branches: Vec<Module>,
-    fusion: Module,
+    scale_branches: Vec<Box<dyn Module>>,
+    fusion: Box<dyn Module>,
 }
 
 impl MultiScaleModel {
@@ -20,7 +20,7 @@ impl MultiScaleModel {
             num_scales,
             scale_factor,
             scale_branches: Vec::new(),
-            fusion: Module::new(),
+            fusion: Box::new(ReLU::new()) as Box<dyn Module>,
         }
     }
     
@@ -138,15 +138,15 @@ impl UNet {
     }
 }
 
-pub fn register_models(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_models(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let multi_scale_model = PyModule::new(py, "multi_scale_model")?;
-    m.add_submodule(multi_scale_model)?;
+    m.add_submodule(&multi_scale_model)?;
     
     let pyramid_network = PyModule::new(py, "pyramid_network")?;
-    m.add_submodule(pyramid_network)?;
+    m.add_submodule(&pyramid_network)?;
     
     let unet = PyModule::new(py, "unet")?;
-    m.add_submodule(unet)?;
+    m.add_submodule(&unet)?;
     
     Ok(())
 }

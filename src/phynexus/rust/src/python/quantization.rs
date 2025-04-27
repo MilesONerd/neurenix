@@ -218,7 +218,7 @@ impl PyPruningConfig {
     }
 }
 
-pub fn register_quantization(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_quantization(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "quantization")?;
     
     submodule.add_class::<PyQuantizationType>()?;
@@ -231,7 +231,7 @@ pub fn register_quantization(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_function(wrap_pyfunction!(py_quantize_tensor, submodule)?)?;
     submodule.add_function(wrap_pyfunction!(py_prune_tensor, submodule)?)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

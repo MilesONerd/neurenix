@@ -230,7 +230,7 @@ pub fn arrow_to_tensor(py: Python, array: &PyAny) -> PyResult<Py<Tensor>> {
     }
 }
 
-pub fn register_arrow(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_arrow(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let arrow = PyModule::new(py, "arrow")?;
     
     arrow.add_class::<ArrowTable>()?;
@@ -239,7 +239,7 @@ pub fn register_arrow(py: Python, m: &PyModule) -> PyResult<()> {
     arrow.add_function(wrap_pyfunction!(tensor_to_arrow, arrow)?)?;
     arrow.add_function(wrap_pyfunction!(arrow_to_tensor, arrow)?)?;
     
-    m.add_submodule(arrow)?;
+    m.add_submodule(&arrow)?;
     
     Ok(())
 }

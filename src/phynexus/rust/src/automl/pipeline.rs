@@ -10,7 +10,7 @@ use rand::Rng;
 use crate::error::PhynexusError;
 use crate::tensor::Tensor;
 
-pub fn register_pipeline(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_pipeline(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let pipeline = PyModule::new(py, "pipeline")?;
     
     pipeline.add_class::<PyFeatureSelection>()?;
@@ -21,7 +21,7 @@ pub fn register_pipeline(py: Python, m: &PyModule) -> PyResult<()> {
     pipeline.add_class::<PyMinMaxScaler>()?;
     pipeline.add_class::<PyAutoPipeline>()?;
     
-    m.add_submodule(pipeline)?;
+    m.add_submodule(&pipeline)?;
     
     Ok(())
 }

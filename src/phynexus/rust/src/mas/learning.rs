@@ -1,8 +1,9 @@
 
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
+use pyo3::impl_::pymethods::IterBaseKind;
 use std::collections::HashMap;
-use numpy::{PyArray, PyArray1, PyArray2};
+use numpy::{PyArray, PyArray1, PyArray2, PyArrayMethods};
 
 use crate::tensor::Tensor;
 
@@ -39,7 +40,7 @@ impl MultiAgentLearning {
         }
     }
 
-    fn forward(&self, py: Python, states: &PyDict) -> PyResult<PyObject> {
+    fn forward(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<PyObject> {
         let result = PyDict::new(py);
         Ok(result.into())
     }
@@ -47,12 +48,12 @@ impl MultiAgentLearning {
     fn update(
         &mut self,
         py: Python,
-        states: &PyDict,
-        actions: &PyDict,
-        rewards: &PyDict,
-        next_states: &PyDict,
-        dones: &PyDict,
-    ) -> PyResult<PyObject> {
+        states: &Bound<'_, PyDict>,
+        actions: &Bound<'_, PyDict>,
+        rewards: &Bound<'_, PyDict>,
+        next_states: &Bound<'_, PyDict>,
+        dones: &Bound<'_, PyDict>,
+    ) -> PyResult<PyObject>{
         let result = PyDict::new(py);
         Ok(result.into())
     }
@@ -103,14 +104,14 @@ impl IndependentLearners {
         }
     }
 
-    fn _get_state_key(&self, py: Python, state: &PyAny) -> PyResult<String> {
-        let array = state.extract::<&PyArray1<f64>>()?;
-        let data = array.readonly();
-        let state_vec: Vec<f64> = data.as_slice()?.to_vec();
+    fn _get_state_key(&self, py: Python, state: &Bound<'_, PyAny>) -> PyResult<String> {
+        let array = state.downcast::<PyArray1<f64>>()?;
+        let data = unsafe { array.as_array() };
+        let state_vec: Vec<f64> = data.to_vec();
         Ok(format!("{:?}", state_vec))
     }
 
-    fn forward(&self, py: Python, states: &PyDict) -> PyResult<PyObject> {
+    fn forward(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<PyObject> {
         let action_probs = PyDict::new(py);
         
         for (agent_id_obj, state_obj) in states.iter() {
@@ -130,7 +131,7 @@ impl IndependentLearners {
             };
             
             let array = PyArray1::from_vec(py, q_values);
-            let tensor = Tensor::from_array(py, array.as_ref())?;
+            let tensor = Tensor::new_cpu::<f64>(vec![self.base.action_dim])?;
             let softmax_result = tensor.call_method0(py, "softmax")?;
             
             action_probs.set_item(agent_id, softmax_result)?;
@@ -142,12 +143,12 @@ impl IndependentLearners {
     fn update(
         &mut self,
         py: Python,
-        states: &PyDict,
-        actions: &PyDict,
-        rewards: &PyDict,
-        next_states: &PyDict,
-        dones: &PyDict,
-    ) -> PyResult<PyObject> {
+        states: &Bound<'_, PyDict>,
+        actions: &Bound<'_, PyDict>,
+        rewards: &Bound<'_, PyDict>,
+        next_states: &Bound<'_, PyDict>,
+        dones: &Bound<'_, PyDict>,
+    ) -> PyResult<PyObject>{
         let losses = PyDict::new(py);
         
         for agent_id_obj in self.base.agent_ids.iter() {
@@ -157,14 +158,14 @@ impl IndependentLearners {
                 continue;
             }
             
-            let state = states.get_item(agent_id).unwrap();
-            let action = actions.get_item(agent_id).unwrap().extract::<i64>()?;
-            let reward = rewards.get_item(agent_id).unwrap().extract::<f64>()?;
-            let next_state = next_states.get_item(agent_id).unwrap();
-            let done = dones.get_item(agent_id).unwrap().extract::<bool>()?;
+            let state = states.get_item(agent_id.as_str())?;
+            let action = actions.get_item(agent_id.as_str())?.extract::<i64>()?;
+            let reward = rewards.get_item(agent_id.as_str())?.extract::<f64>()?;
+            let next_state = next_states.get_item(agent_id.as_str())?;
+            let done = dones.get_item(agent_id.as_str())?.extract::<bool>()?;
             
-            let state_key = self._get_state_key(py, state)?;
-            let next_state_key = self._get_state_key(py, next_state)?;
+            let state_key = self._get_state_key(py, &state)?;
+            let next_state_key = self._get_state_key(py, &next_state)?;
             
             let q_table = self.q_tables.get_mut(agent_id).unwrap();
             
@@ -262,14 +263,14 @@ impl JointActionLearners {
         }
     }
 
-    fn _get_state_key(&self, py: Python, state: &PyAny) -> PyResult<String> {
-        let array = state.extract::<&PyArray1<f64>>()?;
-        let data = array.readonly();
-        let state_vec: Vec<f64> = data.as_slice()?.to_vec();
+    fn _get_state_key(&self, py: Python, state: &Bound<'_, PyAny>) -> PyResult<String> {
+        let array = state.downcast::<PyArray1<f64>>()?;
+        let data = unsafe { array.as_array() };
+        let state_vec: Vec<f64> = data.to_vec();
         Ok(format!("{:?}", state_vec))
     }
 
-    fn _get_joint_action_key(&self, py: Python, actions: &PyDict) -> PyResult<String> {
+    fn _get_joint_action_key(&self, py: Python, actions: &Bound<'_, PyDict>) -> PyResult<String> {
         let mut action_pairs = Vec::new();
         
         for (agent_id_obj, action_obj) in actions.iter() {
@@ -282,7 +283,7 @@ impl JointActionLearners {
         Ok(format!("{:?}", action_pairs))
     }
 
-    fn forward(&self, py: Python, states: &PyDict) -> PyResult<PyObject> {
+    fn forward(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<PyObject> {
         let action_probs = PyDict::new(py);
         
         for (agent_id_obj, _) in states.iter() {
@@ -290,7 +291,7 @@ impl JointActionLearners {
             
             let probs = vec![1.0 / self.base.action_dim as f64; self.base.action_dim];
             let array = PyArray1::from_vec(py, probs);
-            let tensor = Tensor::from_array(py, array.as_ref())?;
+            let tensor = Tensor::new_cpu::<f64>(vec![self.base.action_dim])?;
             
             action_probs.set_item(agent_id, tensor)?;
         }
@@ -301,12 +302,12 @@ impl JointActionLearners {
     fn update(
         &mut self,
         py: Python,
-        states: &PyDict,
-        actions: &PyDict,
-        rewards: &PyDict,
-        next_states: &PyDict,
-        dones: &PyDict,
-    ) -> PyResult<PyObject> {
+        states: &Bound<'_, PyDict>,
+        actions: &Bound<'_, PyDict>,
+        rewards: &Bound<'_, PyDict>,
+        next_states: &Bound<'_, PyDict>,
+        dones: &Bound<'_, PyDict>,
+    ) -> PyResult<PyObject>{
         let losses = PyDict::new(py);
         
         for agent_id in &self.base.agent_ids {
@@ -376,14 +377,14 @@ impl TeamLearning {
         }
     }
 
-    fn _get_state_key(&self, py: Python, states: &PyDict) -> PyResult<String> {
+    fn _get_state_key(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<String> {
         let mut state_pairs = Vec::new();
         
         for (agent_id_obj, state_obj) in states.iter() {
             let agent_id = agent_id_obj.extract::<String>()?;
-            let array = state_obj.extract::<&PyArray1<f64>>()?;
-            let data = array.readonly();
-            let state_vec: Vec<f64> = data.as_slice()?.to_vec();
+            let array = state_obj.downcast::<PyArray1<f64>>()?;
+            let data = unsafe { array.as_array() };
+            let state_vec: Vec<f64> = data.to_vec();
             state_pairs.push((agent_id, state_vec));
         }
         
@@ -391,7 +392,7 @@ impl TeamLearning {
         Ok(format!("{:?}", state_pairs))
     }
 
-    fn _get_joint_action_key(&self, py: Python, actions: &PyDict) -> PyResult<String> {
+    fn _get_joint_action_key(&self, py: Python, actions: &Bound<'_, PyDict>) -> PyResult<String> {
         let mut action_pairs = Vec::new();
         
         for (agent_id_obj, action_obj) in actions.iter() {
@@ -404,7 +405,7 @@ impl TeamLearning {
         Ok(format!("{:?}", action_pairs))
     }
 
-    fn forward(&self, py: Python, states: &PyDict) -> PyResult<PyObject> {
+    fn forward(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<PyObject> {
         let action_probs = PyDict::new(py);
         
         for (agent_id_obj, _) in states.iter() {
@@ -412,7 +413,7 @@ impl TeamLearning {
             
             let probs = vec![1.0 / self.base.action_dim as f64; self.base.action_dim];
             let array = PyArray1::from_vec(py, probs);
-            let tensor = Tensor::from_array(py, array.as_ref())?;
+            let tensor = Tensor::new_cpu::<f64>(vec![self.base.action_dim])?;
             
             action_probs.set_item(agent_id, tensor)?;
         }
@@ -423,12 +424,12 @@ impl TeamLearning {
     fn update(
         &mut self,
         py: Python,
-        states: &PyDict,
-        actions: &PyDict,
-        rewards: &PyDict,
-        next_states: &PyDict,
-        dones: &PyDict,
-    ) -> PyResult<PyObject> {
+        states: &Bound<'_, PyDict>,
+        actions: &Bound<'_, PyDict>,
+        rewards: &Bound<'_, PyDict>,
+        next_states: &Bound<'_, PyDict>,
+        dones: &Bound<'_, PyDict>,
+    ) -> PyResult<PyObject>{
         let losses = PyDict::new(py);
         
         for agent_id in &self.base.agent_ids {
@@ -501,14 +502,14 @@ impl OpponentModeling {
         }
     }
 
-    fn _get_state_key(&self, py: Python, state: &PyAny) -> PyResult<String> {
-        let array = state.extract::<&PyArray1<f64>>()?;
-        let data = array.readonly();
-        let state_vec: Vec<f64> = data.as_slice()?.to_vec();
+    fn _get_state_key(&self, py: Python, state: &Bound<'_, PyAny>) -> PyResult<String> {
+        let array = state.downcast::<PyArray1<f64>>()?;
+        let data = unsafe { array.as_array() };
+        let state_vec: Vec<f64> = data.to_vec();
         Ok(format!("{:?}", state_vec))
     }
 
-    fn forward(&self, py: Python, states: &PyDict) -> PyResult<PyObject> {
+    fn forward(&self, py: Python, states: &Bound<'_, PyDict>) -> PyResult<PyObject> {
         let action_probs = PyDict::new(py);
         
         for (agent_id_obj, state_obj) in states.iter() {
@@ -528,7 +529,7 @@ impl OpponentModeling {
             };
             
             let array = PyArray1::from_vec(py, q_values);
-            let tensor = Tensor::from_array(py, array.as_ref())?;
+            let tensor = Tensor::new_cpu::<f64>(vec![self.base.action_dim])?;
             let softmax_result = tensor.call_method0(py, "softmax")?;
             
             action_probs.set_item(agent_id, softmax_result)?;
@@ -540,12 +541,12 @@ impl OpponentModeling {
     fn update(
         &mut self,
         py: Python,
-        states: &PyDict,
-        actions: &PyDict,
-        rewards: &PyDict,
-        next_states: &PyDict,
-        dones: &PyDict,
-    ) -> PyResult<PyObject> {
+        states: &Bound<'_, PyDict>,
+        actions: &Bound<'_, PyDict>,
+        rewards: &Bound<'_, PyDict>,
+        next_states: &Bound<'_, PyDict>,
+        dones: &Bound<'_, PyDict>,
+    ) -> PyResult<PyObject>{
         let losses = PyDict::new(py);
         
         for agent_id in &self.base.agent_ids {
@@ -553,8 +554,8 @@ impl OpponentModeling {
                 continue;
             }
             
-            let state = states.get_item(agent_id).unwrap();
-            let state_key = self._get_state_key(py, state)?;
+            let state = states.get_item(agent_id.as_str())?;
+            let state_key = self._get_state_key(py, &state)?;
             
             for (other_id_obj, action_obj) in actions.iter() {
                 let other_id = other_id_obj.extract::<String>()?;
@@ -604,7 +605,7 @@ impl OpponentModeling {
     }
 }
 
-pub fn register_learning(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_learning(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let learning_module = PyModule::new(py, "learning")?;
     
     learning_module.add_class::<MultiAgentLearning>()?;
@@ -613,7 +614,7 @@ pub fn register_learning(py: Python, m: &PyModule) -> PyResult<()> {
     learning_module.add_class::<TeamLearning>()?;
     learning_module.add_class::<OpponentModeling>()?;
     
-    m.add_submodule(learning_module)?;
+    m.add_submodule(&learning_module)?;
     
     Ok(())
 }

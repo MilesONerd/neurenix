@@ -189,12 +189,12 @@ fn permutation_importance(
     Ok(result.into())
 }
 
-pub fn register_feature_importance(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_feature_importance(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let feature_importance = PyModule::new(py, "feature_importance")?;
     
     feature_importance.add_function(wrap_pyfunction!(permutation_importance, feature_importance)?)?;
     
-    m.add_submodule(feature_importance)?;
+    m.add_submodule(&feature_importance)?;
     
     Ok(())
 }

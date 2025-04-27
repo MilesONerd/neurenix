@@ -143,7 +143,7 @@ fn um_get_info(py: Python, handle: &PyDict) -> PyResult<PyObject> {
     Ok(info.into())
 }
 
-pub fn register_unified(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_unified(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let unified = PyModule::new(py, "unified")?;
     
     unified.add_function(wrap_pyfunction!(um_initialize, unified)?)?;
@@ -155,7 +155,7 @@ pub fn register_unified(py: Python, m: &PyModule) -> PyResult<()> {
     unified.add_function(wrap_pyfunction!(um_is_managed, unified)?)?;
     unified.add_function(wrap_pyfunction!(um_get_info, unified)?)?;
     
-    m.add_submodule(unified)?;
+    m.add_submodule(&unified)?;
     
     Ok(())
 }

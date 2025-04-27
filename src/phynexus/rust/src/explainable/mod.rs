@@ -11,7 +11,7 @@ use pyo3::wrap_pyfunction;
 
 use crate::error::PhynexusError;
 
-pub fn register_explainable(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_explainable(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let explainable = PyModule::new(py, "explainable")?;
     
     shap::register_shap(py, explainable)?;
@@ -21,7 +21,7 @@ pub fn register_explainable(py: Python, m: &PyModule) -> PyResult<()> {
     counterfactual::register_counterfactual(py, explainable)?;
     activation::register_activation(py, explainable)?;
     
-    m.add_submodule(explainable)?;
+    m.add_submodule(&explainable)?;
     
     Ok(())
 }

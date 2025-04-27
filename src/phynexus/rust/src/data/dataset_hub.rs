@@ -690,12 +690,12 @@ fn py_register_dataset(
     Ok(())
 }
 
-pub fn register_dataset_hub(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_dataset_hub(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let dataset_hub_module = PyModule::new(py, "dataset_hub")?;
     
     dataset_hub(py, dataset_hub_module)?;
     
-    m.add_submodule(dataset_hub_module)?;
+    m.add_submodule(&dataset_hub_module)?;
     
     Ok(())
 }

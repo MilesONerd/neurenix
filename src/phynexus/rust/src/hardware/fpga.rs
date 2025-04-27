@@ -262,7 +262,7 @@ fn fpga_copy_from_device(py: Python, memory_handle: &PyDict) -> PyResult<PyObjec
     Ok(data)
 }
 
-pub fn register_fpga(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_fpga(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let fpga = PyModule::new(py, "fpga")?;
     
     fpga.add_function(wrap_pyfunction!(fpga_initialize, fpga)?)?;
@@ -276,7 +276,7 @@ pub fn register_fpga(py: Python, m: &PyModule) -> PyResult<()> {
     fpga.add_function(wrap_pyfunction!(fpga_copy_to_device, fpga)?)?;
     fpga.add_function(wrap_pyfunction!(fpga_copy_from_device, fpga)?)?;
     
-    m.add_submodule(fpga)?;
+    m.add_submodule(&fpga)?;
     
     Ok(())
 }

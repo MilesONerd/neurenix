@@ -589,7 +589,7 @@ pub mod utils {
         for i in 0..num_qubits {
             circuit.h(i);
             for j in i+1..num_qubits {
-                let angle = PI / (1 << (j - i));
+                let angle = PI / (1 << (j - i)) as f64;
                 circuit.cz(i, j);
             }
         }
@@ -605,13 +605,13 @@ pub mod utils {
     }
 }
 
-pub fn register_quantum(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_quantum(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let quantum = PyModule::new(py, "quantum")?;
     
     quantum.add_function(wrap_pyfunction!(py_is_quantum_available, quantum)?)?;
     quantum.add_function(wrap_pyfunction!(py_get_quantum_device_count, quantum)?)?;
     
-    m.add_submodule(quantum)?;
+    m.add_submodule(&quantum)?;
     
     Ok(())
 }

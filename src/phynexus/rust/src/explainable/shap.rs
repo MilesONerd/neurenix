@@ -288,14 +288,14 @@ fn deep_shap(
     Ok(result.into())
 }
 
-pub fn register_shap(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_shap(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let shap = PyModule::new(py, "shap")?;
     
     shap.add_function(wrap_pyfunction!(kernel_shap, shap)?)?;
     shap.add_function(wrap_pyfunction!(tree_shap, shap)?)?;
     shap.add_function(wrap_pyfunction!(deep_shap, shap)?)?;
     
-    m.add_submodule(shap)?;
+    m.add_submodule(&shap)?;
     
     Ok(())
 }

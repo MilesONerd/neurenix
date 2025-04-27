@@ -135,7 +135,7 @@ fn graphcore_optimize_model(py: Python, model: PyObject, inputs: &PyDict) -> PyR
     Ok(model)
 }
 
-pub fn register_graphcore(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_graphcore(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let graphcore = PyModule::new(py, "graphcore")?;
     
     graphcore.add_function(wrap_pyfunction!(graphcore_initialize, graphcore)?)?;
@@ -146,7 +146,7 @@ pub fn register_graphcore(py: Python, m: &PyModule) -> PyResult<()> {
     graphcore.add_function(wrap_pyfunction!(graphcore_execute_model, graphcore)?)?;
     graphcore.add_function(wrap_pyfunction!(graphcore_optimize_model, graphcore)?)?;
     
-    m.add_submodule(graphcore)?;
+    m.add_submodule(&graphcore)?;
     
     Ok(())
 }

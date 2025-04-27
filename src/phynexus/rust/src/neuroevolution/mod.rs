@@ -13,7 +13,7 @@ pub use evolution_strategy::*;
 
 use pyo3::prelude::*;
 
-pub fn register_neuroevolution(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_neuroevolution(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "neuroevolution")?;
     
     genetic::register_genetic(py, submodule)?;
@@ -22,7 +22,7 @@ pub fn register_neuroevolution(py: Python, m: &PyModule) -> PyResult<()> {
     cmaes::register_cmaes(py, submodule)?;
     evolution_strategy::register_evolution_strategy(py, submodule)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

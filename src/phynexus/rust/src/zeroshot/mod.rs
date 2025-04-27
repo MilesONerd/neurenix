@@ -13,7 +13,7 @@ pub use embedding::*;
 pub use classifier::*;
 pub use utils::*;
 
-pub fn register_zeroshot(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_zeroshot(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "zeroshot")?;
     
     model::register_models(py, submodule)?;
@@ -21,7 +21,7 @@ pub fn register_zeroshot(py: Python, m: &PyModule) -> PyResult<()> {
     classifier::register_classifiers(py, submodule)?;
     utils::register_utils(py, submodule)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

@@ -41,12 +41,12 @@ fn phynexus(_py: Python, m: &PyModule) -> PyResult<()> {
     nn.add_class::<PyLinear>()?;
     nn.add_class::<PyConv2d>()?;
     nn.add_class::<PyLSTM>()?;
-    m.add_submodule(nn)?;
+    m.add_submodule(&nn)?;
     
     let optim = PyModule::new(_py, "optim")?;
     optim.add_class::<PySGD>()?;
     optim.add_class::<PyAdam>()?;
-    m.add_submodule(optim)?;
+    m.add_submodule(&optim)?;
     
     Ok(())
 }

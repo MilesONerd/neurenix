@@ -475,7 +475,7 @@ impl NEAT {
     }
 }
 
-pub fn register_neat(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_neat(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "neat")?;
     
     submodule.add_class::<NodeType>()?;
@@ -486,7 +486,7 @@ pub fn register_neat(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<NEATSpecies>()?;
     submodule.add_class::<NEAT>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

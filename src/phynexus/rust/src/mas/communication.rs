@@ -645,7 +645,7 @@ impl CommunicationNetwork {
     }
 }
 
-pub fn register_communication(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_communication(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let communication_module = PyModule::new(py, "communication")?;
     
     communication_module.add_class::<Message>()?;
@@ -654,7 +654,7 @@ pub fn register_communication(py: Python, m: &PyModule) -> PyResult<()> {
     communication_module.add_class::<Mailbox>()?;
     communication_module.add_class::<CommunicationNetwork>()?;
     
-    m.add_submodule(communication_module)?;
+    m.add_submodule(&communication_module)?;
     
     Ok(())
 }

@@ -11,7 +11,7 @@ use rand::seq::SliceRandom;
 use crate::error::PhynexusError;
 use crate::tensor::Tensor;
 
-pub fn register_nas(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_nas(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let nas = PyModule::new(py, "nas")?;
     
     nas.add_class::<PyNeuralArchitectureSearch>()?;
@@ -19,7 +19,7 @@ pub fn register_nas(py: Python, m: &PyModule) -> PyResult<()> {
     nas.add_class::<PyDARTS>()?;
     nas.add_class::<PyPNAS>()?;
     
-    m.add_submodule(nas)?;
+    m.add_submodule(&nas)?;
     
     Ok(())
 }
