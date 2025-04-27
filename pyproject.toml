@@ -79,7 +79,7 @@ huggingface = [
 
 [tool.setuptools]
 package-dir = {"" = "neurenix"}
-packages = ["neurenix"]
+packages = {find = {}}
 
 [project.scripts]
 init = "neurenix.cli.init:main"
