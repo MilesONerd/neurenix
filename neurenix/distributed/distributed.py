@@ -5,6 +5,7 @@ This module provides the core functionality for distributed training and inferen
 across multiple GPUs and compute nodes.
 """
 
+import datetime
 import os
 import socket
 import threading
@@ -24,6 +25,10 @@ class DistributedContext:
     This class manages the distributed training context, including rank, world size,
     and communication between processes.
     """
+    _master_socket = None
+    _worker_sockets = {}
+    _socket_lock = threading.Lock()
+    _socket_port = 23457  # Different from init_method port
     
     def __init__(
         self,
@@ -86,7 +91,9 @@ class DistributedContext:
         # Set device
         if self.device_id is not None:
             device = get_device(f"cuda:{self.device_id}")
-            device.set_as_default()
+            from neurenix.device_manager import DeviceManager
+            device_manager = DeviceManager()
+            device_manager.active_device = device
         
         # Initialize process group
         if self.init_method is None:
@@ -99,20 +106,82 @@ class DistributedContext:
                 hostname = socket.gethostname()
                 self.init_method = f"tcp://{hostname}:23456"
         
-        # Initialize process group (placeholder for actual implementation)
-        print(f"Initializing distributed process group: rank={self.rank}, "
-              f"world_size={self.world_size}, backend={self.backend}")
+        # Initialize process group
+        try:
+            import torch
+            import torch.distributed as dist
+            if not dist.is_initialized():
+                dist.init_process_group(
+                    backend=self.backend,
+                    init_method=self.init_method,
+                    world_size=self.world_size,
+                    rank=self.rank,
+                    timeout=torch.distributed.default_pg_timeout if self.timeout is None else datetime.timedelta(seconds=self.timeout)
+                )
+                print(f"Initialized torch.distributed process group: rank={self.rank}, "
+                      f"world_size={self.world_size}, backend={self.backend}")
+        except (ImportError, AttributeError):
+            # Fallback to custom implementation
+            print(f"Initializing custom distributed process group: rank={self.rank}, "
+                  f"world_size={self.world_size}, backend={self.backend}")
+            # Set up socket-based communication for simple operations
+            self._setup_socket_communication()
         
         # Mark as initialized
         self._initialized = True
+    
+    def _setup_socket_communication(self):
+        """Set up socket-based communication for distributed operations."""
+        if self.rank == 0:  # Master process
+            self._master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._master_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            hostname = socket.gethostname()
+            self._master_socket.bind((hostname, self._socket_port))
+            self._master_socket.listen(self.world_size - 1)
+            
+            # Accept connections from worker processes
+            for _ in range(self.world_size - 1):
+                client_socket, client_address = self._master_socket.accept()
+                worker_rank = int(client_socket.recv(1024).decode())
+                self._worker_sockets[worker_rank] = client_socket
+                print(f"Master accepted connection from worker {worker_rank}")
+        else:  # Worker process
+            if self.init_method and "//" in self.init_method:
+                master_hostname = self.init_method.split("//")[1].split(":")[0]
+            else:
+                # Default to localhost if init_method is not available
+                master_hostname = "localhost"
+            
+            worker_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            worker_socket.connect((master_hostname, self._socket_port))
+            worker_socket.send(str(self.rank).encode())
+            self._worker_sockets[0] = worker_socket
+            print(f"Worker {self.rank} connected to master")
     
     def shutdown(self):
         """Shut down the distributed context."""
         if not self._initialized:
             return
         
-        # Clean up process group (placeholder for actual implementation)
-        print("Shutting down distributed process group")
+        try:
+            import torch.distributed as dist
+            if dist.is_initialized():
+                dist.destroy_process_group()
+                print("Shut down torch.distributed process group")
+        except (ImportError, AttributeError):
+            # Clean up socket-based communication
+            with self._socket_lock:
+                if self.rank == 0 and self._master_socket:
+                    for worker_socket in self._worker_sockets.values():
+                        worker_socket.close()
+                    self._master_socket.close()
+                    self._master_socket = None
+                    self._worker_sockets = {}
+                elif self.rank != 0:
+                    for socket_conn in self._worker_sockets.values():
+                        socket_conn.close()
+                    self._worker_sockets = {}
+            print(f"Process {self.rank} shut down socket communication")
         
         # Mark as not initialized
         self._initialized = False
@@ -215,6 +284,51 @@ def barrier():
     
     This function blocks until all processes reach this barrier.
     """
-    # Placeholder for actual implementation
-    print(f"Process {get_rank()} reached barrier")
-    time.sleep(0.1)  # Simulate synchronization
+    global _GLOBAL_CONTEXT
+    
+    if _GLOBAL_CONTEXT is None or not _GLOBAL_CONTEXT.is_initialized:
+        return
+    
+    try:
+        # Try to use torch.distributed if available
+        import torch.distributed as dist
+        if dist.is_initialized():
+            dist.barrier()
+            return
+    except (ImportError, AttributeError):
+        pass
+    
+    # Fallback to socket-based synchronization
+    rank = get_rank()
+    world_size = get_world_size()
+    
+    if world_size <= 1:
+        return
+    
+    with _GLOBAL_CONTEXT._socket_lock:
+        if rank == 0:  # Master process
+            barrier_counts = {r: False for r in range(1, world_size)}
+            
+            for worker_rank in range(1, world_size):
+                if worker_rank in _GLOBAL_CONTEXT._worker_sockets:
+                    try:
+                        _GLOBAL_CONTEXT._worker_sockets[worker_rank].recv(1024)
+                        barrier_counts[worker_rank] = True
+                    except (socket.error, ConnectionError) as e:
+                        print(f"Error receiving barrier signal from worker {worker_rank}: {e}")
+            
+            for worker_rank in range(1, world_size):
+                if worker_rank in _GLOBAL_CONTEXT._worker_sockets and barrier_counts[worker_rank]:
+                    try:
+                        _GLOBAL_CONTEXT._worker_sockets[worker_rank].send(b"barrier_complete")
+                    except (socket.error, ConnectionError) as e:
+                        print(f"Error sending barrier completion to worker {worker_rank}: {e}")
+        else:  # Worker process
+            if 0 in _GLOBAL_CONTEXT._worker_sockets:
+                try:
+                    _GLOBAL_CONTEXT._worker_sockets[0].send(b"barrier_reached")
+                    _GLOBAL_CONTEXT._worker_sockets[0].recv(1024)
+                except (socket.error, ConnectionError) as e:
+                    print(f"Error in barrier for worker {rank}: {e}")
+    
+    print(f"Process {rank} completed barrier")
