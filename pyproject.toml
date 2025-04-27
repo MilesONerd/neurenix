@@ -81,6 +81,10 @@ huggingface = [
 package-dir = {"" = "neurenix"}
 packages = {find = {}}
 
+[tool.setuptools.packages.find]
+where = ["neurenix"]
+exclude = ["dist", "build", "*.egg-info"]
+
 [project.scripts]
 init = "neurenix.cli.init:main"
 run = "neurenix.cli.run:main"
