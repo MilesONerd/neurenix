@@ -10,17 +10,57 @@ theme:
 nav:
   - Home: index.md
   - Neurenix vs. Other AI Frameworks: FRAMEWORK_COMPARISON.md
+  - Placeholder Implementations: PLACEHOLDER_IMPLEMENTATIONS.md
   - Core | API: api/core.md
-  - Distributed Computing | API: api/distributed_computing.md
-  - Hugging Face Integration | API: api/huggingface_integration.md
-  - Meta-Learning | API: api/meta_learning.md
+  - Agent | API: api/agent.md
+  - Asynchronous Training Module | API: api/async_train.md
+  - AutoML | API: api/automl.md
+  - Command Line Interface (CLI) | API: api/cli.md
+  - Continual Learning | API: api/continual.md
+  - Data Module | API: api/dara.md
+  - Distributed Computing 1 | API: api/distributed.md
+  - Distributed Computing 2 | API: api/distributed_computing.md
+  - Docker Integration | API: api/docker.md
+  - Explainable AI | API: api/explainable.md
+  - Federated Learning | API: api/federated.md
+  - Fuzzy Logic | API: api/fuzzy.md
+  - Graph Neural Networks (GNNs) | API: api/gnn.md
+  - Hardware Acceleration Module | API: api/hardware.md
+  - Hugging Face 1 | API: api/huggingface.md
+  - Hugging Face 2 | API: api/huggingface_integration.md
+  - Kubernetes | API: api/kubernetes.md
+  - Multi-Agent Systems (MAS) | API: api/mas.md
+  - Memory Management | API: api/memory.md
+  - Meta-Learning | API: api/meta
+  - Multi-Scale Models | API: api/multiscale.md
+  - Neuro-Symbolic AI | API: api/neuro_symbolic.md
+  - Neuroevolution | API: api/neuroevolution.md
   - Neural Networks | API: api/nn.md
+  - Optimization Module | API: api/optim.md
   - Optimization | API: api/optimization.md
+  - Quantum Computing | API: api/quantum.md
   - Reinforcement Learning | API: api/reinforcement_learning.md
+  - Reinforcement Learning Module | API: api/rl.md
   - Tensor Operations | API: api/tensor.md
+  - Transfer Learning Module | API: api/transfer.md
   - Transfer Learning | API: api/transfer_learning.md
+  - Unsupervised Learning Module | API: api/unsupervised.md
   - Unsupervised Learning | API: api/unsupervised_learning.md
   - WebAssembly Support | API: api/webassembly.md
+  - Zero-Shot Learning | API: api/zeroshot.md
+  - ARM Support | Hardware: hardware/arm/README.md
+  - DirectML Support | Hardware: hardware/directml/README.md
+  - FPGA Support | Hardware: hardware/fpga/README.md
+  - GraphCore IPU Support | Hardware: hardware/graphcore/README.md
+  - MKL-DNN Support | Hardware: hardware/mkldnn/README.md
+  - NPU Support | Hardware: hardware/npu/README.md
+  - oneAPI Support | Hardware: hardware/oneapi/README.md
+  - oneDNN Support | Hardware: hardware/onednn/README.md
+  - OpenCL Support | Hardware: hardware/opencl/README.md
+  - NVIDIA Tensor Cores Support | Hardware: hardware/tensor_cores/README.md
+  - TensorRT Support | Hardware: hardware/tensorrt/README.md
+  - TPU Support | Hardware: hardware/tpu/README.md
+  - Vulkan Support | Hardware: hardware/vulkan/README.md
 
 markdown_extensions:
   - admonition
