@@ -58,10 +58,14 @@ huggingface = [
 
 [project.urls]
 "Homepage" = "https://neurenix.github.io"
+"Source Code" = "https://github.com/MilesONerd/neurenix"
+"Download" = "https://pypi.org/project/neurenix/#files"
 "Bug Tracker" = "https://github.com/MilesONerd/neurenix/issues"
+"Documentation" = "https://neurenix.readthedocs.io/en/latest/"
+"Community" = "https://discord.gg/Eqnhr8tK2G"
 
 [tool.setuptools]
-package-dir = {"" = "neurenix/python"}
+package-dir = {"" = "neurenix"}
 packages = ["neurenix"]
 
 [tool.setuptools-rust]
