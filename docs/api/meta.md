@@ -6,6 +6,8 @@ The Meta-Learning API provides functionality for few-shot learning and rapid ada
 
 Meta-learning, or "learning to learn," enables models to quickly adapt to new tasks with minimal data, making it particularly useful for applications where labeled data is scarce or expensive to obtain.
 
+Neurenix's meta-learning capabilities are implemented using a multi-language architecture, where the high-performance operations are implemented in the Rust/C++ Phynexus engine, while the Python API provides a user-friendly interface. This architecture enables Neurenix to deliver optimal performance across a wide range of devices, from edge devices to multi-GPU clusters.
+
 ## Key Concepts
 
 ### Few-Shot Learning
