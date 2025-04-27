@@ -10,7 +10,7 @@ use pyo3::wrap_pyfunction;
 use crate::error::PhynexusError;
 use crate::tensor::Tensor;
 
-pub fn register_automl(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_automl(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let automl = PyModule::new(py, "automl")?;
     
     search::register_search(py, automl)?;
@@ -18,7 +18,7 @@ pub fn register_automl(py: Python, m: &PyModule) -> PyResult<()> {
     model_selection::register_model_selection(py, automl)?;
     pipeline::register_pipeline(py, automl)?;
     
-    m.add_submodule(automl)?;
+    m.add_submodule(&automl)?;
     
     Ok(())
 }

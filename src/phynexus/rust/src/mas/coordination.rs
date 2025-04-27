@@ -602,7 +602,7 @@ impl CoalitionFormation {
     }
 }
 
-pub fn register_coordination(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_coordination(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let coordination_module = PyModule::new(py, "coordination")?;
     
     coordination_module.add_class::<Coordinator>()?;
@@ -611,7 +611,7 @@ pub fn register_coordination(py: Python, m: &PyModule) -> PyResult<()> {
     coordination_module.add_class::<VotingMechanism>()?;
     coordination_module.add_class::<CoalitionFormation>()?;
     
-    m.add_submodule(coordination_module)?;
+    m.add_submodule(&coordination_module)?;
     
     Ok(())
 }

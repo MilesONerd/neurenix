@@ -13,7 +13,7 @@ pub use reasoning::*;
 
 use pyo3::prelude::*;
 
-pub fn register_neuro_symbolic(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_neuro_symbolic(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "neuro_symbolic")?;
     
     symbolic::register_symbolic(py, submodule)?;
@@ -22,7 +22,7 @@ pub fn register_neuro_symbolic(py: Python, m: &PyModule) -> PyResult<()> {
     knowledge_distillation::register_knowledge_distillation(py, submodule)?;
     reasoning::register_reasoning(py, submodule)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

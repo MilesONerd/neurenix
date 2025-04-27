@@ -26,7 +26,7 @@ fn convert_param_space(param_space: &PyDict) -> PyResult<HashMap<String, Vec<PyO
     Ok(param_space_map)
 }
 
-pub fn register_search(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_search(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let search = PyModule::new(py, "search")?;
     
     search.add_class::<PyGridSearch>()?;
@@ -34,7 +34,7 @@ pub fn register_search(py: Python, m: &PyModule) -> PyResult<()> {
     search.add_class::<PyBayesianOptimization>()?;
     search.add_class::<PyEvolutionarySearch>()?;
     
-    m.add_submodule(search)?;
+    m.add_submodule(&search)?;
     
     Ok(())
 }

@@ -335,7 +335,7 @@ impl InductiveReasoning {
     }
 }
 
-pub fn register_reasoning(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_reasoning(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "reasoning")?;
     
     submodule.add_class::<ConstraintSatisfaction>()?;
@@ -344,7 +344,7 @@ pub fn register_reasoning(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<DeductiveReasoning>()?;
     submodule.add_class::<InductiveReasoning>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

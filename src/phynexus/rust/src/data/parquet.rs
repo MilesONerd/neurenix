@@ -189,14 +189,14 @@ pub fn write_parquet_dataset(
     }
 }
 
-pub fn register_parquet(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_parquet(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let parquet = PyModule::new(py, "parquet")?;
     
     parquet.add_class::<ParquetDataset>()?;
     parquet.add_function(wrap_pyfunction!(read_parquet_dataset, parquet)?)?;
     parquet.add_function(wrap_pyfunction!(write_parquet_dataset, parquet)?)?;
     
-    m.add_submodule(parquet)?;
+    m.add_submodule(&parquet)?;
     
     Ok(())
 }

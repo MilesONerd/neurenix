@@ -62,12 +62,12 @@ fn activation_visualization(
     Ok(result.into())
 }
 
-pub fn register_activation(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_activation(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let activation = PyModule::new(py, "activation")?;
     
     activation.add_function(wrap_pyfunction!(activation_visualization, activation)?)?;
     
-    m.add_submodule(activation)?;
+    m.add_submodule(&activation)?;
     
     Ok(())
 }

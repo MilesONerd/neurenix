@@ -118,12 +118,12 @@ fn partial_dependence(
     Ok(result.into())
 }
 
-pub fn register_partial_dependence(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_partial_dependence(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let partial_dependence_module = PyModule::new(py, "partial_dependence")?;
     
     partial_dependence_module.add_function(wrap_pyfunction!(partial_dependence, partial_dependence_module)?)?;
     
-    m.add_submodule(partial_dependence_module)?;
+    m.add_submodule(&partial_dependence_module)?;
     
     Ok(())
 }

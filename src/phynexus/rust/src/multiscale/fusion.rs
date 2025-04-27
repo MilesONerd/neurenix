@@ -31,7 +31,7 @@ pub struct ScaleFusion {
     fusion: FeatureFusion,
     fusion_mode: String,
     target_scale: String,
-    projection: Option<Module>,
+    projection: Option<Box<dyn Module>>,
     bn: Option<BatchNorm2d>,
     relu: Option<ReLU>,
 }
@@ -167,9 +167,9 @@ pub struct AttentionFusion {
     fusion: FeatureFusion,
     num_scales: usize,
     attention_type: String,
-    channel_attention: Vec<Module>,
-    spatial_attention: Vec<Module>,
-    projection: Module,
+    channel_attention: Vec<Box<dyn Module>>,
+    spatial_attention: Vec<Box<dyn Module>>,
+    projection: Box<dyn Module>,
     bn: BatchNorm2d,
     relu: ReLU,
 }
@@ -202,13 +202,13 @@ impl AttentionFusion {
             attention_type: attention_type.to_string(),
             channel_attention,
             spatial_attention,
-            projection: Module::from(projection),
+            projection: Box::new(projection) as Box<dyn Module>,
             bn,
             relu,
         }
     }
     
-    fn create_channel_attention(channels: usize) -> Module {
+    fn create_channel_attention(channels: usize) -> Box<dyn Module> {
         let mut layers = Vec::new();
         
         layers.push(Conv2d::new(channels, channels / 16, 1, 1, 0, false));
@@ -216,16 +216,16 @@ impl AttentionFusion {
         layers.push(Conv2d::new(channels / 16, channels, 1, 1, 0, false));
         layers.push(Sigmoid::new());
         
-        Module::from_layers(layers)
+        Box::new(Module::from_layers(layers))
     }
     
-    fn create_spatial_attention() -> Module {
+    fn create_spatial_attention() -> Box<dyn Module> {
         let mut layers = Vec::new();
         
         layers.push(Conv2d::new(2, 1, 7, 1, 3, false));
         layers.push(Sigmoid::new());
         
-        Module::from_layers(layers)
+        Box::new(Module::from_layers(layers))
     }
     
     pub fn forward(&self, features: &[Tensor]) -> Tensor {
@@ -329,7 +329,7 @@ pub struct UNetDecoder {
     encoder_channels: Vec<usize>,
     output_channels: usize,
     num_scales: usize,
-    up_blocks: Vec<Module>,
+    up_blocks: Vec<Box<dyn Module>>,
     final_conv: Conv2d,
 }
 
@@ -384,21 +384,21 @@ impl UNetDecoder {
     }
 }
 
-pub fn register_fusion(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_fusion(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let feature_fusion = PyModule::new(py, "feature_fusion")?;
-    m.add_submodule(feature_fusion)?;
+    m.add_submodule(&feature_fusion)?;
     
     let scale_fusion = PyModule::new(py, "scale_fusion")?;
-    m.add_submodule(scale_fusion)?;
+    m.add_submodule(&scale_fusion)?;
     
     let attention_fusion = PyModule::new(py, "attention_fusion")?;
-    m.add_submodule(attention_fusion)?;
+    m.add_submodule(&attention_fusion)?;
     
     let pyramid_fusion = PyModule::new(py, "pyramid_fusion")?;
-    m.add_submodule(pyramid_fusion)?;
+    m.add_submodule(&pyramid_fusion)?;
     
     let unet_decoder = PyModule::new(py, "unet_decoder")?;
-    m.add_submodule(unet_decoder)?;
+    m.add_submodule(&unet_decoder)?;
     
     Ok(())
 }

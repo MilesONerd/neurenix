@@ -538,13 +538,13 @@ impl CMAES {
     }
 }
 
-pub fn register_cmaes(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_cmaes(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "cmaes")?;
     
     submodule.add_class::<CMAESConfig>()?;
     submodule.add_class::<CMAES>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

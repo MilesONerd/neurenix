@@ -191,12 +191,12 @@ fn counterfactual(
     Ok(result.into())
 }
 
-pub fn register_counterfactual(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_counterfactual(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let counterfactual_module = PyModule::new(py, "counterfactual")?;
     
     counterfactual_module.add_function(wrap_pyfunction!(counterfactual, counterfactual_module)?)?;
     
-    m.add_submodule(counterfactual_module)?;
+    m.add_submodule(&counterfactual_module)?;
     
     Ok(())
 }

@@ -178,7 +178,7 @@ fn mpi_scatter(py: Python, data: PyObject, src: Option<i32>) -> PyResult<PyObjec
     Ok(data)
 }
 
-pub fn register_mpi(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_mpi(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let mpi = PyModule::new(py, "mpi")?;
     
     mpi.add_function(wrap_pyfunction!(mpi_initialize, mpi)?)?;
@@ -189,7 +189,7 @@ pub fn register_mpi(py: Python, m: &PyModule) -> PyResult<()> {
     mpi.add_function(wrap_pyfunction!(mpi_all_gather, mpi)?)?;
     mpi.add_function(wrap_pyfunction!(mpi_scatter, mpi)?)?;
     
-    m.add_submodule(mpi)?;
+    m.add_submodule(&mpi)?;
     
     Ok(())
 }

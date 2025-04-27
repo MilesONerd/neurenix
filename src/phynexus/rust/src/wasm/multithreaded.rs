@@ -269,7 +269,7 @@ fn parallel_batch_processing(py: Python, model: &PyAny, batches: &PyList) -> PyR
     }
 }
 
-pub fn register_multithreaded(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_multithreaded(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "multithreaded")?;
     
     submodule.add_function(wrap_pyfunction!(is_multithreading_supported, submodule)?)?;
@@ -280,7 +280,7 @@ pub fn register_multithreaded(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_function(wrap_pyfunction!(parallel_map, submodule)?)?;
     submodule.add_function(wrap_pyfunction!(parallel_batch_processing, submodule)?)?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

@@ -46,8 +46,8 @@ pub fn init() -> error::Result<()> {
 }
 
 #[pymodule]
-fn _phynexus(py: Python, m: &PyModule) -> PyResult<()> {
-    m.add("__version__", "2.0.0")?;
+fn _phynexus(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.setattr("__version__", "2.0.0")?;
     
     m.add_function(wrap_pyfunction!(py_init, m)?)?;
     

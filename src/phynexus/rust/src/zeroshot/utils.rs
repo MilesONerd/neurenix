@@ -182,10 +182,10 @@ fn utils(_py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-pub fn register_utils(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_utils(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "utils")?;
     utils(py, submodule)?;
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     Ok(())
 }
 

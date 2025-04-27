@@ -348,7 +348,7 @@ impl HyperNEAT {
     }
 }
 
-pub fn register_hyperneat(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_hyperneat(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "hyperneat")?;
     
     submodule.add_class::<Substrate>()?;
@@ -356,7 +356,7 @@ pub fn register_hyperneat(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<HyperNEATNetwork>()?;
     submodule.add_class::<HyperNEAT>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

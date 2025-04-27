@@ -247,7 +247,7 @@ impl SymbolicTeacher {
     }
 }
 
-pub fn register_knowledge_distillation(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_knowledge_distillation(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "knowledge_distillation")?;
     
     submodule.add_class::<KnowledgeDistillation>()?;
@@ -255,7 +255,7 @@ pub fn register_knowledge_distillation(py: Python, m: &PyModule) -> PyResult<()>
     submodule.add_class::<RuleExtraction>()?;
     submodule.add_class::<SymbolicTeacher>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

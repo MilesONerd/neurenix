@@ -11,14 +11,14 @@ use rand::seq::SliceRandom;
 use crate::error::PhynexusError;
 use crate::tensor::Tensor;
 
-pub fn register_model_selection(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_model_selection(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let model_selection = PyModule::new(py, "model_selection")?;
     
     model_selection.add_class::<PyAutoModelSelection>()?;
     model_selection.add_class::<PyCrossValidation>()?;
     model_selection.add_class::<PyNestedCrossValidation>()?;
     
-    m.add_submodule(model_selection)?;
+    m.add_submodule(&model_selection)?;
     
     Ok(())
 }

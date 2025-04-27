@@ -14,7 +14,7 @@ pub use synaptic::*;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
-pub fn register_continual(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_continual(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let continual = PyModule::new(py, "continual")?;
     
     continual.add_function(wrap_pyfunction!(compute_ewc_importance, continual)?)?;
@@ -32,7 +32,7 @@ pub fn register_continual(py: Python, m: &PyModule) -> PyResult<()> {
     continual.add_function(wrap_pyfunction!(update_synaptic_importance, continual)?)?;
     continual.add_function(wrap_pyfunction!(compute_synaptic_penalty, continual)?)?;
     
-    m.add_submodule(continual)?;
+    m.add_submodule(&continual)?;
     
     Ok(())
 }

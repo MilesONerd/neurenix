@@ -5,7 +5,7 @@ use pyo3::types::{PyDict, PyList, PySet, PyString, PyTuple};
 use crate::tensor::Tensor;
 use crate::error::PhynexusError;
 
-#[pyclass]
+#[pyclass(unsendable)]
 #[derive(Clone)]
 pub struct LogicTensor {
     tensor: Tensor,
@@ -317,7 +317,7 @@ impl ProbabilisticLogic {
     }
 }
 
-pub fn register_differentiable_logic(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_differentiable_logic(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let submodule = PyModule::new(py, "differentiable_logic")?;
     
     submodule.add_class::<LogicTensor>()?;
@@ -325,7 +325,7 @@ pub fn register_differentiable_logic(py: Python, m: &PyModule) -> PyResult<()> {
     submodule.add_class::<FuzzyLogic>()?;
     submodule.add_class::<ProbabilisticLogic>()?;
     
-    m.add_submodule(submodule)?;
+    m.add_submodule(&submodule)?;
     
     Ok(())
 }

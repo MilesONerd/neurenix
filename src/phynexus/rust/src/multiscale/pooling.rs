@@ -8,7 +8,7 @@ use std::collections::HashMap;
 pub struct MultiScalePooling {
     output_size: (usize, usize),
     pool_type: String,
-    pool: Module,
+    pool: Box<dyn Module>,
 }
 
 impl MultiScalePooling {
@@ -36,7 +36,7 @@ pub struct PyramidPooling {
     out_channels: usize,
     pool_sizes: Vec<usize>,
     pool_type: String,
-    pyramid_levels: Vec<Module>,
+    pyramid_levels: Vec<Box<dyn Module>>,
 }
 
 impl PyramidPooling {
@@ -86,7 +86,7 @@ impl PyramidPooling {
 pub struct SpatialPyramidPooling {
     output_sizes: Vec<usize>,
     pool_type: String,
-    pools: Vec<Module>,
+    pools: Vec<Box<dyn Module>>,
 }
 
 impl SpatialPyramidPooling {
@@ -124,15 +124,15 @@ impl SpatialPyramidPooling {
     }
 }
 
-pub fn register_pooling(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_pooling(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let multi_scale_pooling = PyModule::new(py, "multi_scale_pooling")?;
-    m.add_submodule(multi_scale_pooling)?;
+    m.add_submodule(&multi_scale_pooling)?;
     
     let pyramid_pooling = PyModule::new(py, "pyramid_pooling")?;
-    m.add_submodule(pyramid_pooling)?;
+    m.add_submodule(&pyramid_pooling)?;
     
     let spatial_pyramid_pooling = PyModule::new(py, "spatial_pyramid_pooling")?;
-    m.add_submodule(spatial_pyramid_pooling)?;
+    m.add_submodule(&spatial_pyramid_pooling)?;
     
     Ok(())
 }

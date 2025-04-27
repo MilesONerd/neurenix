@@ -188,7 +188,7 @@ fn horovod_distributed_optimizer(
     Ok(optimizer)
 }
 
-pub fn register_horovod(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_horovod(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let horovod = PyModule::new(py, "horovod")?;
     
     horovod.add_function(wrap_pyfunction!(horovod_initialize, horovod)?)?;
@@ -200,7 +200,7 @@ pub fn register_horovod(py: Python, m: &PyModule) -> PyResult<()> {
     horovod.add_function(wrap_pyfunction!(horovod_broadcast_parameters, horovod)?)?;
     horovod.add_function(wrap_pyfunction!(horovod_distributed_optimizer, horovod)?)?;
     
-    m.add_submodule(horovod)?;
+    m.add_submodule(&horovod)?;
     
     Ok(())
 }

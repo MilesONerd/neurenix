@@ -328,7 +328,7 @@ impl HybridAgent {
     }
 }
 
-pub fn register_agent(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_agent(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let agent_module = PyModule::new(py, "agent")?;
     
     agent_module.add_class::<AgentState>()?;
@@ -337,7 +337,7 @@ pub fn register_agent(py: Python, m: &PyModule) -> PyResult<()> {
     agent_module.add_class::<DeliberativeAgent>()?;
     agent_module.add_class::<HybridAgent>()?;
     
-    m.add_submodule(agent_module)?;
+    m.add_submodule(&agent_module)?;
     
     Ok(())
 }

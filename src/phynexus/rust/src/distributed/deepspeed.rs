@@ -131,7 +131,7 @@ fn deepspeed_initialize_model(
     Ok(model)
 }
 
-pub fn register_deepspeed(py: Python, m: &PyModule) -> PyResult<()> {
+pub fn register_deepspeed(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let deepspeed = PyModule::new(py, "deepspeed")?;
     
     deepspeed.add_function(wrap_pyfunction!(deepspeed_initialize, deepspeed)?)?;
@@ -139,7 +139,7 @@ pub fn register_deepspeed(py: Python, m: &PyModule) -> PyResult<()> {
     deepspeed.add_function(wrap_pyfunction!(deepspeed_barrier, deepspeed)?)?;
     deepspeed.add_function(wrap_pyfunction!(deepspeed_initialize_model, deepspeed)?)?;
     
-    m.add_submodule(deepspeed)?;
+    m.add_submodule(&deepspeed)?;
     
     Ok(())
 }
