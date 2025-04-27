@@ -653,7 +653,7 @@ api_keys = Secret(
     name="api-keys",
     namespace="neurenix-models",
     data={
-        "api-key": "c2VjcmV0LWtleQ=="  # base64 encoded "secret-key"
+        "api-key": "${API_KEY_BASE64}"  # Use environment variable for the base64 encoded API key
     }
 )
 api_keys.create()
@@ -930,8 +930,8 @@ credentials = Secret(
     name="update-credentials",
     namespace="neurenix-scheduled",
     data={
-        "aws-access-key": "QUtJQUlPU0ZPRE5ON0VYQU1QTEU=",  # base64 encoded
-        "aws-secret-key": "d0phbHJYVXRuRkVNSS9LN01ERU5HL2JQeFJmaUNZRVhBTVBMRUtFWQ=="  # base64 encoded
+        "aws-access-key": "${AWS_ACCESS_KEY_BASE64}",  # Use environment variable for base64 encoded access key
+        "aws-secret-key": "${AWS_SECRET_KEY_BASE64}"   # Use environment variable for base64 encoded secret key
     }
 )
 credentials.create()
