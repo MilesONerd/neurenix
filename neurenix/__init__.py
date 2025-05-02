@@ -6,7 +6,7 @@ with support for multiple GPUs and distributed clusters. The framework is specia
 with native support for multi-agents, reinforcement learning, and autonomous AI.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 from neurenix.core import init, version
 from neurenix.tensor import Tensor

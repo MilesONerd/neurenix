@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "neurenix"
-version = "2.0.0"
+version = "2.0.1"
 description = "Empowering Intelligent Futures, One Edge at a Time."
 readme = "README.md"
 authors = [
@@ -78,10 +78,10 @@ huggingface = [
 "Community" = "https://discord.gg/Eqnhr8tK2G"
 
 [tool.setuptools]
-package-dir = {"" = "neurenix"}
+package-dir = {"" = "."}
 
 [tool.setuptools.packages.find]
-where = ["neurenix"]
+where = ["."]
 exclude = ["dist", "build", "*.egg-info"]
 
 [project.scripts]
