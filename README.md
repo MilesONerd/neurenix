@@ -219,6 +219,7 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
   - Ethos-U/NPU for dedicated neural processing
   - Neon SIMD for vectorized operations
   - SVE (Scalable Vector Extensions) for variable-length vector processing
+ - **Conda version**
 
 ## Documentation
 
