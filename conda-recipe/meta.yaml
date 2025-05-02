@@ -1,0 +1,53 @@
+{% set name = "neurenix" %}
+{% set version = "2.0.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: fbc6065845b4adc4a7a34e3f3bbf03564333beaed18eca360e77bb33793bb3fb
+
+build:
+  noarch: python
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv
+
+requirements:
+  host:
+    - python >=3.8
+    - pip
+    - setuptools
+    - setuptools-rust
+    - wheel
+  run:
+    - python >=3.8
+    - numpy >=1.24.0
+    - scipy >=1.10.0
+    - typing-extensions >=4.7.0
+
+test:
+  imports:
+    - neurenix
+    - neurenix.nn
+    - neurenix.optim
+    - neurenix.agent
+    - neurenix.tensor
+    - neurenix.device
+
+about:
+  home: https://github.com/MilesONerd/neurenix
+  summary: Empowering Intelligent Futures, One Edge at a Time.
+  description: |
+    Neurenix is an AI framework designed for edge computing and distributed systems. 
+    It provides a flexible and efficient platform for developing and deploying AI models 
+    across various hardware devices, from embedded systems to multi-GPU clusters.
+  license: MIT
+  license_family: MIT
+  doc_url: https://github.com/MilesONerd/neurenix
+  dev_url: https://github.com/MilesONerd/neurenix
+
+extra:
+  recipe-maintainers:
+    - MilesONerd
