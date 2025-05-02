@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from setuptools_rust import Binding, RustExtension
 
 setup(
-    packages=find_packages(),
+    packages=find_packages(include=['neurenix', 'neurenix.*']),
     rust_extensions=[
         RustExtension(
             "neurenix._phynexus",
