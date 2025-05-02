@@ -9,8 +9,10 @@ theme:
 
 nav:
   - Home: index.md
+  - 
   - Neurenix vs. Other AI Frameworks: FRAMEWORK_COMPARISON.md
   - Placeholder Implementations: PLACEHOLDER_IMPLEMENTATIONS.md
+  - Installation Guide: installation.md
   - Core | API: api/core.md
   - Agent | API: api/agent.md
   - Asynchronous Training Module | API: api/async_train.md
