@@ -43,8 +43,8 @@ about:
     Neurenix is an AI framework designed for edge computing and distributed systems. 
     It provides a flexible and efficient platform for developing and deploying AI models 
     across various hardware devices, from embedded systems to multi-GPU clusters.
-  license: MIT
-  license_family: MIT
+  license: Apache 2.0
+  license_family: Apache
   doc_url: https://github.com/MilesONerd/neurenix
   dev_url: https://github.com/MilesONerd/neurenix
 
