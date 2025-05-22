@@ -12,10 +12,11 @@ Stay connected and follow **Neurenix** on social media:
 [![Mastodon](https://img.shields.io/badge/Mastodon-6364FF?style=for-the-badge&logo=Mastodon&logoColor=white)](https://fosstodon.org/@neurenix)
 [![X/Twitter](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/neurenix)
 
-Also, check out the official site and repository:
+Also, check out the official site, repository and DeepWiki documentation:
 
 - **Website**: [https://neurenix.github.io/](https://neurenix.github.io/)
 - **GitHub Repository**: [https://github.com/MilesONerd/neurenix](https://github.com/MilesONerd/neurenix)
+- **DeepWiki Documentation**: [https://deepwiki.com/MilesONerd/neurenix](https://deepwiki.com/MilesONerd/neurenix)
 
 Join the community and stay up to date with the latest news, releases, and updates. 💬
 
