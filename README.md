@@ -223,7 +223,8 @@ Neurenix is ​​an AI framework optimized for embedded devices (Edge AI), with
 
 ## Documentation
 
-[Neurenix Documentation](https://neurenix.readthedocs.io/en/latest/)
+[Documentation - ReadTheDocs](https://neurenix.readthedocs.io/en/latest/)
+[Documentation - DeepWiki](https://deepwiki.com/MilesONerd/neurenix)
 
 ## License
 
